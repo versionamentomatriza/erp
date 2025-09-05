@@ -1,0 +1,23 @@
+[0;1;32m●[0m apache2.service - The Apache HTTP Server
+     Loaded: loaded (/lib/systemd/system/apache2.service; enabled; vendor preset: enabled)
+     Active: [0;1;32mactive (running)[0m since Wed 2025-04-16 14:17:24 -03; 3min 38s ago
+       Docs: https://httpd.apache.org/docs/2.4/
+    Process: 987028 ExecStart=/usr/sbin/apachectl start (code=exited, status=0/SUCCESS)
+   Main PID: 987032 (apache2)
+      Tasks: 10 (limit: 19003)
+     Memory: 501.9M
+        CPU: 8.969s
+     CGroup: /system.slice/apache2.service
+             ├─987032 /usr/sbin/apache2 -k start
+             ├─987045 /usr/sbin/apache2 -k start
+             ├─987046 /usr/sbin/apache2 -k start
+             ├─987047 /usr/sbin/apache2 -k start
+             ├─987048 /usr/sbin/apache2 -k start
+             ├─987049 /usr/sbin/apache2 -k start
+             ├─987050 /usr/sbin/apache2 -k start
+             ├─987095 /usr/sbin/apache2 -k start
+             ├─987119 /usr/sbin/apache2 -k start
+             └─987122 /usr/sbin/apache2 -k start
+
+Apr 16 14:17:24 matriza.vps-kinghost.net systemd[1]: Starting The Apache HTTP Server...
+Apr 16 14:17:24 matriza.vps-kinghost.net systemd[1]: Started The Apache HTTP Server.

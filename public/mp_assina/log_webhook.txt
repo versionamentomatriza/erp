@@ -1,0 +1,4 @@
+2025-04-29 23:07:53 - Entrada: {"action":"updated","application_id":"3330354533569473","data":{"id":"777"},"date":"2021-11-01T02:02:02Z","entity":"preapproval","id":"123456","type":"subscription_preapproval","version":8}
+Outro tipo: {"action":"updated","application_id":"3330354533569473","data":{"id":"777"},"date":"2021-11-01T02:02:02Z","entity":"preapproval","id":"123456","type":"subscription_preapproval","version":8}
+2025-04-29 23:27:20 - Entrada: {"action":"payment.updated","api_version":"v1","data":{"id":"123456"},"date_created":"2021-11-01T02:02:02Z","id":"123456","live_mode":false,"type":"payment","user_id":329569010}
+Pagamento recebido: {"action":"payment.updated","api_version":"v1","data":{"id":"123456"},"date_created":"2021-11-01T02:02:02Z","id":"123456","live_mode":false,"type":"payment","user_id":329569010}

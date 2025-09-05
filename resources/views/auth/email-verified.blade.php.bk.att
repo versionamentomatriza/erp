@@ -1,0 +1,9 @@
+@extends('layouts.app', ['title'=>'Verificação'])
+
+@section('content')
+<div class="container text-center mt-5">
+    <h2>Email verificado com sucesso!</h2>
+    <p class="mt-3">Seu e-mail foi validado com sucesso. Clique abaixo para continuar para o sistema.</p>
+    <a href="/config" class="btn btn-success mt-4">Continuar</a>
+</div>
+@endsection

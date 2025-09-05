@@ -1,0 +1,236 @@
+$(document).ready(function(){
+	//Cria as div que envolvem o mecanismos slider
+	//Cria o mecanismo rotação do slider.
+	$(".manual-slider").wrapInner("<div class='window'><div class='container'>").prepend('<div class="next-prev"><a class="prev">Anterior</a><a class="next">Próxima</a></div>');
+
+	$('.manual-slider').each(function(index){
+		//Captura o número de slides rotativo
+		//$(this).addClass("mslider"+index);
+
+		//Captura o comprimento e seta em todos os slides
+		lms = $(this).width();
+		console.log(lms);
+		$(this).find(".sheet, .next-prev").css("width", lms );
+		$(this).children(".window").css("width", lms );
+		
+		var n = $(this).find("div.sheet").length;
+		ltl =n*lms;
+		$(this).find(".container").css("width", ltl);
+	});
+	
+	
+	//Executa a transição de slides
+	$("a.next").click(function(){
+		ls = $(this).parent().parent().find(".sheet").width();
+		ltl = $(this).parent().parent().find(".container").width();
+		$(this).parent().siblings(".window").animate({"scrollLeft": "+="+ ls +"px"}, "fast");
+		
+		var position = $(this).parent().siblings(".window").scrollLeft();
+		
+		if(position == ltl){
+			$(this).parent().siblings(".window").animate({"scrollLeft": "0px"}, 1000);
+		}
+	});
+	
+	$("a.prev").click(function(){
+		ls = $(this).parent().parent().find(".sheet").width();
+		$(this).parent().siblings(".window").animate({"scrollLeft": "-="+ lms +"px"}, "slow");
+	});
+});
+
+//Se uma página tiver o quadro de avisos o layout recebe o comportamento de três colunas.
+$(document).ready(function(){
+	if($("div").hasClass( "quadroavisos" )){
+		$(".column2>.content").addClass("trescolunas");
+	};
+});
+
+//HOME SISTEMAS: divisor de colunas da listagem dos sistemas.
+$(document).ready(function(){
+	var n = $("div.lista_sistemas a").length;
+
+	$("div.lista_sistemas ul li").unwrap();
+
+ 	var col = Math.floor(n/3);
+
+	//console.log(n + " " + col);
+
+ 	if (n%3 != 0) {
+ 		col = col+1;
+ 	};
+
+ 	var collection = $("div.lista_sistemas li");
+
+	collection.slice(0,col).wrapAll("<ul></ul>");
+	//console.log("col1 " + n + " " + col);
+	collection.slice(col,col*2).wrapAll("<ul></ul>");
+	//console.log("col2 " + n + " " + col*2);
+	collection.slice(col*2,n).wrapAll("<ul></ul>");
+	//console.log("col3 " + n + " " + col*2);
+
+});
+
+
+//HOME SISTEMAS: divisor de colunas da listagem dos sistemas.
+$(document).ready(function(){
+    var n = $("div.sis div.lista_sistemas a").length;
+
+    $("div.sis div.lista_sistemas ul li").unwrap();
+
+    var col = Math.floor(n/2);
+
+    //console.log(n + " " + col);
+
+    if (n%2 != 0) {
+        col = col+1;
+    };
+
+    var collection = $("div.sis div.lista_sistemas li");
+
+    collection.slice(0,col).wrapAll("<ul></ul>");
+    //console.log("col1 " + n + " " + col);
+    collection.slice(col,col*2).wrapAll("<ul></ul>");
+    //console.log("col2 " + n + " " + col*2);
+
+
+});
+
+//Mecanismo para filtrar os itens de listas textuais.
+//O script recebe o nome do imput e da lista que deve manipular.
+
+/*
+$(document).ready(function(){
+	$('#inputSearch').keyup(function(){
+		var texto = $('#inputSearch').val();
+		texto +=  '.*';
+		var rTexto = new RegExp(texto,'i');
+
+		if (texto.length > 2){
+			$('#listSearch li').hide();
+			$('#listSearch li').filter(function(i){	   
+				return rTexto.test($(this).text());
+			}).show();
+		}else{
+			$('#listSearch li').show();
+			texto.length = "";
+		}
+
+	});
+});
+
+*/
+
+/*
+ * Mecanismo de controle da barra de acessibilidade
+ */
+$(document).ready(function(){	
+	
+	//Funcao para a criacao de cookies
+	$.createCookie = function(name, value, params) {
+		$.cookie(name, value, params);
+	}
+	
+	
+	//Funcao para exclusao de cookies
+	$.deleteCookie = function(name,params) {
+		$.cookie(name, null, params);
+	}
+
+	//Habilita e desabilita o contraste
+	$('#contrast').click(function() {
+		var valueCookie = $.cookie('correios_contrast');
+		if(valueCookie == null){
+			$.createCookie('correios_contrast', 1, {path : '/'} );
+			$('body').addClass('contrast');
+		}else{
+			$.deleteCookie('correios_contrast',{path : '/'});
+			$('body').removeClass('contrast');
+		}
+		
+	});
+	
+	//Conjunto de funcoes para a edicao do tamanho do texto das paginas
+	//Diminui a fonte
+	$('#smallerFont').click(function() {
+		var valueCookie = $.cookie('correios_font');
+
+		if(valueCookie >= -1){
+			valueCookie --;
+			$.createCookie('correios_font', valueCookie, {path : '/'} );
+			$.modeFont(valueCookie);
+		}if(valueCookie == null){
+			$.createCookie('correios_font', -1,{path : '/'} );
+			$.modeFont(-1);
+		}
+	});
+	
+	//Aumenta a fonte
+	$('#biggerFont').click(function() {
+		var valueCookie = $.cookie('correios_font');
+
+		if(valueCookie <= 1){
+			valueCookie ++;
+			$.createCookie('correios_font',valueCookie, {path : '/'});
+			$.modeFont(valueCookie);
+		}if(valueCookie == null){
+			$.createCookie('correios_font', 1 , {path : '/'} );
+			$.modeFont(1);
+		}
+	});
+	
+	//Define a fonte no tamanho padrão
+	$('#defaultFont').click(function() {
+		$.deleteCookie('correios_font',{path : '/'});
+		$.modeFont(0);
+	});
+	
+	//verificar os cookies e executar os controles das fonts
+	valueCookieFont = parseInt($.cookie('correios_font'));
+	
+	$.modeFont = function(n){
+
+		switch (n)
+			{
+				case 2:
+				//console.log(n);
+				$('body').css('font-size','12px');
+				break;
+				
+				case 1:
+				//console.log(n);
+				$('body').css('font-size','11px');
+				break;
+				
+				case 0:
+				//console.log(n);
+				$('body').css('font-size','10px');
+				break;
+				
+				case -1:
+				//console.log(n);
+				$('body').css('font-size','9px');
+				break;
+				
+				case -2:
+				//console.log(n);
+				$('body').css('font-size','8px');
+				break;
+				
+				default:
+				//console.log('caiu fora');
+			}	
+	};
+	
+	
+	$.modeFont(valueCookieFont);
+	// Verifica os cookies e executa os controles do contraste
+	valueCookieContrast = parseInt($.cookie('correios_contrast'));
+	
+	if(valueCookieContrast == 1){
+		$('body').addClass('contrast');
+	}else{
+		$('body').removeClass('contrast');
+	}
+	
+	
+});

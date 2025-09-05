@@ -1,0 +1,10 @@
+Fala Dev!
+Primeiramente, obrigado pela compra!
+
+Siga as instruções:
+
+1- instale o banco de dados que está com o nome banco.sql
+2- Faça conexão com o banco de dados no arquivo: config/config.php
+3- Configure seus produtos no arquivo: config/produtos.php
+4- Para adicionar seu token e public key do Mercado Pago: helpers/intermediador_pagamento/token.php
+5- para acessar o checkout: https://seusite.com.br/?item=1

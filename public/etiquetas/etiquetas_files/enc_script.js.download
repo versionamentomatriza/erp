@@ -1,0 +1,306 @@
+function formataCEP(formato, keypress, objeto)
+{
+
+//onKeyPress="formataCEP('CEP', window.event.keyCode, this);"
+campo = eval(objeto);
+if (formato=='CEP')
+	{
+	caracteres = '01234567890';
+	separacoes = 1;
+	separacao1 = '-';
+	conjuntos = 2;
+	conjunto1 = 5;
+	conjunto2 = 3;
+	if ((caracteres.search(String.fromCharCode (keypress))!=-1) && campo.value.length < 
+	(conjunto1 + conjunto2 + 1))
+		{
+		if (campo.value.length == conjunto1) 
+		   campo.value = campo.value + separacao1;
+		}
+	else 
+		event.returnValue = false;
+	}
+}
+
+
+function trim(valorTrim){
+	var len = valorTrim.length;
+	for(var x=0; x<len; x++) if(valorTrim.charCodeAt(x)!=32 && valorTrim.charCodeAt(x)!=10 && valorTrim.charCodeAt(x)!=13) break;
+	valorTrim = valorTrim.substring(x,len);
+	len = valorTrim.length;
+	for(x=len-1; x>1; x--) if(valorTrim.charCodeAt(x)!=32 && valorTrim.charCodeAt(x)!=10 && valorTrim.charCodeAt(x)!=13) break;
+	valorTrim = valorTrim.substring(0,x+1);
+	return valorTrim;
+}
+
+function getFocus(formulario, campo){
+	eval("document." + formulario + "." + campo + ".focus()")
+}
+
+
+function camposVazios(formulario){
+	//se retornar false quer dizer que o formulário não possui nenhum campo em branco
+	var i, temp;
+	var args = camposVazios.arguments;
+	var nomeCampo = false;
+	
+	for(i=1; i<args.length; i++){
+		if(eval("trim(document." + formulario + "." + args[i] + ".value)")=="" ){
+			nomeCampo = args[i];
+			break;
+		}
+	}
+	return nomeCampo;
+}
+
+function blockChar(args){
+	//coloque os caracteres que deseja bloquear no argumento da função
+	//ex: blockChar('0123456789') -- Bloqueia os numeros
+	//se quiser bloquear pelo codigo ASC coloque outros parametros na frente do primeiro;
+	//ex: blockChar('', 13, 85, 94)
+	for(var i=0; i<args.length;  i++){
+		if (window.event.keyCode == args.charCodeAt(i)){
+			event.returnValue = false;
+			break;
+		}
+	}//end for
+
+	if(blockChar.arguments.length > 1){
+		for(var i=1; i<blockChar.arguments.length; i++){
+			if (!isNaN(blockChar.arguments[i]) && window.event.keyCode == blockChar.arguments[i]){
+				event.returnValue = false;
+				break;
+			}
+		}//end for
+	}// end if
+}//eend function
+
+function soNumeros(){
+	if (window.event.keyCode < 48 || window.event.keyCode > 57)
+	event.returnValue = false;
+}
+
+function popup(caminho,nome,largura,altura,rolagem) 
+{
+//	var esquerda = 0;
+//	var cima = 0;
+//	var largura = screen.width - 10;
+//	var altura = screen.height - 70;
+	var esquerda = (screen.width - largura) / 2;
+	var cima = (screen.height - altura) / 2 -50;
+	window.open(caminho,nome,'toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=' + rolagem + ',resizable=yes,copyhistory=no,top=' + cima + ',left=' + esquerda + ',width=' + largura + ',height=' + altura);
+//popup('lrm_default.cfm','logisticaMaster','750','550','yes');
+}
+
+function showHideLayers() { //v2.0
+  var i, visStr, args, theObj;
+  args = showHideLayers.arguments;
+  for (i=0; i<(args.length-2); i+=3) { //with arg triples (objNS,objIE,visStr)
+    visStr   = args[i+2];
+    if (navigator.appName == 'Netscape' && document.layers != null) {
+      theObj = eval(args[i]);
+      if (theObj) theObj.visibility = visStr;
+    } else if (document.all != null) { //IE
+      if (visStr == 'show') visStr = 'visible'; //convert vals
+      if (visStr == 'hide') visStr = 'hidden';
+      theObj = eval(args[i+1]);
+      if (theObj) theObj.style.visibility = visStr;
+  } }
+}
+
+
+function repeatString(str, count){
+	var novaStr="";
+	for(var i=0; i<count; i++) novaStr = novaStr + str;
+	return novaStr
+}
+
+function validarCNPJ(strCNPJ){
+	if (trim(strCNPJ) == "")
+		return true;
+	
+	var
+		strDV = strCNPJ.substr(12, 2),
+		intSoma,
+		intDigito = 0,
+		strControle = "",
+		strMultiplicador = "543298765432";
+		strCNPJ = strCNPJ.substr(0, 12);
+
+	for(var j = 1; j <= 2; j++){
+		intSoma = 0;
+		for(var i = 0; i <= 11; i++){
+			intSoma += (parseInt(strCNPJ.substr(i, 1), 10) * parseInt(strMultiplicador.substr(i, 1), 10))
+		}
+		if(j == 2){intSoma += (2 * intDigito)}
+		intDigito = (intSoma * 10) % 11;
+		if(intDigito == 10){intDigito = 0}
+		strControle += intDigito.toString();
+		strMultiplicador = "654329876543";
+	}
+	return(strControle == strDV);
+}
+
+function validarMail(email) 
+{
+	 if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email))
+ 	   {
+			return true;
+       }
+	 else
+	   { 
+	      return false;
+	   }
+}
+
+function comparaData(data1, data2){
+	//------------------------------
+	// Uso: comparaData("10/01/2002", "10/03/2002");
+	// data1 e data2 no formato "dd/mm/aaaa"
+	// se retornar 1 "data1" é maior
+	// se retornar 2 "data2" é maior
+	// se retornar 0 "data1" é igual a "data2"
+	//------------------------------
+	var dataDiff = transformaData(data2) - transformaData(data1);
+	var maiorData;
+
+	if(dataDiff > 0){dataSaida = 2;}
+	else if(dataDiff < 0){dataSaida = 1;}
+	else {dataSaida == 0;}
+
+	return dataSaida;
+}
+
+function transformaData(data){// data no formato dd/mm/aaaa
+	var data = trim(data);
+	argDia = parseInt(data.substring(0,2), 10);
+	argMes = parseInt(data.substring(3,5), 10) - 1;
+	argAno = parseInt(data.substring(6,10),10);
+	data = new Date(argAno, argMes, argDia);
+	return data;
+}
+
+function isDate(data){
+	var data = trim(data);
+	if(data != ""){
+		dia = parseInt(data.substring(0,2), 10);
+		mes = parseInt(data.substring(3,5), 10);
+		ano = parseInt(data.substring(6,10),10);
+		
+		if(isNaN(dia) || isNaN(mes) || isNaN(ano))
+			return false;
+
+		//Verifica se o tamanho da string é 10 
+		if(data.length < 10 || (mes < 1 || mes > 12) || (dia > 31 || dia < 1))
+			return false;
+		var quantDias;
+		if(mes==4 || mes==6 || mes==9 || mes==11)//mes com 30 dias
+			quantDias = 30;
+		else if(mes==1 || mes==3 || mes==5 || mes==7 || mes==8 || mes==10 || mes==12)//mes com 31	
+			quantDias = 31;
+		else if(mes==2){ //mes com 28
+			if((ano % 4 == 0) && (ano % 100 != 0 || ano % 400 ==0)) quantDias = 29; //verifica se é bissexto
+			else quantDias = 28;
+		}
+		if(dia > quantDias || dia < 1) return false;
+	}
+	else{return false;}
+
+	return true;
+}
+
+function validarNumeroObjeto(objeto){
+	var objeto = trim(objeto);
+	if(objeto.length != 13) return false;
+
+	var valor1 = objeto.substring(0,2);
+	var valor2 = objeto.substring(2,11);
+	var valor3 = objeto.substring(11,13);
+
+	// Verificar os 2 primeiros e os 2 ultimos digitos
+	for(i=0; i<2; i++){
+		if((! isNaN(valor1.charAt(i))) || (! isNaN(valor3.charAt(i))) ) return false;
+	}
+	//verificar os digitos do meio do numero do objeto
+	var i = 0
+	while (i < valor2.length){
+    	if(isNaN(valor2.charAt(i)) || valor2.charCodeAt(i)==32 ) return false;
+		i++;
+	}
+	return true;
+}
+
+function FormataValor(campo,tammax,teclapres) 
+ {
+ 	//uso:
+	//<input type="Text" name="fat_vr_bruto" maxlength="17" onKeyDown="FormataValor(this,17,event)">
+
+	var tecla = teclapres.keyCode;
+	vr = campo.value;
+	vr = vr.replace( "/", "" );
+	vr = vr.replace( "/", "" );
+	vr = vr.replace( ",", "" );
+	vr = vr.replace( ".", "" );
+	vr = vr.replace( ".", "" );
+	vr = vr.replace( ".", "" );
+	vr = vr.replace( ".", "" );
+	tam = vr.length;
+
+	if (tam < tammax && tecla != 8){ tam = vr.length + 1 ; }
+
+	if (tecla == 8 ){	tam = tam - 1 ; }
+		
+	if ( tecla == 8 || tecla >= 48 && tecla <= 57 || tecla >= 96 && tecla <= 105 ){
+		if ( tam <= 2 ){ 
+	 		campo.value = vr ; }
+	 	if ( (tam > 2) && (tam <= 5) ){
+	 		campo.value = vr.substr( 0, tam - 2 ) + ',' + vr.substr( tam - 2, tam ) ; }
+	 	if ( (tam >= 6) && (tam <= 8) ){
+	 		campo.value = vr.substr( 0, tam - 5 ) + '.' + vr.substr( tam - 5, 3 ) + ',' + vr.substr( tam - 2, tam ) ; }
+	 	if ( (tam >= 9) && (tam <= 11) ){
+	 		campo.value = vr.substr( 0, tam - 8 ) + '.' + vr.substr( tam - 8, 3 ) + '.' + vr.substr( tam - 5, 3 ) + ',' + vr.substr( tam - 2, tam ) ; }
+	 	if ( (tam >= 12) && (tam <= 14) ){
+	 		campo.value = vr.substr( 0, tam - 11 ) + '.' + vr.substr( tam - 11, 3 ) + '.' + vr.substr( tam - 8, 3 ) + '.' + vr.substr( tam - 5, 3 ) + ',' + vr.substr( tam - 2, tam ) ; }
+	 	if ( (tam >= 15) && (tam <= 17) ){
+	 		campo.value = vr.substr( 0, tam - 14 ) + '.' + vr.substr( tam - 14, 3 ) + '.' + vr.substr( tam - 11, 3 ) + '.' + vr.substr( tam - 8, 3 ) + '.' + vr.substr( tam - 5, 3 ) + ',' + vr.substr( tam - 2, tam ) ;}
+	}			
+}
+
+function FormataData(nomecampo,teclapres) {
+//	onKeydown="FormataData('nome_campo',event);"
+	var tecla = teclapres.keyCode;
+	vr = document.form1[nomecampo].value;
+	vr = vr.replace( ".", "" );
+	vr = vr.replace( "/", "" );
+	vr = vr.replace( "/", "" );
+	tam = vr.length + 1;
+
+	if ( tecla != 9 && tecla != 8 ){
+		if ( tam > 2 && tam < 5 )
+			document.form1[nomecampo].value = vr.substr( 0, tam - 2  ) + '/' + vr.substr( tam - 2, tam );
+		if ( tam >= 5 && tam <= 10 )
+			document.form1[nomecampo].value = vr.substr( 0, 2 ) + '/' + vr.substr( 2, 2 ) + '/' + vr.substr( 4, 4 ); }
+}
+
+function addBookmark(url, titulo)
+{
+	//Parâmetros: 
+	//url: Endereço a ser adicionado
+	//titulo: Título que aparecerá nos Favoritos
+	if (document.all)
+		window.external.AddFavorite(url, titulo)
+}
+
+function validarCep(cep)
+{
+	txCep = trim(cep);
+	if(txCep.length == 0)
+		return false;
+
+	txCep = txCep.replace("-","");
+	txCep = txCep.replace(".","");
+	if(txCep.length != 8 || isNaN(txCep))
+		return false;
+	else
+		return true;
+}

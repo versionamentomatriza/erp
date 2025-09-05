@@ -1,0 +1,49 @@
+	TR.H	{BACKGROUND-COLOR: #FFFFCC;}
+
+	INPUT.cssBotao{
+		background-color: #FFCA00; 
+	}
+	TABLE.cssFormulario{
+		border:1px solid; 
+		border-color:#002a78; 
+		background-color : #d8e6ed;
+	}
+	TR.cssLinhaTitulo{
+		color:#202A65;
+		background-color : #C4DEE9;
+		font-weight : bold;
+	}
+	TR.cssFundo1{
+		background-color : #FFFFCC;
+	}
+	TR.cssFundo2{
+		background-color : #ECF3F6;
+	}
+	
+	TR.cssLinha{
+		BACKGROUND-COLOR:#cccccc;
+	}
+	TD {
+	  color: #003399;
+	  font-size: 11px;
+	  font-family: arial;
+	  border-color:#000000;
+	}
+	TD.class {
+	  color: #003399;
+	  font-size: 10px;
+	  font-family: arial;
+	}
+	TABLE {
+	  border-collapse: collapse;
+		  
+	}
+	H1 {
+		font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+		font-size: 18px;
+		padding-top: 8px;
+		color: #004282;
+		border-bottom-width: 1px;
+		border-bottom-color: #C2D7F0;
+		border-bottom-style: groove;
+	}	

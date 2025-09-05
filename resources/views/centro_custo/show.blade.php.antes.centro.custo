@@ -1,0 +1,89 @@
+@extends('layouts.app', ['title' => 'Detalhes do Centro de Custo'])
+
+@section('content')
+<div class="mt-3">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Detalhes do Centro de Custo</h5>
+            <div style="text-align: right; margin-top: -35px;">
+                <a href="{{ route('centro-custo.index') }}" class="btn btn-danger btn-sm px-3">
+                    <i class="ri-arrow-left-double-fill"></i> Voltar
+                </a>
+            </div>
+            <p><strong>Descrição:</strong> {{ $centroCusto->descricao }}</p>
+            <hr>
+
+            <h4>Registros de Vendas</h4>
+            <table class="table table-centered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Data</th>
+                        <th>Cidade</th>
+                        <th>Estado</th>
+						<th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($nfeRegistros as $item)
+                    <tr>
+                        <td>{{ $item['id'] }}</td>
+                        <td>{{ $item['cliente'] }}</td>
+                        <td>{{ $item['data'] }}</td>
+                        <td>{{ $item['cidade'] }}</td>
+                        <td>{{ $item['estado'] }}</td>
+						<td>{{ number_format($item['total'], 2, ',', '.') }}</td>
+
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="text-center">Nenhum registro de NFE encontrado.</td>
+                    </tr>
+                    @endforelse
+                    <tr class="table-secondary">
+                        <td colspan="4">Valor total</td>
+                        <td colspan="2">{{ number_format($nfeTotal, 2, ',', '.') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4 class="mt-4">Registros de Compras</h4>
+            <table class="table table-centered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Fornecedor</th>
+                        <th>Data</th>
+                        <th>Cidade</th>
+                        <th>Estado</th>
+						<th>Total</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($comprasRegistros as $item)
+                    <tr>
+                        <td>{{ $item['id'] }}</td>
+                        <td>{{ $item['fornecedor'] }}</td>
+                        <td>{{ $item['data'] }}</td>
+                        <td>{{ $item['cidade'] }}</td>
+                        <td>{{ $item['estado'] }}</td>
+						<td>{{ number_format($item['total'], 2, ',', '.') }}</td>
+
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="text-center">Nenhum registro de Compras encontrado.</td>
+                    </tr>
+                    @endforelse
+                    <tr class="table-secondary">
+                        <td colspan="4">Valor total</td>
+                        <td colspan="2">{{ number_format($comprasTotal, 2, ',', '.') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@endsection
