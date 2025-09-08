@@ -98,7 +98,7 @@ class ContaPagarController extends Controller
                 'arquivo' => $file_name
             ]);
 
-            ContaPagar::create($request->all());
+            $conta = ContaPagar::create($request->all());
             if ($request->dt_recorrencia) {
                 for ($i = 0; $i < sizeof($request->dt_recorrencia); $i++) {
                     $data = $request->dt_recorrencia[$i];
@@ -111,6 +111,7 @@ class ContaPagarController extends Controller
                         'empresa_id' => $request->empresa_id,
                         'fornecedor_id' => $request->fornecedor_id,
                         'centro_custo_id' => $request->centro_custo_id,
+                        'local_id' => $conta->local_id,
                     ];
                     ContaPagar::create($data);
                 }

@@ -133,7 +133,6 @@
                                                     <i class="ri-money-dollar-box-line"></i>
                                                 </a>
 												@endif
-
                                             </form>
                                         </td>
                                     </tr>
