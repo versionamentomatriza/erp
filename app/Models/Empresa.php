@@ -18,7 +18,7 @@ class Empresa extends Model
         'numero_ultima_mdfe_producao', 'numero_ultima_mdfe_homologacao', 'numero_serie_mdfe', 'logo',
         'tipo_contador', 'limite_cadastro_empresas', 'percentual_comissao', 'exclusao_icms_pis_cofins',
         'token_nfse', 'numero_ultima_nfse', 'numero_serie_nfse', 'aut_xml',
-		'cargo_funcao','atividade','qtd_funcionarios', 'nome_contato'
+		'cargo_funcao','atividade','qtd_funcionarios', 'nome_contato', 'nome_cobranca', 'email_cobranca', 'telefone_cobranca'
     ];
 
     protected $appends = [ 'info' ];

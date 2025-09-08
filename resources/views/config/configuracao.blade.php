@@ -53,6 +53,17 @@
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
+                        <a class="nav-link" data-bs-toggle="tab" href="#cobranca" role="tab" aria-selected="false">
+                            <div class="d-flex align-items-center">
+                                <div class="tab-icon"><i class='fa fa-file-invoice-dollar font-18 me-2'></i>
+                                </div>
+                                <div class="tab-title">
+                                    Cobrança
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
                         <a class="nav-link" data-bs-toggle="tab" href="#nota_fiscal" role="tab" aria-selected="false">
                             <div class="d-flex align-items-center">
                                 <div class="tab-icon"><i class='fa fa-file-alt font-18 me-2'></i>
@@ -203,6 +214,24 @@
                                     @endisset
                                     
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="cobranca" role="tabpanel">
+                        <div class="row m-3">
+                            <!-- Nome do destinatário -->
+                            <div class="col-xs-2 col-md-4">
+                                {!!Form::text('nome_cobranca', 'Nome')->attrs(['class' => 'form-control', 'placeholder' => 'Nome do destinatário'])!!}
+                            </div>
+
+                            <!-- E-mail -->
+                            <div class="col-xs-2 col-md-4">
+                                {!!Form::text('email_cobranca', 'E-mail')->attrs(['class' => 'form-control', 'placeholder' => 'E-mail para cobrança'])!!}
+                            </div>
+
+                            <!-- Telefone -->
+                            <div class="col-xs-2 col-md-4">
+                                {!!Form::tel('telefone_cobranca', 'Telefone')->attrs(['class' => 'form-control fone', 'data-mask' => '(00) 00000-0000', 'placeholder' => 'Telefone de contato'])!!}
                             </div>
                         </div>
                     </div>
