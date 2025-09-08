@@ -23,8 +23,7 @@ class RelatorioAdmController extends Controller
         $start_date = $request->start_date;
         $end_date = $request->end_date;
 
-        $data = Empresa::
-            when(!empty($start_date), fn($q) => $q->whereDate('created_at', '>=', $start_date))
+        $data = Empresa::when(!empty($start_date), fn($q) => $q->whereDate('created_at', '>=', $start_date))
             ->when(!empty($end_date), fn($q) => $q->whereDate('created_at', '<=', $end_date))
             ->get();
 
@@ -46,8 +45,7 @@ class RelatorioAdmController extends Controller
         $end_date = $request->end_date;
         $empresa = $request->empresa;
 
-        $data = AcessoLog::
-            when(!empty($start_date), fn($q) => $q->whereDate('acesso_logs.created_at', '>=', $start_date))
+        $data = AcessoLog::when(!empty($start_date), fn($q) => $q->whereDate('acesso_logs.created_at', '>=', $start_date))
             ->when(!empty($end_date), fn($q) => $q->whereDate('acesso_logs.created_at', '<=', $end_date))
             ->when($empresa, fn($q) => $q->where('usuario_empresas.empresa_id', $empresa)
                 ->join('usuario_empresas', 'acesso_logs.usuario_id', '=', 'usuario_empresas.usuario_id'))
@@ -73,12 +71,19 @@ class RelatorioAdmController extends Controller
         $start_created_at = $request->start_created_at;
         $end_created_at = $request->end_created_at;
         $plano_id = $request->plano_id;
+        $status =  $request->status;
 
-        $data = PlanoEmpresa::
-            when(!empty($start_date), fn($q) => $q->whereDate('data_expiracao', '>=', $start_date))
+        $data = PlanoEmpresa::when(!empty($start_date), fn($q) => $q->whereDate('data_expiracao', '>=', $start_date))
             ->when(!empty($end_date), fn($q) => $q->whereDate('data_expiracao', '<=', $end_date))
             ->when(!empty($start_created_at), fn($q) => $q->whereDate('created_at', '>=', $start_created_at))
             ->when(!empty($end_created_at), fn($q) => $q->whereDate('created_at', '<=', $end_created_at))
+            ->when(!empty($status), function ($q) use ($status) {
+                if ($status === 'ativo') {
+                    $q->whereDate('data_expiracao', '>=', now());
+                } elseif ($status === 'inativo') {
+                    $q->whereDate('data_expiracao', '<', now());
+                }
+            })
             ->when(!empty($plano_id), fn($q) => $q->where('plano_id', $plano_id))
             ->get();
 
