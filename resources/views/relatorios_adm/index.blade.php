@@ -64,9 +64,11 @@
                                 {!! Form::date('end_date', 'Dt. expiração final') !!}
                             </div>
                             <div class="col-md-12 col-12">
+                                {!! Form::select('status', 'Filtro por Situação', ['ativo' => 'Ativo' , 'inativo' => 'Inativo']) !!}
+                            </div>
+                            <div class="col-md-12 col-12">
                                 {!! Form::select('plano_id', 'Filtro por Plano', ['' => 'Todos os planos'] + $planos->toArray()) !!}
                             </div>
-
                         </div>
                     </div>
                     <div class="card-footer">
