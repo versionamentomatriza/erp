@@ -87,36 +87,31 @@ class ContaPagarController extends Controller
     public function store(Request $request)
     {
         $this->__validate($request);
-        try {
 
+        try {
             $file_name = '';
-            if ($request->hasFile('file')) {
-                $file_name = $this->uploadUtil->uploadFile($request->file, '/financeiro');
-            }
+            if ($request->hasFile('file')) $file_name = $this->uploadUtil->uploadFile($request->file, '/financeiro');
 
             $request->merge([
                 'valor_integral' => __convert_value_bd($request->valor_integral),
-                'valor_pago' => $request->valor_pago ? __convert_value_bd($request->valor_pago) : 0,
+                'valor_pago' => $request->status ? __convert_value_bd($request->valor_pago) : 0,
                 'arquivo' => $file_name
             ]);
 
-            ContaPagar::create($request->all());
+            $conta = ContaPagar::create($request->all());
             if ($request->dt_recorrencia) {
                 for ($i = 0; $i < sizeof($request->dt_recorrencia); $i++) {
                     $data = $request->dt_recorrencia[$i];
                     $valor = __convert_value_bd($request->valor_recorrencia[$i]);
                     $data = [
-                        'venda_id' => null,
+                        'descricao' => $request->descricao,
                         'data_vencimento' => $data,
-                        'data_pagamento' => $data,
                         'valor_integral' => $valor,
-                        'valor_pago' => $request->status ? $valor : 0,
-                        'referencia' => $request->referencia,
-                        'categoria_id' => $request->categoria_id,
-                        'status' => $request->status,
+                        'status' => 0,
                         'empresa_id' => $request->empresa_id,
                         'fornecedor_id' => $request->fornecedor_id,
-                        'tipo_pagamento' => $request->tipo_pagamento,
+                        'centro_custo_id' => $request->centro_custo_id,
+                        'local_id' => $conta->local_id,
                     ];
                     ContaPagar::create($data);
                 }
