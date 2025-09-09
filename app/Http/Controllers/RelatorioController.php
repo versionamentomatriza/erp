@@ -1025,11 +1025,7 @@ class RelatorioController extends Controller
     public function baixaProdutos(Request $request)
     {
         // Obter o ID do usuário logado
-        $user = User::find(Auth::id());
-        $user_id = $user->id;
-
-        $empresaId = Caixa::where('usuario_id', $user_id)->first()->empresa_id;
-        $usuariosIds = Caixa::where('empresa_id', 5)
+        $usuariosIds = Caixa::where('empresa_id', Auth::user()->empresa->empresa_id)
             ->distinct()
             ->pluck('usuario_id')
             ->toArray();
