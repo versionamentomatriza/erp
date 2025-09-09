@@ -26,7 +26,7 @@ auth.json
 /public/storage
 /public/hot
 /public/build
-/public/vendor
+/public/vendor     # continua ignorando vendor padrão do Laravel/Mix
 mix-manifest.json
 
 /storage/*.key
@@ -96,7 +96,10 @@ resources/views/auth/register.blade.php
 
 # Pastas de testes e não usadas em produção
 public/dia_especial/
-public/bs5-tour/
+
+# PERMITIR rastrear os assets JS/CSS do front-end
+!public/assets/vendor/
+!public/bs5-tour/
 
 # =========================================
 # CONFIGURAÇÕES LOCAIS & IDEs
@@ -125,3 +128,10 @@ public/bs5-tour/
 # Homestead
 Homestead.json
 Homestead.yaml
+
+# Ignorar PDFs temporários de NFSe
+/public/nfse_temp/
+
+# Ignorar XMLs processados de NFCE e NFE
+/public/xml_nfce/
+/public/xml_nfe/

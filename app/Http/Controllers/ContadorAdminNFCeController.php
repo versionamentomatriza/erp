@@ -20,6 +20,7 @@ class ContadorAdminNFCeController extends Controller
         $empresaSelecionada = $contador->empresa_selecionada;
         $start_date = $request->get('start_date');
         $end_date = $request->get('end_date');
+        $cpf_cnpj = $request->get('cpf_cnpj');
 
         $data = Nfce::where('empresa_id', $empresaSelecionada)
         ->when(!empty($start_date), function ($query) use ($start_date) {
@@ -27,6 +28,19 @@ class ContadorAdminNFCeController extends Controller
         })
         ->when(!empty($end_date), function ($query) use ($end_date,) {
             return $query->whereDate('created_at', '<=', $end_date);
+        })
+        ->when(!empty($cpf_cnpj), function ($query) use ($cpf_cnpj) {
+            $doc = preg_replace('/\D/', '', $cpf_cnpj); // sem máscara
+            $query->where(function ($q) use ($doc, $cpf_cnpj) {
+                $q->whereHas('cliente', function ($q2) use ($doc, $cpf_cnpj) {
+                    $q2->where('cpf_cnpj', 'like', "%$doc%")
+                    ->orWhere('cpf_cnpj', 'like', "%$cpf_cnpj%");
+                })
+                ->orWhereHas('fornecedor', function ($q2) use ($doc, $cpf_cnpj) {
+                    $q2->where('cpf_cnpj', 'like', "%$doc%")
+                    ->orWhere('cpf_cnpj', 'like', "%$cpf_cnpj%");
+                });
+            });
         })
         ->where('estado', 'aprovado')
         ->orderBy('created_at', 'desc')
