@@ -31,6 +31,11 @@
                             ->attrs(['class' => 'form-select'])
                             !!}
                         </div>
+                        <div class="col-md-3">
+                            {!! Form::text('cpf_cnpj', 'CPF/CNPJ')
+                                ->attrs(['class' => 'form-control', 'placeholder' => 'Digite o CPF/CNPJ'])
+                            !!}
+                        </div>
 
                         <div class="col-lg-3 col-12">
                             <br>
