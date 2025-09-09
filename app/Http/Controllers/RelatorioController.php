@@ -27,7 +27,6 @@ use Dompdf\Dompdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\BaseExport;
 use App\Models\Caixa;
-use App\Models\User;
 
 class RelatorioController extends Controller
 {
@@ -42,7 +41,7 @@ class RelatorioController extends Controller
     }
 
 
-
+    
     public function produtos(Request $request)
     {
         $locais = __getLocaisAtivoUsuario()->pluck(['id']);
@@ -51,7 +50,7 @@ class RelatorioController extends Controller
         $marca_id = $request->marca_id;
         $categoria_id = $request->categoria_id;
         $local_id = $request->local_id;
-
+    
         $data = Produto::select('produtos.*')
             ->where('empresa_id', $request->empresa_id)
             ->when($estoque != '', function ($query) use ($estoque) {
@@ -78,178 +77,181 @@ class RelatorioController extends Controller
                     ->whereIn('produto_localizacaos.localizacao_id', $locais);
             })
             ->get();
-
+    
         if ($tipo != '') {
             foreach ($data as $item) {
                 $sumNfe = ItemNfe::where('produto_id', $item->id)->sum('quantidade');
                 $sumNfce = ItemNfce::where('produto_id', $item->id)->sum('quantidade');
                 $item->quantidade_vendida = $sumNfe + $sumNfce;
             }
-
+    
             $data = $tipo == 1 ? $data->sortByDesc('quantidade_vendida') : $data->sortBy('quantidade_vendida');
         }
-
+    
         $marca = $marca_id ? Marca::findOrFail($marca_id) : null;
         $categoria = $categoria_id ? CategoriaProduto::findOrFail($categoria_id) : null;
-
+    
         $exportar_excel = $request->get('export');
 
-        // PDF
-        if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            $view = view('relatorios.produtos', [
-                'data' => $data,
-                'tipo' => $tipo,
-                'marca' => $marca,
-                'categoria' => $categoria,
-                'title' => 'Relatório de Produto',
-            ]);
+    // PDF
+    if ($exportar_excel !== 'excel') {
+        set_time_limit(60);
+        ini_set('memory_limit', '512M');
+        $view = view('relatorios.produtos', [
+            'data' => $data,
+            'tipo' => $tipo,
+            'marca' => $marca,
+            'categoria' => $categoria,
+            'title' => 'Relatório de Produto',
+        ]);
+        
 
+        $domPdf = new Dompdf(["enable_remote" => true]); 
+        $domPdf->loadHtml($view);
+        $domPdf->setPaper("A4", "landscape");
+        $domPdf->render();
+        return $domPdf->stream("Relatório_de_Produto.pdf", ["Attachment" => false]);
+    }
 
-            $domPdf = new Dompdf(["enable_remote" => true]);
-            $domPdf->loadHtml($view);
-            $domPdf->setPaper("A4", "landscape");
-            $domPdf->render();
-            return $domPdf->stream("Relatório_de_Produto.pdf", ["Attachment" => false]);
+    // EXCEL
+    return Excel::download(
+        new BaseExport(['data' => $data, 'tipo' => $tipo], 'exports.produtos'),
+        'produto.xlsx'
+    );
+    
+
+}
+    
+
+public function clientes(Request $request)
+{
+    $tipo = $request->tipo;
+    $start_date = $request->start_date;
+    $end_date = $request->end_date;
+
+    $data = Cliente::where('empresa_id', $request->empresa_id)
+        ->when(!empty($start_date), function ($query) use ($start_date) {
+            return $query->whereDate('created_at', '>=', $start_date);
+        })
+        ->when(!empty($end_date), function ($query) use ($end_date,) {
+            return $query->whereDate('created_at', '<=', $end_date);
+        })->get();
+
+    if ($tipo != '') {
+        foreach ($data as $item) {
+            $sumNfe = Nfe::where('cliente_id', $item->id)->sum('total');
+            $sumNfce = Nfce::where('cliente_id', $item->id)->sum('total');
+            $item->total = $sumNfe + $sumNfce;
         }
+        $data = $tipo == 1 ? $data->sortByDesc('total') : $data->sortBy('total');
+    }
 
-        // EXCEL
+    $exportar_excel = $request->get('export');
+    if ($exportar_excel === 'excel') {
+                set_time_limit(60);
+                ini_set('memory_limit', '512M');
         return Excel::download(
-            new BaseExport(['data' => $data, 'tipo' => $tipo], 'exports.produtos'),
-            'produto.xlsx'
+            new BaseExport(['data' => $data, 'tipo' => $tipo], 'exports.clientes'),
+            'clientes.xlsx'
         );
     }
 
+    $p = view('relatorios/clientes', compact('data', 'tipo'))
+        ->with('title', 'Relatório de Clientes');
 
-    public function clientes(Request $request)
-    {
-        $tipo = $request->tipo;
-        $start_date = $request->start_date;
-        $end_date = $request->end_date;
+    $domPdf = new Dompdf(["enable_remote" => true]);
+    $domPdf->loadHtml($p);
+    $domPdf->setPaper("A4", "landscape");
+    $domPdf->render();
+    $domPdf->stream("Relatório de Clientes.pdf", ["Attachment" => false]);
+}
 
-        $data = Cliente::where('empresa_id', $request->empresa_id)
-            ->when(!empty($start_date), function ($query) use ($start_date) {
-                return $query->whereDate('created_at', '>=', $start_date);
-            })
-            ->when(!empty($end_date), function ($query) use ($end_date,) {
-                return $query->whereDate('created_at', '<=', $end_date);
-            })->get();
+public function fornecedores(Request $request)
+{
+    $tipo = $request->tipo;
+    $start_date = $request->start_date;
+    $end_date = $request->end_date;
 
-        if ($tipo != '') {
-            foreach ($data as $item) {
-                $sumNfe = Nfe::where('cliente_id', $item->id)->sum('total');
-                $sumNfce = Nfce::where('cliente_id', $item->id)->sum('total');
-                $item->total = $sumNfe + $sumNfce;
-            }
-            $data = $tipo == 1 ? $data->sortByDesc('total') : $data->sortBy('total');
+    $data = Fornecedor::where('empresa_id', $request->empresa_id)
+        ->when(!empty($start_date), function ($query) use ($start_date) {
+            return $query->whereDate('created_at', '>=', $start_date);
+        })
+        ->when(!empty($end_date), function ($query) use ($end_date,) {
+            return $query->whereDate('created_at', '<=', $end_date);
+        })->get();
+
+    if ($tipo != '') {
+        foreach ($data as $item) {
+            $sumNfe = Nfe::where('fornecedor_id', $item->id)
+                ->where('tpNF', 0)
+                ->sum('total');
+
+            $item->total = $sumNfe;
         }
-
-        $exportar_excel = $request->get('export');
-        if ($exportar_excel === 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            return Excel::download(
-                new BaseExport(['data' => $data, 'tipo' => $tipo], 'exports.clientes'),
-                'clientes.xlsx'
-            );
-        }
-
-        $p = view('relatorios/clientes', compact('data', 'tipo'))
-            ->with('title', 'Relatório de Clientes');
-
-        $domPdf = new Dompdf(["enable_remote" => true]);
-        $domPdf->loadHtml($p);
-        $domPdf->setPaper("A4", "landscape");
-        $domPdf->render();
-        $domPdf->stream("Relatório de Clientes.pdf", ["Attachment" => false]);
+        $data = $tipo == 1 ? $data->sortByDesc('total') : $data->sortBy('total');
     }
 
-    public function fornecedores(Request $request)
-    {
-        $tipo = $request->tipo;
-        $start_date = $request->start_date;
-        $end_date = $request->end_date;
-
-        $data = Fornecedor::where('empresa_id', $request->empresa_id)
-            ->when(!empty($start_date), function ($query) use ($start_date) {
-                return $query->whereDate('created_at', '>=', $start_date);
-            })
-            ->when(!empty($end_date), function ($query) use ($end_date,) {
-                return $query->whereDate('created_at', '<=', $end_date);
-            })->get();
-
-        if ($tipo != '') {
-            foreach ($data as $item) {
-                $sumNfe = Nfe::where('fornecedor_id', $item->id)
-                    ->where('tpNF', 0)
-                    ->sum('total');
-
-                $item->total = $sumNfe;
-            }
-            $data = $tipo == 1 ? $data->sortByDesc('total') : $data->sortBy('total');
-        }
-
-        $exportar_excel = $request->get('export');
-        if ($exportar_excel === 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            return Excel::download(
-                new BaseExport(['data' => $data, 'tipo' => $tipo], 'exports.fornecedores'),
-                'fornecedores.xlsx'
-            );
-        }
-
-        $p = view('relatorios/fornecedores', compact('data', 'tipo'))
-            ->with('title', 'Relatório de Fornecedores');
-
-        $domPdf = new Dompdf(["enable_remote" => true]);
-        $domPdf->loadHtml($p);
-        $domPdf->setPaper("A4", "landscape");
-        $domPdf->render();
-        $domPdf->stream("Relatório de Fornecedores.pdf", ["Attachment" => false]);
-    }
-
-
-    public function nfe(Request $request)
-    {
-        $locais = __getLocaisAtivoUsuario()->pluck(['id']);
-
-        $data = Nfe::where('empresa_id', $request->empresa_id)
-            ->when(!empty($request->start_date), fn($q) => $q->whereDate('data_emissao', '>=', $request->start_date))
-            ->when(!empty($request->end_date), fn($q) => $q->whereDate('data_emissao', '<=', $request->end_date))
-            ->when(!empty($request->cliente), fn($q) => $q->where('cliente_id', $request->cliente))
-            ->when(!empty($request->estado), fn($q) => $q->where('estado', $request->estado))
-            ->when(!empty($request->tipo), fn($q) => $q->where('tpNF', $request->tipo))
-            ->when($request->local_id, fn($q) => $q->where('local_id', $request->local_id))
-            ->when(!$request->local_id, fn($q) => $q->whereIn('local_id', $locais))
-            ->when(!empty($request->finNFe), fn($q) => $q->where('finNFe', $request->finNFe))
-            ->when(!empty($request->natureza_operacao), fn($q) => $q->where('natureza_id', $request->natureza_operacao))
-            ->get();
-
-        $exportar_excel = $request->get('export');
-
-        // PDF
-        if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            $view = view('relatorios.nfe', compact('data'))
-                ->with('title', 'Relatório de NFe');
-
-            $domPdf = new Dompdf(["enable_remote" => true]);
-            $domPdf->loadHtml($view);
-            $domPdf->setPaper("A4", "landscape");
-            $domPdf->render();
-            return $domPdf->stream("Relatório_de_NFe.pdf", ["Attachment" => false]);
-        }
-
-        // EXCEL
+    $exportar_excel = $request->get('export');
+    if ($exportar_excel === 'excel') {
+                set_time_limit(60);
+                ini_set('memory_limit', '512M');
         return Excel::download(
-            new BaseExport(['data' => $data], 'exports.nfe'),
-            'nfe.xlsx'
+            new BaseExport(['data' => $data, 'tipo' => $tipo], 'exports.fornecedores'),
+            'fornecedores.xlsx'
         );
     }
 
+    $p = view('relatorios/fornecedores', compact('data', 'tipo'))
+        ->with('title', 'Relatório de Fornecedores');
+
+    $domPdf = new Dompdf(["enable_remote" => true]);
+    $domPdf->loadHtml($p);
+    $domPdf->setPaper("A4", "landscape");
+    $domPdf->render();
+    $domPdf->stream("Relatório de Fornecedores.pdf", ["Attachment" => false]);
+}
+
+
+public function nfe(Request $request)
+{
+    $locais = __getLocaisAtivoUsuario()->pluck(['id']);
+
+    $data = Nfe::where('empresa_id', $request->empresa_id)
+        ->when(!empty($request->start_date), fn($q) => $q->whereDate('data_emissao', '>=', $request->start_date))
+        ->when(!empty($request->end_date), fn($q) => $q->whereDate('data_emissao', '<=', $request->end_date))
+        ->when(!empty($request->cliente), fn($q) => $q->where('cliente_id', $request->cliente))
+        ->when(!empty($request->estado), fn($q) => $q->where('estado', $request->estado))
+        ->when(!empty($request->tipo), fn($q) => $q->where('tpNF', $request->tipo))
+        ->when($request->local_id, fn($q) => $q->where('local_id', $request->local_id))
+        ->when(!$request->local_id, fn($q) => $q->whereIn('local_id', $locais))
+        ->when(!empty($request->finNFe), fn($q) => $q->where('finNFe', $request->finNFe))
+        ->when(!empty($request->natureza_operacao), fn($q) => $q->where('natureza_id', $request->natureza_operacao))
+        ->get();
+
+    $exportar_excel = $request->get('export');
+
+    // PDF
+    if ($exportar_excel !== 'excel') {
+        set_time_limit(60);
+        ini_set('memory_limit', '512M');
+        $view = view('relatorios.nfe', compact('data'))
+            ->with('title', 'Relatório de NFe');
+
+        $domPdf = new Dompdf(["enable_remote" => true]);
+        $domPdf->loadHtml($view);
+        $domPdf->setPaper("A4", "landscape");
+        $domPdf->render();
+        return $domPdf->stream("Relatório_de_NFe.pdf", ["Attachment" => false]);
+    }
+
+    // EXCEL
+    return Excel::download(
+        new BaseExport(['data' => $data], 'exports.nfe'),
+        'nfe.xlsx'
+    );
+    
+}
+    
 
     public function nfce(Request $request)
     {
@@ -293,18 +295,18 @@ class RelatorioController extends Controller
 
         // PDF
         if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
+        set_time_limit(60);
+        ini_set('memory_limit', '512M');
             $view = view('relatorios.nfce', compact('data'))
                 ->with('title', 'Relatório de NFCe');
-
+    
             $domPdf = new Dompdf(["enable_remote" => true]);
             $domPdf->loadHtml($view);
             $domPdf->setPaper("A4", "landscape");
             $domPdf->render();
             return $domPdf->stream("Relatório_de_NFCe.pdf", ["Attachment" => false]);
-        }
-
+        } 
+    
         // EXCEL
         return Excel::download(
             new BaseExport(['data' => $data], 'exports.nfce'),
@@ -341,29 +343,29 @@ class RelatorioController extends Controller
                 return $query->whereIn('local_id', $locais);
             })
             ->get();
+            
+            $exportar_excel = $request->get('export');
 
-        $exportar_excel = $request->get('export');
-
-        // PDF
-        if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            $view = view('relatorios.cte', compact('data'))
-                ->with('title', 'Relatório de CTe');
-
-            $domPdf = new Dompdf(["enable_remote" => true]);
-            $domPdf->loadHtml($view);
-            $domPdf->setPaper("A4", "landscape");
-            $domPdf->render();
-            return $domPdf->stream("Relatório_de_CTe.pdf", ["Attachment" => false]);
+            // PDF
+            if ($exportar_excel !== 'excel') {
+                set_time_limit(60);
+                ini_set('memory_limit', '512M');
+                $view = view('relatorios.cte', compact('data'))
+                    ->with('title', 'Relatório de CTe');
+        
+                $domPdf = new Dompdf(["enable_remote" => true]);
+                $domPdf->loadHtml($view);
+                $domPdf->setPaper("A4", "landscape");
+                $domPdf->render();
+                return $domPdf->stream("Relatório_de_CTe.pdf", ["Attachment" => false]);
+            } 
+        
+            // EXCEL
+            return Excel::download(
+                new BaseExport(['data' => $data], 'exports.cte'),
+                'cte.xlsx'
+            );
         }
-
-        // EXCEL
-        return Excel::download(
-            new BaseExport(['data' => $data], 'exports.cte'),
-            'cte.xlsx'
-        );
-    }
 
 
     public function mdfe(Request $request)
@@ -397,28 +399,28 @@ class RelatorioController extends Controller
         $p = view('relatorios/mdfe', compact('data'))
             ->with('title', 'Relatório de MDFe');
 
-        $exportar_excel = $request->get('export');
+            $exportar_excel = $request->get('export');
 
-        // PDF
-        if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            $view = view('relatorios.mdfe', compact('data'))
-                ->with('title', 'Relatório de MDFe');
-
-            $domPdf = new Dompdf(["enable_remote" => true]);
-            $domPdf->loadHtml($view);
-            $domPdf->setPaper("A4", "landscape");
-            $domPdf->render();
-            return $domPdf->stream("Relatório_de_MDFe.pdf", ["Attachment" => false]);
+            // PDF
+            if ($exportar_excel !== 'excel') {
+                set_time_limit(60);
+                ini_set('memory_limit', '512M');
+                $view = view('relatorios.mdfe', compact('data'))
+                    ->with('title', 'Relatório de MDFe');
+        
+                $domPdf = new Dompdf(["enable_remote" => true]);
+                $domPdf->loadHtml($view);
+                $domPdf->setPaper("A4", "landscape");
+                $domPdf->render();
+                return $domPdf->stream("Relatório_de_MDFe.pdf", ["Attachment" => false]);
+            } 
+        
+            // EXCEL
+            return Excel::download(
+                new BaseExport(['data' => $data], 'exports.mdfe'),
+                'mdfe.xlsx'
+            );
         }
-
-        // EXCEL
-        return Excel::download(
-            new BaseExport(['data' => $data], 'exports.mdfe'),
-            'mdfe.xlsx'
-        );
-    }
 
     public function conta_pagar(Request $request)
     {
@@ -457,28 +459,28 @@ class RelatorioController extends Controller
             })
             ->get();
 
-        $exportar_excel = $request->get('export');
+            $exportar_excel = $request->get('export');
 
-        // PDF
-        if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            $view = view('relatorios.conta_pagar', compact('data', 'request'))
-                ->with('title', 'Relatório de Conta a Pagar');
-
-            $domPdf = new Dompdf(["enable_remote" => true]);
-            $domPdf->loadHtml($view);
-            $domPdf->setPaper("A4", "landscape");
-            $domPdf->render();
-            return $domPdf->stream("Relatório_de_Conta_a_Pagar.pdf", ["Attachment" => false]);
+            // PDF
+            if ($exportar_excel !== 'excel') {
+                set_time_limit(60);
+                ini_set('memory_limit', '512M');
+                $view = view('relatorios.conta_pagar', compact('data', 'request'))
+                    ->with('title', 'Relatório de Conta a Pagar');
+        
+                $domPdf = new Dompdf(["enable_remote" => true]);
+                $domPdf->loadHtml($view);
+                $domPdf->setPaper("A4", "landscape");
+                $domPdf->render();
+                return $domPdf->stream("Relatório_de_Conta_a_Pagar.pdf", ["Attachment" => false]);
+            } 
+        
+            // EXCEL
+            return Excel::download(
+                new BaseExport(['data' => $data], 'exports.conta_pagar '),
+                'conta_pagar.xlsx'
+            );
         }
-
-        // EXCEL
-        return Excel::download(
-            new BaseExport(['data' => $data], 'exports.conta_pagar '),
-            'conta_pagar.xlsx'
-        );
-    }
 
     public function conta_receber(Request $request)
     {
@@ -525,14 +527,14 @@ class RelatorioController extends Controller
             ini_set('memory_limit', '512M');
             $view = view('relatorios.conta_receber', compact('data', 'request'))
                 ->with('title', 'Relatório de Conta a Receber');
-
+    
             $domPdf = new Dompdf(["enable_remote" => true]);
             $domPdf->loadHtml($view);
             $domPdf->setPaper("A4", "landscape");
             $domPdf->render();
             return $domPdf->stream("Relatório_de_Conta_a_Receber.pdf", ["Attachment" => false]);
-        }
-
+        } 
+    
         // EXCEL
         return Excel::download(
             new BaseExport(['data' => $data], 'exports.conta_receber '),
@@ -561,28 +563,28 @@ class RelatorioController extends Controller
         $p = view('relatorios/comissao', compact('data'))
             ->with('title', 'Relatório de Comissao');
 
-        $exportar_excel = $request->get('export');
+            $exportar_excel = $request->get('export');
 
-        // PDF
-        if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            $view = view('relatorios.comissao', compact('data'))
-                ->with('title', 'Relatório de Comissão');
-
-            $domPdf = new Dompdf(["enable_remote" => true]);
-            $domPdf->loadHtml($view);
-            $domPdf->setPaper("A4", "landscape");
-            $domPdf->render();
-            return $domPdf->stream("Relatório_de_Comissão.pdf", ["Attachment" => false]);
+            // PDF
+            if ($exportar_excel !== 'excel') {
+                set_time_limit(60);
+                ini_set('memory_limit', '512M');
+                $view = view('relatorios.comissao', compact('data'))
+                    ->with('title', 'Relatório de Comissão');
+        
+                $domPdf = new Dompdf(["enable_remote" => true]);
+                $domPdf->loadHtml($view);
+                $domPdf->setPaper("A4", "landscape");
+                $domPdf->render();
+                return $domPdf->stream("Relatório_de_Comissão.pdf", ["Attachment" => false]);
+            } 
+        
+            // EXCEL
+            return Excel::download(
+                new BaseExport(['data' => $data], 'exports.comissao '),
+                'comissao.xlsx'
+            );
         }
-
-        // EXCEL
-        return Excel::download(
-            new BaseExport(['data' => $data], 'exports.comissao '),
-            'comissao.xlsx'
-        );
-    }
 
     public function vendas(Request $request)
     {
@@ -622,32 +624,32 @@ class RelatorioController extends Controller
         // Renderiza a view corretamente
         $p = view('relatorios.vendas', compact('data'))
             ->with('title', 'Relatório de Vendas');
-        $exportar_excel = $request->get('export');
+            $exportar_excel = $request->get('export');
 
-        // PDF
-        if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
+            // PDF
+           if ($exportar_excel !== 'excel') {
+                set_time_limit(60);
+                ini_set('memory_limit', '512M');
 
-            $html = view('relatorios.vendas', compact('data'))
-                ->with('title', 'Relatório de Vendas')
-                ->render(); // renderiza como HTML
+                $html = view('relatorios.vendas', compact('data'))
+                    ->with('title', 'Relatório de Vendas')
+                    ->render(); // renderiza como HTML
 
-            $domPdf = new Dompdf(["enable_remote" => true]);
-            $domPdf->loadHtml($html);
-            $domPdf->setPaper("A4", "landscape");
-            $domPdf->render();
+                $domPdf = new Dompdf(["enable_remote" => true]);
+                $domPdf->loadHtml($html);
+                $domPdf->setPaper("A4", "landscape");
+                $domPdf->render();
 
-            return $domPdf->stream("Relatório_de_Vendas.pdf", ["Attachment" => false]);
+                return $domPdf->stream("Relatório_de_Vendas.pdf", ["Attachment" => false]);
+            }
+
+        
+            // EXCEL
+            return Excel::download(
+                new BaseExport(['data' => $data], 'exports.venda '),
+                'vendas.xlsx'
+            );
         }
-
-
-        // EXCEL
-        return Excel::download(
-            new BaseExport(['data' => $data], 'exports.venda '),
-            'vendas.xlsx'
-        );
-    }
 
     private function uneArrayVendas($vendas, $vendasCaixa)
     {
@@ -725,28 +727,28 @@ class RelatorioController extends Controller
 
         $p = view('relatorios/compras', compact('data'))
             ->with('title', 'Relatório de Compras');
-        $exportar_excel = $request->get('export');
+            $exportar_excel = $request->get('export');
 
-        // PDF
-        if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            $view = view('relatorios.compras', compact('data'))
-                ->with('title', 'Relatório de Compras');
-
-            $domPdf = new Dompdf(["enable_remote" => true]);
-            $domPdf->loadHtml($view);
-            $domPdf->setPaper("A4", "landscape");
-            $domPdf->render();
-            return $domPdf->stream("Relatório_de_Compras.pdf", ["Attachment" => false]);
+            // PDF
+            if ($exportar_excel !== 'excel') {
+                   set_time_limit(60);
+                   ini_set('memory_limit', '512M');
+                $view = view('relatorios.compras', compact('data'))
+                    ->with('title', 'Relatório de Compras');
+        
+                $domPdf = new Dompdf(["enable_remote" => true]);
+                $domPdf->loadHtml($view);
+                $domPdf->setPaper("A4", "landscape");
+                $domPdf->render();
+                return $domPdf->stream("Relatório_de_Compras.pdf", ["Attachment" => false]);
+            } 
+        
+            // EXCEL
+            return Excel::download(
+                new BaseExport(['data' => $data], 'exports.compras '),
+                'compras.xlsx'
+            );
         }
-
-        // EXCEL
-        return Excel::download(
-            new BaseExport(['data' => $data], 'exports.compras '),
-            'compras.xlsx'
-        );
-    }
 
 
 
@@ -893,28 +895,28 @@ class RelatorioController extends Controller
             ->with('data', $data)
             ->with('title', 'Taxas de Pagamento');
 
-        $exportar_excel = $request->get('export');
+            $exportar_excel = $request->get('export');
 
-        // PDF
-        if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            $view = view('relatorios.taxas', compact('data'))
-                ->with('title', 'Relatório de Taxas');
-
-            $domPdf = new Dompdf(["enable_remote" => true]);
-            $domPdf->loadHtml($view);
-            $domPdf->setPaper("A4", "landscape");
-            $domPdf->render();
-            return $domPdf->stream("Relatório_de_Taxas.pdf", ["Attachment" => false]);
+            // PDF
+            if ($exportar_excel !== 'excel') {
+                set_time_limit(60);
+                ini_set('memory_limit', '512M');
+                $view = view('relatorios.taxas', compact('data'))
+                    ->with('title', 'Relatório de Taxas');
+        
+                $domPdf = new Dompdf(["enable_remote" => true]);
+                $domPdf->loadHtml($view);
+                $domPdf->setPaper("A4", "landscape");
+                $domPdf->render();
+                return $domPdf->stream("Relatório_de_Taxas.pdf", ["Attachment" => false]);
+            } 
+        
+            // EXCEL
+            return Excel::download(
+                new BaseExport(['data' => $data], 'exports.taxas '),
+                'taxas.xlsx'
+            );
         }
-
-        // EXCEL
-        return Excel::download(
-            new BaseExport(['data' => $data], 'exports.taxas '),
-            'taxas.xlsx'
-        );
-    }
 
     public function lucro(Request $request)
     {
@@ -987,41 +989,41 @@ class RelatorioController extends Controller
 
         $p = view('relatorios/lucro', compact('data'))
             ->with('title', 'Relatório de Lucros');
+            
+            $exportar_excel = $request->get('export');
 
-        $exportar_excel = $request->get('export');
-
-        // PDF
-        if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            $view = view('relatorios.lucro', compact('data'))
-                ->with('title', 'Relatório de Lucro');
-
-            $domPdf = new Dompdf(["enable_remote" => true]);
-            $domPdf->loadHtml($view);
-            $domPdf->setPaper("A4", "landscape");
-            $domPdf->render();
-            return $domPdf->stream("Relatório_de_Lucro.pdf", ["Attachment" => false]);
+            // PDF
+            if ($exportar_excel !== 'excel') {
+                set_time_limit(60);
+                ini_set('memory_limit', '512M');
+                $view = view('relatorios.lucro', compact('data'))
+                    ->with('title', 'Relatório de Lucro');
+        
+                $domPdf = new Dompdf(["enable_remote" => true]);
+                $domPdf->loadHtml($view);
+                $domPdf->setPaper("A4", "landscape");
+                $domPdf->render();
+                return $domPdf->stream("Relatório_de_Lucro.pdf", ["Attachment" => false]);
+            } 
+        
+            // EXCEL
+            return Excel::download(
+                new BaseExport(['data' => $data], 'exports.lucro '),
+                'lucro.xlsx'
+            );
         }
 
-        // EXCEL
-        return Excel::download(
-            new BaseExport(['data' => $data], 'exports.lucro '),
-            'lucro.xlsx'
-        );
-    }
-
-    private function calculaCusto($itens)
-    {
-        $total = 0;
-        foreach ($itens as $item) {
-            if ($item && $item->produto && $item->produto->valor_compra !== null) {
-                $total += $item->quantidade * $item->produto->valor_compra;
+        private function calculaCusto($itens)
+        {
+            $total = 0;
+            foreach ($itens as $item) {
+                if ($item && $item->produto && $item->produto->valor_compra !== null) {
+                    $total += $item->quantidade * $item->produto->valor_compra;
+                }
             }
+            return $total;
         }
-        return $total;
-    }
-
+        
     public function baixaProdutos(Request $request)
     {
         // Obter o ID do usuário logado
@@ -1063,65 +1065,66 @@ class RelatorioController extends Controller
                 return $produto->movimentacoes->sum('quantidade');
             });
         }
-
+            
         // Exibir a view com os dados calculados
         $p = view('relatorios.baixa_produtos', compact('produtos', 'totalBaixado', 'start_date', 'end_date', 'tipo'))
             ->with('title', 'Relatório de Baixa de Produtos'); // Passando o título
 
-        $exportar_excel = $request->get('export');
+            $exportar_excel = $request->get('export');
 
-        // PDF
-
-        if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            $view = view('relatorios.baixa_produtos', compact('produtos', 'totalBaixado', 'start_date', 'end_date', 'tipo'))
-                ->with('title', 'Relatório de Saída de Produtos');
-
-            $domPdf = new Dompdf(["enable_remote" => true]);
-            $domPdf->loadHtml($view);
-            $domPdf->setPaper("A4", "landscape");
-            $domPdf->render();
-            return $domPdf->stream("Relatório_Saída_de_Produtos.pdf", ["Attachment" => false]);
+            // PDF
+            
+            if ($exportar_excel !== 'excel') {
+                set_time_limit(60);
+                ini_set('memory_limit', '512M');
+                $view = view('relatorios.baixa_produtos', compact('produtos', 'totalBaixado', 'start_date', 'end_date', 'tipo'))
+                    ->with('title', 'Relatório de Saída de Produtos');
+        
+                $domPdf = new Dompdf(["enable_remote" => true]);
+                $domPdf->loadHtml($view);
+                $domPdf->setPaper("A4", "landscape");
+                $domPdf->render();
+                return $domPdf->stream("Relatório_Saída_de_Produtos.pdf", ["Attachment" => false]);
+            } 
+        
+            // EXCEL
+            return Excel::download(
+                new BaseExport([
+                    'data' => $produtos,
+                    'totalBaixado' => $totalBaixado,
+                ], 'exports.saida_produtos'),
+                'saida_produtos.xlsx'
+            );
         }
 
-        // EXCEL
-        return Excel::download(
-            new BaseExport([
-                'data' => $produtos,
-                'totalBaixado' => $totalBaixado,
-            ], 'exports.saida_produtos'),
-            'saida_produtos.xlsx'
-        );
-    }
-
-    public function agendamentos(Request $request)
-    {
-        $start_date = $request->input('start_date') . ' 00:01:00';
-        $end_date = $request->input('end_date') . ' 23:59:59';
-
-        $agendamentos = Agendamento::whereBetween('data', [$start_date, $end_date])
-            ->with(['funcionario', 'cliente', 'itens.servico'])
-            ->get();
-
-        $exportar_excel = $request->get('export');
-
-        if ($exportar_excel !== 'excel') {
-            set_time_limit(60);
-            ini_set('memory_limit', '512M');
-            $view = view('relatorios.agendamentos', compact('agendamentos', 'start_date', 'end_date'))
-                ->with('title', 'Relatório de Agendamentos');
-
-            $domPdf = new Dompdf(["enable_remote" => true]);
-            $domPdf->loadHtml($view);
-            $domPdf->setPaper("A4", "landscape");
-            $domPdf->render();
-            return $domPdf->stream("Relatório_de_Agendamentos.pdf", ["Attachment" => false]);
+        public function agendamentos(Request $request)
+        {
+            $start_date = $request->input('start_date') . ' 00:01:00';
+            $end_date = $request->input('end_date') . ' 23:59:59';
+        
+            $agendamentos = Agendamento::whereBetween('data', [$start_date, $end_date])
+                ->with(['funcionario', 'cliente', 'itens.servico'])
+                ->get();
+        
+            $exportar_excel = $request->get('export');
+        
+            if ($exportar_excel !== 'excel') {
+                set_time_limit(60);
+                ini_set('memory_limit', '512M');
+                $view = view('relatorios.agendamentos', compact('agendamentos', 'start_date', 'end_date'))
+                    ->with('title', 'Relatório de Agendamentos');
+        
+                $domPdf = new Dompdf(["enable_remote" => true]);
+                $domPdf->loadHtml($view);
+                $domPdf->setPaper("A4", "landscape");
+                $domPdf->render();
+                return $domPdf->stream("Relatório_de_Agendamentos.pdf", ["Attachment" => false]);
+            }
+        
+            return Excel::download(
+                new BaseExport(['data' => $agendamentos], 'exports.agendamentos'),
+                'agendamentos.xlsx'
+            );
         }
-
-        return Excel::download(
-            new BaseExport(['data' => $agendamentos], 'exports.agendamentos'),
-            'agendamentos.xlsx'
-        );
-    }
+        
 }
