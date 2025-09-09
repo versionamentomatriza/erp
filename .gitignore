@@ -128,3 +128,10 @@ public/dia_especial/
 # Homestead
 Homestead.json
 Homestead.yaml
+
+# Ignorar PDFs temporários de NFSe
+/public/nfse_temp/
+
+# Ignorar XMLs processados de NFCE e NFE
+/public/xml_nfce/
+/public/xml_nfe/
