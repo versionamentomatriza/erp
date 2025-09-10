@@ -26,9 +26,7 @@ use App\Models\Localizacao;
 use Dompdf\Dompdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\BaseExport;
-
-
-
+use App\Models\Caixa;
 
 class RelatorioController extends Controller
 {
@@ -1029,23 +1027,26 @@ public function nfe(Request $request)
     public function baixaProdutos(Request $request)
     {
         // Obter o ID do usuário logado
-        $user_id = Auth::id();
+        $usuariosIds = Caixa::where('empresa_id', Auth::user()->empresa->empresa_id)
+            ->distinct()
+            ->pluck('usuario_id')
+            ->toArray();
 
         // Dados de entrada: datas e tipo de ordenação
         $start_date = $request->input('start_date') . ' 00:00:00';
         $end_date = $request->input('end_date') . ' 23:59:59';
         $tipo = $request->input('tipo');
 
-        // Filtrar produtos com movimentações de redução (baixa) no período selecionado e associadas ao user_id do usuário logado
-        $produtos = Produto::whereHas('movimentacoes', function ($query) use ($start_date, $end_date, $user_id) {
+        // Filtrar produtos com movimentações de redução (baixa) no período selecionado e associadas aos usuarios que movimentaram um caixa xa da empresa
+        $produtos = Produto::whereHas('movimentacoes', function ($query) use ($start_date, $end_date, $usuariosIds) {
             $query->whereBetween('created_at', [$start_date, $end_date])
                 ->where('tipo', 'reducao') // Filtra apenas reduções (baixas)
-                ->where('user_id', $user_id); // Filtra pela movimentação do usuário logado
+                ->whereIn('user_id', $usuariosIds); // Filtra pela movimentação dos usuários da empresa
         })
-            ->with(['movimentacoes' => function ($query) use ($start_date, $end_date, $user_id) {
+            ->with(['movimentacoes' => function ($query) use ($start_date, $end_date, $usuariosIds) {
                 $query->whereBetween('created_at', [$start_date, $end_date])
                     ->where('tipo', 'reducao') // Movimentações de redução (baixa)
-                    ->where('user_id', $user_id); // Movimentações do usuário logado
+                    ->whereIn('user_id', $usuariosIds); // Movimentações
             }])
             ->get();
 
