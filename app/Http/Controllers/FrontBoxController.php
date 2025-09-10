@@ -17,6 +17,8 @@ use App\Utils\EstoqueUtil;
 
 class FrontBoxController extends Controller
 {
+    protected $util = null;
+
     /** 
      * Display a listing of the resource.
 	 
@@ -67,7 +69,7 @@ class FrontBoxController extends Controller
                 if ($i == 0) {
                     $vencimento = $primeiro_vencimento_fatura;
                 } else {
-                    $vencimento = date('Y-m-d', strtotime($vencimento . " + $intervalo_fatura days"));
+                    $vencimento = date('Y-m-d', timestamp: strtotime($primeiro_vencimento_fatura . " + $intervalo_fatura days"));
                 }
 
                 $p['vencimento'] = $vencimento;
