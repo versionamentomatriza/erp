@@ -22,7 +22,6 @@
                     <div class="col-md-8 div-conta-empresa">
                         {!!Form::select('conta_empresa_sangria_id', 'Conta empresa')
                         ->attrs(['class' => 'conta_empresa'])
-                        ->required()
                         !!}
                     </div>
 
