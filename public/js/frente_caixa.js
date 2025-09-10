@@ -1342,12 +1342,14 @@ $("body").on("change", "#inp-lista_preco_id", function () {
 var emitirNfce = false
 $('#btn_fiscal').click(() => {
     emitirNfce = true
-    $("#form-pdv").submit()
+    const form = $('#form-pdv-update').length ? '#form-pdv-update' : '#form-pdv';
+    $(form).submit();
 })
 
 $('#btn_nao_fiscal').click(() => {
     emitirNfce = false
-    $("#form-pdv").submit()
+    const form = $('#form-pdv-update').length ? '#form-pdv-update' : '#form-pdv';
+    $(form).submit();
 })
 
 $("#form-pdv").on("submit", function (e) {
