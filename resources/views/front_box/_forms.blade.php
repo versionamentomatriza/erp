@@ -160,7 +160,7 @@
                     <div class="row">
                         <div class="col-12">
                             <br>
-                            <button class="btn btn-primary btn-add-item w-100" type="button" style="margin-left: 0px">Adicionar</button>
+                            <button id="btn-add-item" class="btn btn-primary btn-add-item w-100" type="button" style="margin-left: 0px">Adicionar</button>
                         </div>
 
                     </div>
@@ -202,11 +202,11 @@
                                     <div class="form-group mb-2" style="width: 200px">
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <button id="btn-subtrai" class="btn btn-danger" type="button">-</button>
+                                                <button id="btn-subtrai" class="btn btn-danger" type="button" data-estoque="{{$product->produto->estoqueAtual()}}">-</button>
                                             </div>
                                             <input type="tel" readonly class="form-control qtd qtd_row" name="quantidade[]" value="{{ number_format($product->quantidade, 2, ',', '') }}">
                                             <div class="input-group-append">
-                                                <button class="btn btn-success" id="btn-incrementa" type="button">+</button>
+                                                <button class="btn btn-success" id="btn-incrementa" type="button" data-estoque="{{$product->produto->estoqueAtual()}}">+</button>
                                             </div>
                                         </div>
                                     </div>
@@ -314,7 +314,7 @@
                                     <h5 class="text-muted text-uppercase fs-13 mt-0" title="Number of Customers">Desconto</h5>
                                 </div>
                                 <div class="avatar-sm flex-shrink-0">
-                                    <button type="button" onclick="setaDesconto()" class="avatar-title text-bg-primary rounded rounded-3 fs-3 widget-icon-box-avatar shadow">
+                                    <button id="btn-desconto" type="button" onclick="setaDesconto()" class="avatar-title text-bg-primary rounded rounded-3 fs-3 widget-icon-box-avatar shadow">
                                         <i class="ri-checkbox-indeterminate-line"></i>
                                     </button>
                                 </div>
@@ -331,7 +331,7 @@
                                     <h5 class="text-muted text-uppercase fs-13 mt-0" title="Number of Customers">Acréscimo</h5>
                                 </div>
                                 <div class="avatar-sm flex-shrink-0">
-                                    <button type="button" onclick="setaAcrescimo()" class="avatar-title text-bg-warning rounded rounded-3 fs-3 widget-icon-box-avatar shadow">
+                                    <button id="btn-acrescimo" type="button" onclick="setaAcrescimo()" class="avatar-title text-bg-warning rounded rounded-3 fs-3 widget-icon-box-avatar shadow">
                                         <i class="ri-add-box-line"></i>
                                     </button>
                                 </div>
@@ -350,7 +350,7 @@
                                         <h5 class="text-center">Suprimento</h5>
                                     </div>
                                     <div class="avatar-sm m-1">
-                                        <button type="button" style="margin-left: 35px" data-bs-toggle="modal" data-bs-target="#suprimento_caixa" class="avatar-title text-bg-info rounded rounded-3 fs-3 widget-icon-box-avatar">
+                                        <button id="btn-suprimento" type="button" style="margin-left: 35px" data-bs-toggle="modal" data-bs-target="#suprimento_caixa" class="avatar-title text-bg-info rounded rounded-3 fs-3 widget-icon-box-avatar">
                                             <i class="ri-add-box-line"></i>
                                         </button>
                                     </div>
@@ -360,7 +360,7 @@
                                         <h5 class="text-center">Sangria</h5>
                                     </div>
                                     <div class="avatar-sm m-1">
-                                        <button type="button" style="margin-left: 35px" data-bs-toggle="modal" data-bs-target="#sangria_caixa" class="avatar-title text-bg-danger rounded rounded-3 fs-3 widget-icon-box-avatar">
+                                        <button id="btn-sangria" type="button" style="margin-left: 35px" data-bs-toggle="modal" data-bs-target="#sangria_caixa" class="avatar-title text-bg-danger rounded rounded-3 fs-3 widget-icon-box-avatar">
                                             <i class="ri-checkbox-indeterminate-line"></i>
                                         </button>
                                     </div>
@@ -448,7 +448,7 @@
                     <div class="card widget-icon-box div-pagamento" style="height: 93%">
                         <div class="card-body">
                             <div class="d-f mt-3">
-                                <button type="button" class="btn btn-warning w-100 btn-pagamento-multi" data-bs-toggle="modal" data-bs-target="#pagamento_multiplo"><i class="ri-list-check-3"></i> Pagamento múltiplo</button><br>
+                                <button id="btn-pagamento" type="button" class="btn btn-warning w-100 btn-pagamento-multi" data-bs-toggle="modal" data-bs-target="#pagamento_multiplo"><i class="ri-list-check-3"></i> Pagamento múltiplo</button><br>
                                 <button type="button" class="btn btn-dark w-100 mt-1" data-bs-toggle="modal" data-bs-target="#lista_precos"><i class="ri-cash-line"></i> Lista de preços</button>
                                 <!-- <div class="flex-grow-1 overflow-hidden">
                                     <h5 class="text-muted text-uppercase fs-13 mt-0" title="Average Revenue">Pagamento Multiplo</h5>

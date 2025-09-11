@@ -10,6 +10,17 @@ $('.leitor_desativado').click(() => {
 
 $(function () {
 
+    if ($("#form-pdv-update").length > 0) {
+        $("#btn-add-item").prop("disabled", true);
+        $("#btn-incrementa").prop("disabled", true);
+        $("#btn-subtrai").prop("disabled", true);
+        $("#btn-suprimento").prop("disabled", true);
+        $("#btn-sangria").prop("disabled", true);
+        $("#btn-acrescimo").prop("disabled", true);
+        $("#btn-desconto").prop("disabled", true);
+        $("#btn-pagamento").prop("disabled", true);
+    }
+
     $("#inp-variacao_id").val('')
     $("#lista_id").val('')
 
@@ -709,19 +720,22 @@ $("#inp-valor_recebido").on("keyup", (event) => {
 });
 
 $("body").on("click", "#btn-incrementa", function () {
-
+    let estoque = $(this).data("estoque");
     let inp = $(this).closest('div.input-group-append').prev()[0]
 
     if (inp.value) {
         let v = convertMoedaToFloat(inp.value)
-        v += 1
-        inp.value = convertFloatToMoeda(v)
-        calcSubTotal()
+        if (v < estoque) {
+            v += 1
+            inp.value = convertFloatToMoeda(v)
+            calcSubTotal()
+        }
     }
 })
 
 $("body").on("click", "#btn-subtrai", function () {
     let inp = $(this).closest('.input-group').find('input')[0]
+
     if (inp.value) {
         let v = convertMoedaToFloat(inp.value)
         v -= 1

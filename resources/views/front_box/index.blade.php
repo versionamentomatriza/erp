@@ -73,11 +73,15 @@
                                             <!-- <a class="btn btn-warning btn-sm" href="{{ route('frontbox.edit', $item->id) }}">
                                                 <i class="ri-edit-line"></i>
                                             </a> -->
-                                            @can('pdv_delete')
-                                            <button type="button" class="btn btn-danger btn-sm btn-delete">
-                                                <i class="ri-delete-bin-line"></i>
-                                            </button>
-                                            @endcan 
+                                            @php
+                                                /*
+                                                @can('pdv_delete')
+                                                <button type="button" class="btn btn-danger btn-sm btn-delete">
+                                                    <i class="ri-delete-bin-line"></i>
+                                                </button>
+                                                @endcan 
+                                                */
+                                            @endphp
 
                                             @if($item->estado == 'novo' || $item->estado == 'rejeitado')
 
