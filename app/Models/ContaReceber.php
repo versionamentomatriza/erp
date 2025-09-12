@@ -10,11 +10,26 @@ class ContaReceber extends Model
     use HasFactory;
 
     protected $fillable = [
-        'empresa_id', 'nfe_id', 'nfce_id', 'cliente_id', 'descricao', 'valor_integral', 'valor_recebido', 'data_vencimento',
-        'data_recebimento', 'status', 'observacao', 'tipo_pagamento', 'caixa_id', 'local_id', 'arquivo','centro_custo_id', 'categoria_conta_id'
+        'empresa_id',
+        'nfe_id',
+        'nfce_id',
+        'cliente_id',
+        'descricao',
+        'valor_integral',
+        'valor_recebido',
+        'data_vencimento',
+        'data_recebimento',
+        'status',
+        'observacao',
+        'tipo_pagamento',
+        'caixa_id',
+        'local_id',
+        'arquivo',
+        'centro_custo_id',
+        'categoria_conta_id'
     ];
 
-    protected $appends = [ 'info' ];
+    protected $appends = ['info'];
 
     public function getInfoAttribute()
     {
@@ -30,7 +45,7 @@ class ContaReceber extends Model
     {
         return $this->belongsTo(Localizacao::class, 'local_id');
     }
-    
+
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
@@ -63,32 +78,49 @@ class ContaReceber extends Model
         ];
     }
 
-    public function diasAtraso(){
+    public function diasAtraso()
+    {
         $d = date('Y-m-d');
         $d2 = $this->data_vencimento;
         $dif = strtotime($d2) - strtotime($d);
         $dias = floor($dif / (60 * 60 * 24));
-        if($dias == 0){
+        if ($dias == 0) {
             return "conta vence hoje";
         }
 
-        if($dias > 0){
+        if ($dias > 0) {
             return "$dias dia(s) para o vencimento";
-        }else{
-            return "conta vencida à " . ($dias*-1) . " dia(s)";
+        } else {
+            return "conta vencida à " . ($dias * -1) . " dia(s)";
         }
-    } 
+    }
     public function getStatus()
-{
-    return match ($this->status) {
-        0 => 'Pendente',
-        1 => 'Pago',
-        default => 'Desconhecido',
-    };
-}
-     public function centroCusto()
+    {
+        return match ($this->status) {
+            0 => 'Pendente',
+            1 => 'Pago',
+            default => 'Desconhecido',
+        };
+    }
+    public function centroCusto()
     {
         return $this->belongsTo(\App\Models\CentroCusto::class, 'centro_custo_id');
     }
 
+    public function conciliacoes()
+    {
+        return $this->morphMany(Conciliacao::class, 'conciliavel', 'conciliavel_tipo', 'conciliavel_id');
+    }
+
+    public function conciliada()
+    {
+        return !empty($this->conciliacoes());
+    }
+
+    public function valorConciliado()
+    {
+        $valor = 0;
+        foreach ($this->conciliacoes as $conciliacao) $valor += $conciliacao->transacao->valor;
+        return $valor;
+    }
 }
