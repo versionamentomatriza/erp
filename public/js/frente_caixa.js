@@ -9,18 +9,6 @@ $('.leitor_desativado').click(() => {
 })
 
 $(function () {
-
-    if ($("#form-pdv-update").length > 0) {
-        $("#btn-add-item").prop("disabled", true);
-        $("#btn-incrementa").prop("disabled", true);
-        $("#btn-subtrai").prop("disabled", true);
-        $("#btn-suprimento").prop("disabled", true);
-        $("#btn-sangria").prop("disabled", true);
-        $("#btn-acrescimo").prop("disabled", true);
-        $("#btn-desconto").prop("disabled", true);
-        $("#btn-pagamento").prop("disabled", true);
-    }
-
     $("#inp-variacao_id").val('')
     $("#lista_id").val('')
 
