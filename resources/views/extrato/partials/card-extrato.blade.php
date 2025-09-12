@@ -1,0 +1,32 @@
+<div class="col">
+    <div class="card h-100 shadow-sm border-0 {{ request()->get('extrato') == $e->id ? 'border-primary' : '' }}">
+        <div class="card-header bg-primary text-white p-2 d-flex justify-content-between align-items-center">
+            <strong>{{ $e->banco ?? 'Banco não informado' }}</strong>
+            @if(request()->get('extrato') == $e->id)
+                <span class="badge bg-success">Selecionado</span>
+            @endif
+        </div>
+        <div class="card-body p-2">
+            <p class="mb-1"><small><strong>Período:</strong>
+                    {{ \Carbon\Carbon::parse($e->inicio)->format('d/m/Y') }}
+                    - {{ \Carbon\Carbon::parse($e->fim)->format('d/m/Y') }}
+                </small></p>
+            <p class="mb-1"><small><strong>Saldo:</strong>
+                    R$ {{ number_format($e->saldo_final ?? 0, 2, ',', '.') }}
+                </small></p>
+            <p class="mb-1"><small><strong>Status:</strong>
+                    @if($e->status === 'conciliado')
+                        <span class="badge bg-success">Conciliado</span>
+                    @else
+                        <span class="badge bg-warning text-dark">Pendente</span>
+                    @endif
+                </small></p>
+        </div>
+        <div class="card-footer text-center p-2 bg-light">
+            <a href="{{ route('extrato.conciliar', ['extrato' => $e->id]) }}"
+                class="btn btn-sm btn-outline-primary w-100 {{ request()->get('extrato') == $e->id ? 'disabled' : '' }}">
+                Selecionar
+            </a>
+        </div>
+    </div>
+</div>
