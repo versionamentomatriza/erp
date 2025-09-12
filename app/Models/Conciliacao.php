@@ -17,7 +17,7 @@ class Conciliacao extends Model
         'transacao_id',
         'extrato_id',
         'conciliavel_id',
-        'conciliavel_type',
+        'conciliavel_tipo',
         'valor_conciliado',
         'data_conciliacao',
     ];
