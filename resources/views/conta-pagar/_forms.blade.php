@@ -91,8 +91,29 @@
     </div>
 
     {{-- Descrição --}}
-    <div class="col-md-3">
+    <div class="col-md-12">
         {!! Form::text('descricao', 'Descrição')->required() !!}
+    </div>
+
+    <div class="col-md-12">
+        {!! Form::select(
+    'categoria_conta_id',
+    'Categoria da Despesa/Custo',
+    \App\Models\CategoriaConta::query()
+        ->whereIn('tipo', ['despesa', 'custo']) // inclui custos
+        ->whereIn('grupo_dre', [                // garante só grupos pertinentes a pagar
+            'custo',
+            'despesa_venda',
+            'despesa_adm',
+            'despesa_financeira',
+            'outras_despesas',
+            'imposto_lucro',
+            'deducao_receita'
+        ])
+        ->orderBy('nome')
+        ->pluck('nome', 'id')
+        ->toArray(),
+    isset($item) ? $item->categoria_conta_id : null)->attrs(['class' => 'form-select'])->required() !!}
     </div>
 
     {{-- Valor Integral --}}

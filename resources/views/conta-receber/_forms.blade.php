@@ -85,8 +85,19 @@
     </div>
 
     {{-- Descrição --}}
-    <div class="col-md-3">
+    <div class="col-md-12">
         {!! Form::text('descricao', 'Descrição')->required() !!}
+    </div>
+
+    <div class="col-md-3">
+        {!! Form::select(
+    'categoria_conta_id',
+    'Categoria da Receita',
+    \App\Models\CategoriaConta::where('tipo', 'receita')
+        ->orderBy('nome')
+        ->pluck('nome', 'id')
+        ->toArray(),
+    isset($item) ? $item->categoria_conta_id : null)->attrs(['class' => 'form-select'])->required() !!}
     </div>
 
     {{-- Valor Integral --}}
