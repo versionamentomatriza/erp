@@ -11,7 +11,7 @@ class ExtratoTransacao extends Model
 
     public $timestamps = false;
 
-    protected $table = 'extrato_transacao';
+    protected $table = 'extratos_transacoes';
 
     protected $fillable = [
         'extrato_id',

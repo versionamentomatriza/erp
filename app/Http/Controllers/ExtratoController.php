@@ -181,7 +181,7 @@ class ExtratoController extends Controller
                 'extrato_id'        => $request->input('id_extrato'),
                 'transacao_id'      => $id_transacao,
                 'conciliavel_id'    => $request->input('id_conta'),
-                'conciliavel_type'  => $request->input('tipo_conta'),
+                'conciliavel_tipo'  => $request->input('tipo_conta'),
                 'data_conciliacao'  => now(),
                 'valor_conciliado'  => $conta->valor_pago ?? $conta->valor_recebido,
             ]);
@@ -202,7 +202,7 @@ class ExtratoController extends Controller
 
         foreach ($request->input('ids_transacoes') as $id_transacao) {
             Conciliacao::where('conciliavel_id', $request->input('id_conta'))
-                ->where('conciliavel_type', $request->input('tipo_conta'))
+                ->where('conciliavel_tipo', $request->input('tipo_conta'))
                 ->where('transacao_id', $id_transacao)
                 ->where('extrato_id', $request->input('id_extrato'))
                 ->delete();
@@ -258,7 +258,7 @@ class ExtratoController extends Controller
             'transacao_id'     => $transacao->id,
             'extrato_id'       => (int) $request->input('extrato_id'),
             'conciliavel_id'   => $conta->id,
-            'conciliavel_type' => get_class($conta),
+            'conciliavel_tipo' => get_class($conta),
             'valor_conciliado' => $valorConciliado,
             'data_conciliacao' => now(),
         ]);
@@ -350,7 +350,7 @@ class ExtratoController extends Controller
                     'transacao_id'      => $transacao->id,
                     'extrato_id'        => $extrato->id,
                     'conciliavel_id'    => $conta->id,
-                    'conciliavel_type'  => get_class($conta),
+                    'conciliavel_tipo'  => get_class($conta),
                     'valor_conciliado'  => abs($diferenca),
                     'data_conciliacao'  => now(),
                 ]);
