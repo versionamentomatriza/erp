@@ -89,7 +89,7 @@
         {!! Form::text('descricao', 'Descrição')->required() !!}
     </div>
 
-    <div class="col-md-3">
+    <div class="col-md-12">
         {!! Form::select(
     'categoria_conta_id',
     'Categoria da Receita',
