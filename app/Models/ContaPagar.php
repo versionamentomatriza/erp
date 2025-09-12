@@ -11,8 +11,13 @@ class ContaPagar extends Model
 
     protected $fillable = [
         'empresa_id', 'nfe_id', 'fornecedor_id', 'descricao', 'valor_integral', 'valor_pago', 'data_vencimento', 
-        'data_pagamento', 'status', 'observacao', 'tipo_pagamento', 'caixa_id', 'local_id', 'arquivo','centro_custo_id'
+        'data_pagamento', 'status', 'observacao', 'tipo_pagamento', 'caixa_id', 'local_id', 'arquivo','centro_custo_id', 'categoria_conta_id'
     ];
+
+    public function categoriaConta()
+    {
+        return $this->belongsTo(CategoriaConta::class, 'categoria_conta_id');
+    }
 
     public function fornecedor(){
 		return $this->belongsTo(Fornecedor::class, 'fornecedor_id');
