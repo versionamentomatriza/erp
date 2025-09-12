@@ -101,6 +101,7 @@ class ContaReceberController extends Controller
             if ($request->hasFile('file')) $file_name = $this->uploadUtil->uploadFile($request->file, '/financeiro');
 
             $request->merge([
+                'categoria_conta_id' => $request->categoria_conta_id,
                 'valor_integral' => __convert_value_bd($request->valor_integral),
                 'valor_recebido' => $request->status ? __convert_value_bd($request->valor_recebido) : 0,
                 'arquivo' => $file_name
