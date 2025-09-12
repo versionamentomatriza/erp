@@ -11,7 +11,7 @@ class ContaReceber extends Model
 
     protected $fillable = [
         'empresa_id', 'nfe_id', 'nfce_id', 'cliente_id', 'descricao', 'valor_integral', 'valor_recebido', 'data_vencimento',
-        'data_recebimento', 'status', 'observacao', 'tipo_pagamento', 'caixa_id', 'local_id', 'arquivo','centro_custo_id'
+        'data_recebimento', 'status', 'observacao', 'tipo_pagamento', 'caixa_id', 'local_id', 'arquivo','centro_custo_id', 'categoria_conta_id'
     ];
 
     protected $appends = [ 'info' ];
@@ -19,6 +19,11 @@ class ContaReceber extends Model
     public function getInfoAttribute()
     {
         return "Cliente: " . $this->cliente->info . " - valor: R$ " . __moeda($this->valor_integral) . ", vencimento: " . __data_pt($this->data_vencimento, 0);
+    }
+
+    public function categoriaConta()
+    {
+        return $this->belongsTo(CategoriaConta::class, 'categoria_conta_id');
     }
 
     public function localizacao()
