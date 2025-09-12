@@ -62,7 +62,7 @@
                                     <td>{{ \Carbon\Carbon::parse($item->created_at)->format('d/m/Y H:i') }}</td>
                                     <td>{{ $item->lista ? $item->listaPreco->nome : '--' }}</td>
                                     <td>{{ $item->user ? $item->user->name : '--' }}</td>
-                                    <td width="300">
+                                    <td width="200">
                                         <form action="{{ route('frontbox.destroy', $item->id) }}" method="post" id="form-{{$item->id}}">
                                             @method('delete')
                                             @csrf
@@ -73,11 +73,15 @@
                                             <!-- <a class="btn btn-warning btn-sm" href="{{ route('frontbox.edit', $item->id) }}">
                                                 <i class="ri-edit-line"></i>
                                             </a> -->
-                                            @can('pdv_delete')
-                                            <button type="button" class="btn btn-danger btn-sm btn-delete">
-                                                <i class="ri-delete-bin-line"></i>
-                                            </button>
-                                            @endcan 
+                                            @php
+                                                /*
+                                                @can('pdv_delete')
+                                                <button type="button" class="btn btn-danger btn-sm btn-delete">
+                                                    <i class="ri-delete-bin-line"></i>
+                                                </button>
+                                                @endcan 
+                                                */
+                                            @endphp
 
                                             @if($item->estado == 'novo' || $item->estado == 'rejeitado')
 
@@ -85,9 +89,13 @@
                                                 <i class="ri-send-plane-fill"></i>
                                             </button>
 
-                                            @can('pdv_edit')
-                                            <a class="btn btn-warning btn-sm" title="Editar venda" href="{{ route('frontbox.edit', $item->id) }}"><i class="ri-pencil-line"></i></a>
-                                            @endcan
+                                            @php
+                                                /*
+                                                @can('pdv_edit')
+                                                <a class="btn btn-warning btn-sm" title="Editar venda" href="{{ route('frontbox.edit', $item->id) }}"><i class="ri-pencil-line"></i></a>
+                                                @endcan
+                                                */
+                                            @endphp
 
                                             @endif
 
