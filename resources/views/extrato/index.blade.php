@@ -26,7 +26,7 @@
                         <div class="mb-4">
                             <h6 class="mb-3"><i class="bi bi-list-ul"></i> Conciliações Disponíveis</h6>
 
-                            @if($extratos->isEmpty())
+                            @if(!$extratos || $extratos->isEmpty())
                                 <div class="alert alert-info text-center">
                                     Nenhum extrato encontrado. Envie um arquivo OFX para começar.
                                 </div>

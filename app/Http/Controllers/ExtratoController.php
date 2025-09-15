@@ -32,36 +32,37 @@ class ExtratoController extends Controller
 
         try {
             // Processamento de arquivos OFX
-            if ($request->hasFile('arquivos_ofx')) {
-                $paths = [];
+            if ($request->hasFile('arquivo_ofx')) {
                 $destino = storage_path('app/ofx_salvos');
 
                 if (!file_exists($destino)) {
                     mkdir($destino, 0777, true);
                 }
 
-                foreach ($request->file('arquivos_ofx') as $arquivo) {
-                    $nome = uniqid() . '_' . $arquivo->getClientOriginalName();
-                    $paths[] = $arquivo->move($destino, $nome)->getPathname();
-                }
+                $arquivo = $request->file('arquivo_ofx');
 
                 $todasTransacoes = [];
                 $dadosExtrato = [];
 
-                foreach ($paths as $path) {
-                    if (!file_exists($path)) continue;
+                if ($arquivo && $arquivo->isValid()) {
+                    $nome = uniqid() . '_' . $arquivo->getClientOriginalName();
+                    $caminho = $arquivo->move($destino, $nome)->getPathname();
 
-                    $conteudo = @file_get_contents($path);
-                    if (!$conteudo) continue;
+                    if (file_exists($caminho)) {
+                        $conteudo = @file_get_contents($caminho);
 
-                    $resultado = OfxService::parse($conteudo);
-                    if (!is_array($resultado) || empty($resultado)) continue;
+                        if ($conteudo) {
+                            $resultado = OfxService::parse($conteudo);
 
-                    $dadosExtrato[] = $resultado;
-                    $todasTransacoes = array_merge($todasTransacoes, $resultado['transacoes'] ?? []);
+                            if (is_array($resultado) && !empty($resultado)) {
+                                $dadosExtrato = $resultado;
+                                $todasTransacoes = $resultado['transacoes'] ?? [];
+                            }
+                        }
+                    }
                 }
 
-                if (empty($dadosExtrato)) {
+                if (empty($dadosExtrato) || empty($todasTransacoes)) {
                     return view('extrato.index', [
                         'contasPagar'      => collect(),
                         'contasReceber'    => collect(),
@@ -73,14 +74,38 @@ class ExtratoController extends Controller
                     ])->with('error', 'Nenhum extrato válido foi processado. Tente enviar novamente.');
                 }
 
-                $extrato = Extrato::firstOrCreate([
-                    'banco'       => $dadosExtrato[0]['transacoes'][0]['banco'] ?? null,
-                    'inicio'      => collect($dadosExtrato)->min('dataInicio'),
-                    'fim'         => collect($dadosExtrato)->max('dataFim'),
-                    'saldo_final' => collect($dadosExtrato)->sortByDesc('dataFim')->first()['saldoFinal'] ?? 0,
-                    'empresa_id'  => $empresaId,
-                ]);
+                // 🔹 Data de referência (dataInicio do OFX ou da 1ª transação)
+                $dataReferencia = !empty($dadosExtrato['dataInicio'])
+                    ? \Carbon\Carbon::parse($dadosExtrato['dataInicio'])
+                    : (isset($todasTransacoes[0]['data']) ? \Carbon\Carbon::parse($todasTransacoes[0]['data']) : now());
 
+                $mes = $dataReferencia->month;
+                $ano = $dataReferencia->year;
+
+                // 🔹 Verifica se já existe extrato no mesmo mês/ano
+                $extrato = Extrato::where('empresa_id', $empresaId)
+                    ->whereMonth('inicio', $mes)
+                    ->whereYear('inicio', $ano)
+                    ->first();
+
+                if ($extrato) {
+                    // 🔹 Atualiza saldo final com o último saldo do OFX importado
+                    $extrato->update([
+                        'saldo_final' => $dadosExtrato['saldoFinal'] ?? $extrato->saldo_final,
+                    ]);
+                } else {
+                    $extrato = Extrato::create([
+                        'banco'       => $dadosExtrato['transacoes'][0]['banco'] ?? null,
+                        'inicio'      => $dataReferencia->copy()->startOfMonth()->toDateString(),
+                        'fim'         => $dataReferencia->copy()->endOfMonth()->toDateString(),
+                        'saldo_final' => $dadosExtrato['saldoFinal'] ?? 0,
+                        'empresa_id'  => $empresaId,
+                    ]);
+
+                    $extratos->push($extrato);
+                }
+
+                // 🔹 Cria ou vincula transações
                 ExtratoService::criarTransacoes($todasTransacoes, $extrato->id);
 
                 $contasPagar = ContaPagar::where('empresa_id', $empresaId)
@@ -140,19 +165,10 @@ class ExtratoController extends Controller
                 'transacoes'       => collect(),
             ]);
         } catch (\Throwable $e) {
-            Log::channel('ofx')->error('Erro ao processar OFX: ' . $e->getMessage());
-
-            return view('extrato.index', [
-                'contasPagar'      => collect(),
-                'contasReceber'    => collect(),
-                'centrosCustos'    => $centrosCustos,
-                'categoriasContas' => $categoriasContas,
-                'extratos'         => $extratos,
-                'extrato'          => null,
-                'transacoes'       => collect(),
-            ])->with('error', 'Erro ao processar o arquivo OFX. Tente reenviar.');
+            dd($e->getMessage());
         }
     }
+
 
     public function dre(Request $request)
     {
@@ -166,29 +182,33 @@ class ExtratoController extends Controller
 
     public function vincular(Request $request)
     {
-        $request->validate([
-            'id_extrato'        => ['required', 'integer'],
-            'id_conta'          => ['required', 'integer'],
-            'tipo_conta'        => ['required', 'string', 'in:App\Models\ContaPagar,App\Models\ContaReceber'],
-            'ids_transacoes'    => ['required'],
-        ]);
-
-        $modelClass = $request->input('tipo_conta');
-        $conta = $modelClass::findOrFail($request->input('id_conta'));
-
-        foreach ($request->input('ids_transacoes') as $id_transacao) {
-            Conciliacao::create([
-                'extrato_id'        => $request->input('id_extrato'),
-                'transacao_id'      => $id_transacao,
-                'conciliavel_id'    => $request->input('id_conta'),
-                'conciliavel_tipo'  => $request->input('tipo_conta'),
-                'data_conciliacao'  => now(),
-                'valor_conciliado'  => $conta->valor_pago ?? $conta->valor_recebido,
+        try {
+            $request->validate([
+                'id_extrato'        => ['required', 'integer'],
+                'id_conta'          => ['required', 'integer'],
+                'tipo_conta'        => ['required', 'string', 'in:App\Models\ContaPagar,App\Models\ContaReceber'],
+                'ids_transacoes'    => ['required'],
             ]);
-        }
 
-        return redirect()->to(url()->previous())
-            ->with('success', 'Transação vinculada com sucesso.');
+            $modelClass = $request->input('tipo_conta');
+            $conta = $modelClass::findOrFail($request->input('id_conta'));
+
+            foreach ($request->input('ids_transacoes') as $id_transacao) {
+                Conciliacao::create([
+                    'extrato_id'        => $request->input('id_extrato'),
+                    'transacao_id'      => $id_transacao,
+                    'conciliavel_id'    => $request->input('id_conta'),
+                    'conciliavel_tipo'  => $request->input('tipo_conta'),
+                    'data_conciliacao'  => now(),
+                    'valor_conciliado'  => $conta->valor_pago ?? $conta->valor_recebido,
+                ]);
+            }
+
+            return redirect()->to(url()->previous())
+                ->with('success', 'Transação vinculada com sucesso.');
+        } catch (\Throwable $e) {
+            dd($e->getMessage());
+        }
     }
 
     public function desvincular(Request $request)
@@ -265,6 +285,31 @@ class ExtratoController extends Controller
 
         return redirect()->to(url()->previous())
             ->with('success', 'Conta criada com sucesso.');
+    }
+
+    public function excluir_conta(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer',
+            'tipo' => 'required|string|in:App\Models\ContaPagar,App\Models\ContaReceber',
+        ]);
+
+        $modelClass = $request->input('tipo');
+        $conta = $modelClass::findOrFail($request->input('id'));
+
+        // Verifica se a conta está vinculada a alguma transação
+        $vinculos = Conciliacao::where('conciliavel_id', $conta->id)
+            ->where('conciliavel_tipo', $request->input('tipo'))
+            ->count();
+
+        if ($vinculos > 0) {
+            return redirect()->back()->with('error', 'Não é possível excluir esta conta, pois ela está vinculada a uma ou mais transações.');
+        }
+
+        // Se não houver vínculos, exclui a conta
+        $conta->delete();
+
+        return redirect()->back()->with('success', 'Conta excluída com sucesso.');
     }
 
     public function finalizar(Request $request)
