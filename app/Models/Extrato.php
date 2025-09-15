@@ -20,7 +20,7 @@ class Extrato extends Model
 
     public function transacoes()
     {
-        return $this->belongsToMany(Transacao::class, 'extrato_transacao');
+        return $this->belongsToMany(Transacao::class, 'extratos_transacoes', 'extrato_id', 'transacao_id');
     }
 
     public function conciliacoes()

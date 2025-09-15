@@ -72,7 +72,7 @@ class ContaPagar extends Model
 
     public function conciliada()
     {
-        return !empty($this->conciliacoes());
+        return $this->conciliacoes()->exists();
     }
 
     public function valorConciliado()
