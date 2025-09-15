@@ -110,12 +110,6 @@
                                         </a>
                                     </div>
                                 @endunless
-                                <div class="d-grid gap-2">
-                                    <a href="{{ route('extrato.dre', ['extrato' => $extrato->id]) }}"
-                                        class="btn btn-outline-primary {{ $extrato->status !== 'conciliado' ? 'disabled' : '' }}">
-                                        Relatório DRE
-                                    </a>
-                                </div>
                             @else
                                 <p class="text-muted">
                                     Nenhum extrato encontrado.

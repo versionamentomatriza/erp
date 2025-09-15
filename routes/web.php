@@ -116,7 +116,7 @@ Route::middleware(['authh', 'validaEmpresa'])->group(function () {
     Route::post('/conciliacao', [ExtratoController::class, 'conciliar'])->name('extrato.conciliar.post');
     Route::post('/conciliacao/vincular', [ExtratoController::class, 'vincular'])->name('extrato.vincular');
     Route::post('/conciliacao/desvincular', [ExtratoController::class, 'desvincular'])->name('extrato.desvincular');
-    Route::get('/dre', [ExtratoController::class, 'dre'])->name('extrato.dre');
+    Route::get('/movimentacao_bancaria', [ExtratoController::class, 'movimentacao_bancaria'])->name('extrato.movimentacao_bancaria');
     Route::post('/conciliacao/criar_conta', [ExtratoController::class, 'criar_conta'])->name('extrato.criar_conta');
     Route::get('/conciliacao/finalizar', [ExtratoController::class, 'finalizar'])->name('extrato.finalizar');
     Route::post('/conciliacao/excedente', [ExtratoController::class, 'excedente'])->name('extrato.excedente');
