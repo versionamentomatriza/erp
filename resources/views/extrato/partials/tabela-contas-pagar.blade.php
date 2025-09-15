@@ -37,26 +37,33 @@
                     {{ $statusLabel }}
                 </span>
 
-                <div class="card-body pt-4">
-                    <div class="row gy-3 align-items-start">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                        <h6 class="text-primary fw-bold mb-0">
+                            <i class="bi bi-hash"></i> {{ $conta->id }}
+                        </h6>
 
-                        <!-- ID + Descrição -->
-                        <div class="col-md-3">
-                            <h6 class="text-primary mb-1">#{{ $conta->id }}</h6>
-                            <p class="text-muted small mb-0">{{ $conta->descricao ?? '-' }}</p>
+                        <!-- Valor em destaque -->
+                        <div>
+                            <span class="fw-bold text-success fs-6">
+                                R$ {{ number_format($conta->valor_pago ?? 0, 2, ',', '.') }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row gy-3">
+                        <!-- Descrição -->
+                        <div class="col-md-4">
+                            <p class="mb-1 text-secondary small fw-semibold">Descrição</p>
+                            <p class="mb-0">{{ $conta->descricao ?? '-' }}</p>
                         </div>
 
                         <!-- Pagamento -->
                         <div class="col-md-2">
                             <p class="mb-1 text-secondary small fw-semibold">Pagamento</p>
-                            <p class="mb-0">{{ \Carbon\Carbon::parse($conta->data_pagamento ?? now())->format('d/m/Y') }}
+                            <p class="mb-0">
+                                {{ \Carbon\Carbon::parse($conta->data_pagamento ?? now())->format('d/m/Y') }}
                             </p>
-                        </div>
-
-                        <!-- Valor -->
-                        <div class="col-md-2">
-                            <p class="mb-1 text-secondary small fw-semibold">Valor</p>
-                            <p class="mb-0">R$ {{ number_format($conta->valor_pago ?? 0, 2, ',', '.') }}</p>
                         </div>
 
                         <!-- Centro de Custo -->
@@ -67,6 +74,15 @@
                             </span>
                         </div>
 
+                        <!-- Fornecedor / Cliente -->
+                        @if($conta->fornecedor)
+                            <div class="col-md-3">
+                                <p class="mb-1 text-secondary small fw-semibold">Fornecedor</p>
+                                <span class="badge bg-info text-dark small px-2 py-1">
+                                    {{ $conta->fornecedor->nome_fantasia ?? $conta->fornecedor->razao_social }}
+                                </span>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Rodapé com ações -->

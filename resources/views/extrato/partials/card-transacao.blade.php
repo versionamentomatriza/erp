@@ -68,6 +68,26 @@
                             placeholder="Ex: Pagamento de fornecedor" required>
                     </div>
 
+                    <div class="mb-3" id="grupoFornecedor" style="display:none;">
+                        <label for="fornecedorConta" class="form-label fw-semibold">Fornecedor</label>
+                        <select name="fornecedor_id" id="fornecedorConta" class="form-select rounded-3">
+                            <option value="">Selecione</option>
+                            @foreach ($fornecedores as $fornecedor)
+                                <option value="{{ $fornecedor->id }}">{{ $fornecedor->nome_fantasia ?? $fornecedor->razao_social }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="grupoCliente" style="display:none;">
+                        <label for="clienteConta" class="form-label fw-semibold">Cliente</label>
+                        <select name="cliente_id" id="clienteConta" class="form-select rounded-3">
+                            <option value="">Selecione</option>
+                            @foreach ($clientes as $cliente)
+                                <option value="{{ $cliente->id }}">{{ $cliente->nome_fantasia ?? $cliente->razao_social }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <div class="mb-3">
                         <label for="valorConta" class="form-label fw-semibold">Valor</label>
                         <div class="input-group">
@@ -161,6 +181,27 @@
 
             // Resetar seleção para evitar erro
             selectCategoria.selectedIndex = -1;
+
+            // Mostrar fornecedor ou cliente conforme o tipo
+            var grupoFornecedor = document.getElementById('grupoFornecedor');
+            var grupoCliente = document.getElementById('grupoCliente');
+
+            // resetar selects
+            document.getElementById('fornecedorConta').value = "";
+            document.getElementById('clienteConta').value = "";
+
+            if (tipo === 'DEBIT') {
+                // contas a pagar → fornecedor
+                grupoFornecedor.style.display = 'block';
+                grupoCliente.style.display = 'none';
+            } else if (tipo === 'CREDIT') {
+                // contas a receber → cliente
+                grupoFornecedor.style.display = 'none';
+                grupoCliente.style.display = 'block';
+            } else {
+                grupoFornecedor.style.display = 'none';
+                grupoCliente.style.display = 'none';
+            }
         });
     });
 </script>
