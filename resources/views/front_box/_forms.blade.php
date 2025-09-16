@@ -477,12 +477,12 @@
                                 {{-- Subtipo PIX --}}
                                 <div id="grupo_subtipo" style="display:none;">
                                     {!! Form::select(
-    'subtipo_pagamento',
-    '',
-    ['' => 'Selecione', 'direto' => 'PIX Direto', 'maquininha' => 'PIX Maquininha'],
-    isset($item) ? $item->subtipo_pagamento ?? '' : '',
-    ['class' => 'form-select', 'id' => 'subtipo_pagamento']
-) !!}
+                                        'subtipo_pagamento',
+                                        '',
+                                        ['' => 'Selecione', 'direto' => 'PIX Direto', 'maquininha' => 'PIX Maquininha'],
+                                        isset($item) ? $item->subtipo_pagamento ?? '' : '',
+                                        ['class' => 'form-select', 'id' => 'subtipo_pagamento']
+                                    ) !!}
                                 </div>
 
                             </div> <!-- end card-body-->
