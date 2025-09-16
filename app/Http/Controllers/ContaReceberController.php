@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Caixa;
+use App\Models\CategoriaConta;
 use App\Models\Cliente;
 use App\Models\ContaReceber;
 use Illuminate\Http\Request;
@@ -42,6 +43,8 @@ class ContaReceberController extends Controller
         $local_id = $request->get('local_id');
         $ordenar_por = $request->get('ordenar_por'); // Captura o campo para ordenação
 
+        $categoriaConta = CategoriaConta::where('nome', 'LIKE', 'Receita de Mercadorias')->first();
+
         // Query para buscar as contas a receber com os filtros aplicados
         $data = ContaReceber::where('empresa_id', request()->empresa_id)
             ->when(!empty($cliente_id), function ($query) use ($cliente_id) {
@@ -59,6 +62,9 @@ class ContaReceberController extends Controller
             ->when(!$local_id, function ($query) use ($locais) {
                 return $query->whereIn('local_id', $locais);
             })
+            ->when($categoriaConta, function ($query) use ($categoriaConta) {
+                return $query->where('categoria_conta_id', '!=', $categoriaConta->id);
+            })
             // Adicionando a ordenação com base na escolha do usuário
             ->when($ordenar_por, function ($query) use ($ordenar_por) {
                 if ($ordenar_por === 'data_vencimento_asc') {
@@ -75,23 +81,23 @@ class ContaReceberController extends Controller
 
 
     public function create(Request $request)
-        {
-            $centrosCusto = CentroCusto::where('empresa_id', request()->empresa_id)->get();
-            $clientes = Cliente::where('empresa_id', request()->empresa_id)->get();
+    {
+        $centrosCusto = CentroCusto::where('empresa_id', request()->empresa_id)->get();
+        $clientes = Cliente::where('empresa_id', request()->empresa_id)->get();
 
-            $item = null;
-            $diferenca = null;
-            if ($request->id) {
-                $item = ContaReceber::findOrFail($request->id);
-                $item->valor_integral = $request->diferenca;
-            }
-
-            if ($request->diferenca) {
-                $diferenca = $request->diferenca;
-            }
-
-            return view('conta-receber.create', compact('clientes', 'item', 'diferenca', 'centrosCusto'));
+        $item = null;
+        $diferenca = null;
+        if ($request->id) {
+            $item = ContaReceber::findOrFail($request->id);
+            $item->valor_integral = $request->diferenca;
         }
+
+        if ($request->diferenca) {
+            $diferenca = $request->diferenca;
+        }
+
+        return view('conta-receber.create', compact('clientes', 'item', 'diferenca', 'centrosCusto'));
+    }
 
     public function store(Request $request)
     {
@@ -132,7 +138,7 @@ class ContaReceberController extends Controller
         return redirect()->route('conta-receber.index');
     }
 
-     public function edit($id)
+    public function edit($id)
     {
         $item = ContaReceber::findOrFail($id);
         $clientes = Cliente::where('empresa_id', request()->empresa_id)->get();
