@@ -37,7 +37,7 @@
 
     <div class="mt-2">
         <button type="button"
-            class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-1 py-1"
+            class="btn btn-success btn-sm w-100 d-flex align-items-center justify-content-center gap-1 py-1"
             data-bs-toggle="modal" data-bs-target="#modalCriarConta" data-id="{{ $transacao->id }}"
             data-tipo="{{ $transacao->tipo }}" data-valor="{{ $transacao->valor }}"
             data-descricao="{{ $transacao->descricao }}" data-data="{{ $transacao->data }}">
@@ -75,26 +75,16 @@
                         <select name="fornecedor_id" id="fornecedorConta" class="form-select rounded-3 select2"
                             style="width:100%;" data-empresa-id="{{ $extrato->empresa_id }}">
                             <option value="">Digite ao menos 2 caracteres...</option>
-
-                            {{-- Se estiver editando, inclui o fornecedor já vinculado --}}
-                            @isset($conta)
-                                @if($conta->fornecedor)
-                                    <option value="{{ $conta->fornecedor->id }}" selected>
-                                        {{ $conta->fornecedor->nome_fantasia ?? $conta->fornecedor->razao_social }}
-                                    </option>
-                                @endif
-                            @endisset
                         </select>
                     </div>
 
                     <div class="mb-3" id="grupoCliente" style="display:none;">
                         <label for="clienteConta" class="form-label fw-semibold">Cliente</label>
-                        <select name="cliente_id" id="clienteConta" class="form-select rounded-3">
-                            <option value="">Selecione</option>
-                            @foreach ($clientes as $cliente)
-                                <option value="{{ $cliente->id }}">{{ $cliente->nome_fantasia ?? $cliente->razao_social }}
-                                </option>
-                            @endforeach
+
+                        {{-- Select vazio, também carregado via AJAX --}}
+                        <select name="cliente_id" id="clienteConta" class="form-select rounded-3 select2"
+                            style="width:100%;" data-empresa-id="{{ $extrato->empresa_id }}">
+                            <option value="">Digite ao menos 2 caracteres...</option>
                         </select>
                     </div>
 
@@ -159,7 +149,7 @@
 <script>
     $(function () {
 
-        // Inicializa Select2 para fornecedor
+        // Função genérica para inicializar Select2
         function initSelect2(selector, url) {
             $(selector).select2({
                 placeholder: 'Digite ao menos 2 caracteres...',
@@ -173,8 +163,8 @@
                     delay: 250,
                     data: function (params) {
                         return {
-                            pesquisa: params.term,                                  // termo digitado
-                            empresa_id: $('#fornecedorConta').data('empresa-id')   // envia o ID da empresa
+                            pesquisa: params.term,                            // termo digitado
+                            empresa_id: $(selector).data('empresa-id')       // pega o ID da empresa do data-empresa-id
                         };
                     },
                     processResults: function (data) {
@@ -192,24 +182,24 @@
             });
         }
 
+        // Ativa Select2 para Fornecedor e Cliente
         initSelect2('#fornecedorConta', '/api/fornecedores/pesquisa');
-        // Se desejar cliente via AJAX, pode descomentar e ajustar a rota:
-        // initSelect2('#clienteConta', '/api/clientes/pesquisa');
+        initSelect2('#clienteConta', '/api/clientes/pesquisa');
 
-        // Função para filtrar categorias
+        // Função para filtrar categorias de acordo com o tipo
         function filtrarCategorias(tipo) {
             const selectCategoria = document.getElementById('categoriaConta');
             selectCategoria.querySelectorAll('option').forEach(option => {
                 const categoriaTipo = option.getAttribute('data-tipo');
                 option.style.display =
                     (tipo === 'DEBIT' && (categoriaTipo === 'custo' || categoriaTipo === 'despesa')) ||
-                        (tipo === 'CREDIT' && categoriaTipo === 'receita')
+                    (tipo === 'CREDIT' && categoriaTipo === 'receita')
                         ? '' : 'none';
             });
             selectCategoria.selectedIndex = -1;
         }
 
-        // Função para alternar fornecedor/cliente
+        // Função para alternar entre Fornecedor e Cliente
         function toggleFornecedorCliente(tipo) {
             const grupoFornecedor = document.getElementById('grupoFornecedor');
             const grupoCliente = document.getElementById('grupoCliente');
@@ -227,7 +217,7 @@
             }
         }
 
-        // Evento do modal
+        // Evento ao abrir modal
         $('#modalCriarConta').on('show.bs.modal', function (event) {
             const button = event.relatedTarget;
             const id = button.getAttribute('data-id');
@@ -241,7 +231,9 @@
             $('#descricaoConta').val(descricao || '');
             $('#valorConta').val(valor || '');
             $('#dataVencimento').val(data || '');
-            $('#modalCriarContaLabel').text(tipo === 'DEBIT' ? 'Criar Conta a Pagar' : 'Criar Conta a Receber');
+            $('#modalCriarContaLabel').text(
+                tipo === 'DEBIT' ? 'Criar Conta a Pagar' : 'Criar Conta a Receber'
+            );
 
             filtrarCategorias(tipo);
             toggleFornecedorCliente(tipo);

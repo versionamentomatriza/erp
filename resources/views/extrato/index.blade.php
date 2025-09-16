@@ -42,7 +42,7 @@
                         @if ($naoRelacionadas > 0)
                             <p class="small mb-1">
                                 <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
-                                <strong>{{ $naoRelacionadas }}</strong> transações não foram conciliadas com nenhuma conta.
+                                <strong>{{ $naoRelacionadas }}</strong> transações não foram conciliadas com nenhum pagamento ou recebimento.
                             </p>
                         @endif
 
@@ -51,16 +51,16 @@
                             <ul class="nav nav-tabs" id="financeTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link active" id="pagar-tab" data-bs-toggle="tab"
-                                        data-bs-target="#pagar" type="button" role="tab">Contas a Pagar</button>
+                                        data-bs-target="#pagar" type="button" role="tab">Pagamentos</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link" id="receber-tab" data-bs-toggle="tab" data-bs-target="#receber"
-                                        type="button" role="tab">Contas a Receber</button>
+                                        type="button" role="tab">Recebimentos</button>
                                 </li>
                             </ul>
 
                             <!-- Tab Content -->
-                            <div class="tab-content border border-top-0 p-4 bg-white" id="financeTabsContent">
+                            <div class="tab-content p-4 bg-white" id="financeTabsContent">
 
                                 <!-- Contas a Pagar -->
                                 <div class="tab-pane fade show active" id="pagar" role="tabpanel">

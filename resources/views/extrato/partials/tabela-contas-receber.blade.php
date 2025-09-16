@@ -30,84 +30,98 @@
             @endphp
 
             <div class="card card-conta shadow-sm border-0 rounded-3 mb-4 position-relative">
-    <!-- Badge de status -->
-    <span
-        class="position-absolute top-0 end-0 mt-2 me-2 px-2 py-1 small text-uppercase fw-semibold {{ $statusClass }}"
-        style="border-radius: 0.25rem; font-size: 0.65rem;">
-        {{ $statusLabel }}
-    </span>
-
-    <div class="card-body p-3">
-        <!-- Cabeçalho com ID e Valor -->
-        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-            <h6 class="text-primary fw-bold mb-0">
-                <i class="bi bi-hash"></i> {{ $conta->id }}
-            </h6>
-            <span class="fw-bold text-success fs-6">
-                R$ {{ number_format($conta->valor_pago ?? 0, 2, ',', '.') }}
-            </span>
-        </div>
-
-        <div class="row gy-3">
-            <!-- Descrição -->
-            <div class="col-md-4">
-                <p class="mb-1 text-secondary small fw-semibold">Descrição</p>
-                <p class="mb-0">{{ $conta->descricao ?? '-' }}</p>
-            </div>
-
-            <!-- Pagamento -->
-            <div class="col-md-2">
-                <p class="mb-1 text-secondary small fw-semibold">Pagamento</p>
-                <p class="mb-0">
-                    {{ \Carbon\Carbon::parse($conta->data_pagamento ?? now())->format('d/m/Y') }}
-                </p>
-            </div>
-
-            <!-- Centro de Custo -->
-            <div class="col-md-3">
-                <p class="mb-1 text-secondary small fw-semibold">Centro de Custo</p>
-                <span class="badge bg-light text-dark border small">
-                    {{ $conta->centroCusto->descricao ?? '-' }}
+                <!-- Badge de status -->
+                <span
+                    class="position-absolute top-0 end-0 mt-2 me-2 px-2 py-1 small text-uppercase fw-semibold {{ $statusClass }}"
+                    style="border-radius: 0.25rem; font-size: 0.65rem;">
+                    {{ $statusLabel }}
                 </span>
-            </div>
 
-            <!-- Cliente -->
-            @if($conta->cliente)
-                <div class="col-md-3">
-                    <p class="mb-1 text-secondary small fw-semibold">Cliente</p>
-                    <span class="badge bg-info text-dark small px-2 py-1">
-                        {{ $conta->cliente->nome_fantasia ?? $conta->cliente->razao_social ?? '-' }}
-                    </span>
+                <div class="card-body p-3">
+                    <!-- Cabeçalho com ID e Valor -->
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                        <h6 class="text-primary fw-bold mb-0">
+                            <i class="bi bi-hash"></i> {{ $conta->id }}
+                        </h6>
+                        <span class="fw-bold text-success fs-6">
+                            R$ {{ number_format($conta->valor_pago ?? 0, 2, ',', '.') }}
+                        </span>
+                    </div>
+
+                    <div class="row gy-3">
+                        <!-- Descrição -->
+                        <div class="col-md-12">
+                            <p class="mb-1 text-secondary small fw-semibold">Descrição</p>
+                            <p class="mb-0">{{ $conta->descricao ?? '-' }}</p>
+                        </div>
+
+                        <!-- Pagamento -->
+                        <div class="col-md-6">
+                            <p class="mb-1 text-secondary small fw-semibold">Recebido em</p>
+                            <p class="mb-0">
+                                {{ \Carbon\Carbon::parse($conta->data_pagamento ?? now())->format('d/m/Y') }}
+                            </p>
+                        </div>
+
+                        <!-- Valor original (opcional) -->
+                        <div class="col-md-6">
+                            <p class="mb-1 text-secondary small fw-semibold">Valor Recebido</p>
+                            <p class="mb-0">
+                                R$ {{ number_format($conta->valor_recebido ?? 0, 2, ',', '.') }}
+                            </p>
+                        </div>
+
+                        @if ($conta->centroCusto)
+                            <!-- Centro de Custo -->
+                            <div class="col-md-6">
+                                <p class="mb-1 text-secondary small fw-semibold">Centro de Custo</p>
+                                <p class="mb-0">{{ $conta->centroCusto->descricao ?? '-' }}</p>
+                            </div>
+                        @endif
+
+                        <!-- Cliente -->
+                        @if($conta->cliente)
+                            <div class="col-md-6">
+                                <p class="mb-1 text-secondary small fw-semibold">Cliente</p>
+                                <p class="mb-0">{{ $conta->cliente->nome_fantasia ?? $conta->cliente->razao_social ?? '-' }}</p>
+                            </div>
+                        @endif
+
+                        @if ($conta->observacao)
+                            <!-- Observações -->
+                            <div class="col-12">
+                                <p class="mb-1 text-secondary small fw-semibold">Observações</p>
+                                <p class="mb-0">{{ $conta->observacao }}</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Rodapé com ações -->
+                    <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2 flex-wrap">
+                        @if ($conta->conciliacoes->isNotEmpty())
+                            <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modalDesvincularContas-{{ $conta->id }}" title="Desvincular transações">
+                                <i class="bi bi-link-45deg"></i> Desvincular
+                            </button>
+                        @else
+                            <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modalVincularConta-{{ $conta->id }}" title="Vincular a uma transação">
+                                <i class="bi bi-plus-circle"></i> Vincular
+                            </button>
+
+                            <form action="{{ route('extrato.excluir_conta') }}" method="POST" class="d-inline"
+                                onsubmit="return confirm('Tem certeza que deseja excluir esta conta?')">
+                                @csrf
+                                <input type="hidden" name="id" value="{{ $conta->id }}">
+                                <input type="hidden" name="tipo" value="{{ get_class($conta) }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Excluir conta">
+                                    <i class="bi bi-trash"></i> Excluir
+                                </button>
+                            </form>
+                        @endif
+                    </div>
                 </div>
-            @endif
-        </div>
-
-        <!-- Rodapé com ações -->
-        <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2 flex-wrap">
-            @if ($conta->conciliacoes->isNotEmpty())
-                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal"
-                    data-bs-target="#modalDesvincularContas-{{ $conta->id }}" title="Desvincular transações">
-                    <i class="bi bi-link-45deg"></i> Desvincular
-                </button>
-            @else
-                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
-                    data-bs-target="#modalVincularConta-{{ $conta->id }}" title="Vincular a uma transação">
-                    <i class="bi bi-plus-circle"></i> Vincular
-                </button>
-
-                <form action="{{ route('extrato.excluir_conta') }}" method="POST" class="d-inline"
-                    onsubmit="return confirm('Tem certeza que deseja excluir esta conta?')">
-                    @csrf
-                    <input type="hidden" name="id" value="{{ $conta->id }}">
-                    <input type="hidden" name="tipo" value="{{ get_class($conta) }}">
-                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Excluir conta">
-                        <i class="bi bi-trash"></i> Excluir
-                    </button>
-                </form>
-            @endif
-        </div>
-    </div>
-</div>
+            </div>
 
         </div>
 

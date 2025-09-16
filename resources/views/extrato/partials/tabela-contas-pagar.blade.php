@@ -63,7 +63,7 @@
                         </div>
 
                         <!-- Pagamento -->
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <p class="mb-1 text-secondary small fw-semibold">Pagamento realizado em</p>
                             <p class="mb-0">
                                 {{ \Carbon\Carbon::parse($conta->data_pagamento ?? now())->format('d/m/Y') }}
@@ -71,36 +71,49 @@
                         </div>
 
                         <!-- Valor original (opcional) -->
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <p class="mb-1 text-secondary small fw-semibold">Valor Pago</p>
                             <p class="mb-0">
                                 R$ {{ number_format($conta->valor_pago ?? 0, 2, ',', '.') }}
                             </p>
                         </div>
 
-                        <!-- Centro de Custo -->
-                        <div class="col-md-4">
-                            <p class="mb-1 text-secondary small fw-semibold">Centro de Custo</p>
-                            <p class="mb-0">{{ $conta->centroCusto->descricao ?? '-' }}</p>
-                        </div>
+                        @if ($conta->centroCusto)
+                            <!-- Centro de Custo -->
+                            <div class="col-md-6">
+                                <p class="mb-1 text-secondary small fw-semibold">Centro de Custo</p>
+                                <p class="mb-0">{{ $conta->centroCusto->descricao ?? '-' }}</p>
+                            </div>
+                        @endif
 
-                        <!-- Fornecedor / Cliente -->
-                        <div class="col-md-2">
-                            <p class="mb-1 text-secondary small fw-semibold">Fornecedor</p>
-                            <p class="mb-0">
-                                {{ $conta->fornecedor->nome_fantasia ?? $conta->fornecedor->razao_social ?? '-' }}</p>
-                        </div>
+                        @if ($conta->fornecedor)
+                            <!-- Fornecedor / Cliente -->
+                            <div class="col-md-6">
+                                <p class="mb-1 text-secondary small fw-semibold">Fornecedor</p>
+                                <p class="mb-0">
+                                    {{ $conta->fornecedor->nome_fantasia ?? $conta->fornecedor->razao_social ?? '-' }}
+                                </p>
+                            </div>
+                        @endif
+
+                        @if ($conta->observacao)
+                            <!-- Observação -->
+                            <div class="col-12">
+                                <p class="mb-1 text-secondary small fw-semibold">Observação</p>
+                                <p class="mb-0">{{ $conta->observacao }}</p>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Rodapé com ações -->
                     <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2 flex-wrap">
                         @if ($conta->conciliacoes->isNotEmpty())
-                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal"
+                            <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal"
                                 data-bs-target="#modalDesvincularContas-{{ $conta->id }}" title="Desvincular transações">
                                 <i class="bi bi-link-45deg"></i> Desvincular
                             </button>
                         @else
-                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                            <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
                                 data-bs-target="#modalVincularConta-{{ $conta->id }}" title="Vincular a uma transação">
                                 <i class="bi bi-plus-circle"></i> Vincular
                             </button>
