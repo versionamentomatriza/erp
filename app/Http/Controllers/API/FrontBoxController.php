@@ -24,6 +24,7 @@ use App\Models\ProdutoVariacao;
 use App\Models\Produto;
 use App\Models\UsuarioAcesso;
 use App\Models\CashBackConfig;
+use App\Models\CategoriaConta;
 use App\Models\Funcionario;
 use App\Utils\EstoqueUtil;
 use Dflydev\DotAccessData\Util;
@@ -255,6 +256,7 @@ class FrontBoxController extends Controller
                 $caixa = Caixa::where('usuario_id', $request->usuario_id)
                     ->where('status', 1)
                     ->first();
+                $categoriaContaDefault = CategoriaConta::where('nome', 'Receita de Mercadorias')->first();
 
                 $numero_nfce = $config->numero_ultima_nfce_producao;
                 if ($config->ambiente == 2) {
@@ -291,10 +293,6 @@ class FrontBoxController extends Controller
                     'cAut_cartao'       => $request->cAut_cartao ?? '',
                     'user_id'           => $request->usuario_id
                 ]);
-
-                if (isset($request->valor_cashback) && $request->valor_cashback > 0) {
-                    // pode aplicar desconto ou outra regra aqui
-                }
 
                 $nfce = Nfce::create($request->all());
 
@@ -376,42 +374,71 @@ class FrontBoxController extends Controller
                     }
                 }
 
-                // ========== CONTA RECEBER E FATURA ==========
-                if ($request->tipo_pagamento_row) {
+                // ========== AGENDAMENTO ==========
+                if ($request->agendamento_id) {
+                    $agendamento = Agendamento::findOrFail($request->agendamento_id);
+                    $agendamento->status = 1;
+                    $agendamento->nfce_id = $nfce->id;
+                    $agendamento->save();
+                }
+
+                // ========== CONTAS A RECEBER & FATURAS ==========
+                $tiposDiferenciados = [
+                    '01' => 0,
+                    '17' => 0,
+                    '02' => 3,
+                    '03' => 30,
+                    '04' => 1,
+                    '05' => 30,
+                    '06' => 30,
+                    '10' => 30,
+                    '11' => 30,
+                    '12' => 30,
+                    '13' => 30,
+                    '14' => 3,
+                    '15' => 3,
+                    '16' => 0,
+                    '90' => 0,
+                    '99' => 0
+                ];
+                $naoRecebidoImediato = ['06', '90', '99'];
+
+                if (!empty($request->tipo_pagamento_row)) {
                     foreach ($request->tipo_pagamento_row as $i => $tipoRow) {
-                        $valorParcela  = __convert_value_bd($request->valor_integral_row[$i]);
-                        $dias          = $calcularDias($tipoRow);
-                        $status        = $dias === 0 ? 1 : 0;
-                        $valorRecebido = $status ? $valorParcela : 0;
+                        $dias = $tiposDiferenciados[$tipoRow] ?? 0;
+                        $dataRecebimento = now()->copy()->addDays($dias);
+                        $valor_recebido = !in_array($tipoRow, $naoRecebidoImediato) ? __convert_value_bd($request->valor_integral_row[$i]) : 0;
+                        $status = !in_array($tipoRow, $naoRecebidoImediato) ? 1 : 0;
 
                         ContaReceber::create([
                             'nfe_id'           => null,
                             'nfce_id'          => $nfce->id,
                             'cliente_id'       => $request->cliente_id,
                             'data_vencimento'  => $request->data_vencimento_row[$i],
-                            'data_recebimento' => $status ? now()->copy()->addDays($dias) : null,
-                            'valor_integral'   => $valorParcela,
-                            'valor_recebido'   => $valorRecebido,
+                            'data_recebimento' => $dataRecebimento,
+                            'valor_integral'   => __convert_value_bd($request->valor_integral_row[$i]),
+                            'valor_recebido'   => $valor_recebido,
                             'status'           => $status,
                             'referencia'       => "Parcela " . ($i + 1) . " da venda código {$nfce->id}",
                             'empresa_id'       => $request->empresa_id,
                             'tipo_pagamento'   => $tipoRow,
                             'observacao'       => $request->obs_row[$i] ?? '',
-                            'local_id'         => $caixa->local_id
+                            'local_id'         => $caixa->local_id,
+                            'categoria_conta_id' => $request->categoria_conta_id ?? $categoriaContaDefault->id ?? null
                         ]);
 
                         FaturaNfce::create([
                             'nfce_id'        => $nfce->id,
                             'tipo_pagamento' => $tipoRow,
                             'data_vencimento' => $request->data_vencimento_row[$i],
-                            'valor'          => $valorParcela
+                            'valor'          => __convert_value_bd($request->valor_integral_row[$i])
                         ]);
                     }
                 } else {
-                    $tipo          = $request->tipo_pagamento;
+                    $tipo = $request->tipo_pagamento;
+                    $dias = $tiposDiferenciados[$tipo] ?? 0;
                     $valorIntegral = __convert_value_bd($request->valor_total);
-                    $dias          = $calcularDias($tipo);
-                    $status        = $dias === 0 ? 1 : 0;
+                    $status = $dias === 0 ? 1 : 0;
                     $valorRecebido = $status ? $valorIntegral : 0;
 
                     ContaReceber::create([
@@ -419,7 +446,7 @@ class FrontBoxController extends Controller
                         'nfce_id'          => $nfce->id,
                         'cliente_id'       => $request->cliente_id,
                         'data_vencimento'  => $request->data_vencimento,
-                        'data_recebimento' => $status ? now()->copy()->addDays($dias) : null,
+                        'data_recebimento' => now()->copy()->addDays($dias),
                         'valor_integral'   => $valorIntegral,
                         'valor_recebido'   => $valorRecebido,
                         'status'           => $status,
@@ -427,7 +454,8 @@ class FrontBoxController extends Controller
                         'empresa_id'       => $request->empresa_id,
                         'tipo_pagamento'   => $tipo,
                         'observacao'       => $request->observacao,
-                        'local_id'         => $caixa->local_id
+                        'local_id'         => $caixa->local_id,
+                        'categoria_conta_id' => $request->categoria_conta_id ?? $categoriaContaDefault->id ?? null
                     ]);
 
                     FaturaNfce::create([
@@ -436,6 +464,59 @@ class FrontBoxController extends Controller
                         'data_vencimento' => date('Y-m-d'),
                         'valor'          => $valorIntegral
                     ]);
+                }
+
+                // ========== COMISSÃO FUNCIONÁRIO ==========
+                if ($request->funcionario_id != null) {
+                    $funcionario = Funcionario::where('empresa_id', $request->empresa_id)->first();
+                    $comissao = $funcionario->comissao ?? 0;
+                    $valorRetorno = $this->calcularComissaoVenda($nfce, $comissao);
+                    ComissaoVenda::create([
+                        'funcionario_id' => $request->funcionario_id,
+                        'nfe_id'         => null,
+                        'nfce_id'        => $nfce->id,
+                        'tabela'         => 'nfce',
+                        'valor'          => $valorRetorno,
+                        'valor_venda'    => __convert_value_bd($request->valor_total),
+                        'status'         => 0,
+                        'empresa_id'     => $request->empresa_id
+                    ]);
+                }
+
+                // ========== CASHBACK ==========
+                if (isset($request->valor_cashback) && $request->valor_cashback == 0 && $request->permitir_credito) {
+                    $this->saveCashBack($nfce);
+                } elseif (isset($request->valor_cashback) && $request->valor_cashback > 0) {
+                    $this->rateioCashBack($request->valor_cashback, $nfce);
+                }
+
+                // ========== PEDIDOS ==========
+                if (isset($request->pedido_id)) {
+                    $pedido = Pedido::findOrfail($request->pedido_id);
+                    $pedido->status = 0;
+                    $pedido->em_atendimento = 0;
+                    $pedido->nfce_id = $nfce->id;
+                    ItemPedido::where('pedido_id', $pedido->id)->update(['estado' => 'finalizado']);
+                    $pedido->save();
+                }
+
+                if (isset($request->pedido_delivery_id)) {
+                    $pedido = PedidoDelivery::findOrfail($request->pedido_delivery_id);
+                    $pedido->estado = 'finalizado';
+                    $pedido->finalizado = 1;
+                    $pedido->horario_entrega = date('H:i');
+                    $pedido->nfce_id = $nfce->id;
+
+                    if ($pedido->motoboy_id) {
+                        MotoboyComissao::create([
+                            'empresa_id'         => $request->empresa_id,
+                            'pedido_id'          => $pedido->id,
+                            'motoboy_id'         => $pedido->motoboy_id,
+                            'valor'              => $pedido->comissao_motoboy,
+                            'valor_total_pedido' => __convert_value_bd($request->valor_total),
+                            'status'             => 0
+                        ]);
+                    }
                 }
 
                 return $nfce;
