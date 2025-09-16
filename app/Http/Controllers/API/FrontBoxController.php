@@ -357,110 +357,87 @@ class FrontBoxController extends Controller
                     $agendamento->save();
                 }
 
-                switch ($request->tipo_pagamento) {
-                    case '01': // Dinheiro
-                    case '17': // PIX
-                        $dataRecebimentoPrevista = now(); // cai no mesmo dia
-                        break;
+                $tiposDiferenciados = [
+                    '01' => 0,  // Dinheiro → mesmo dia
+                    '17' => 0,  // PIX → mesmo dia
+                    '02' => 3,  // Cheque → +3 dias
+                    '03' => 30, // Cartão de Crédito → +30 dias
+                    '04' => 1,  // Cartão de Débito → +1 dia
+                    '05' => 30, // Crédito Loja → +30 dias
+                    '06' => 30, // Crediário → +30 dias
+                    '10' => 30, // Vale Alimentação → +30 dias
+                    '11' => 30, // Vale Refeição → +30 dias
+                    '12' => 30, // Vale Presente → +30 dias
+                    '13' => 30, // Vale Combustível → +30 dias
+                    '14' => 3,  // Duplicata Mercantil → +3 dias
+                    '15' => 3,  // Boleto Bancário → +3 dias
+                    '16' => 0,  // Depósito Bancário → mesmo dia
+                    '90' => 0,  // Sem Pagamento → genérico
+                    '99' => 0,  // Outros → genérico
+                ];
 
-                    case '02': // Cheque
-                        $dataRecebimentoPrevista = now()->copy()->addDays(3); // geralmente 3 dias úteis
-                        break;
+                $naoRecebidoImediato = ['06', '90', '99'];
 
-                    case '03': // Cartão de Crédito
-                        $dataRecebimentoPrevista = now()->copy()->addDays(30); // padrão D+30 (ajustável por adquirente)
-                        break;
+                // Se houver pagamento múltiplo
+                if (!empty($request->tipo_pagamento_row)) {
 
-                    case '04': // Cartão de Débito
-                        $dataRecebimentoPrevista = now()->copy()->addDay(); // D+1
-                        break;
+                    foreach ($request->tipo_pagamento_row as $i => $tipo) {
+                        $dias = $tiposDiferenciados[$tipo] ?? 0;
+                        $dataRecebimento = now()->copy()->addDays($dias);
+                        $valor_recebido = !in_array($tipo, $naoRecebidoImediato) ? __convert_value_bd($request->valor_integral_row[$i]) : 0;
+                        $status = !in_array($tipo, $naoRecebidoImediato) ? 1 : 0;
 
-                    case '05': // Crédito Loja
-                    case '06': // Crediário
-                        $dataRecebimentoPrevista = now()->copy()->addDays(30); // depende da política da loja
-                        break;
+                        ContaReceber::create([
+                            'nfe_id' => null,
+                            'nfce_id' => $nfce->id,
+                            'cliente_id' => $request->cliente_id,
+                            'data_vencimento' => $request->data_vencimento_row[$i],
+                            'data_recebimento' => $dataRecebimento,
+                            'valor_integral' => __convert_value_bd($request->valor_integral_row[$i]),
+                            'valor_recebido' => $valor_recebido,
+                            'status' => $status,
+                            'referencia' => "Parcela " . ($i + 1) . " da venda código {$nfce->id}",
+                            'empresa_id' => $request->empresa_id,
+                            'tipo_pagamento' => $tipo,
+                            'observacao' => $request->obs_row[$i] ?? '',
+                            'local_id' => $caixa->local_id
+                        ]);
 
-                    case '10': // Vale Alimentação
-                    case '11': // Vale Refeição
-                    case '12': // Vale Presente
-                    case '13': // Vale Combustível
-                        $dataRecebimentoPrevista = now()->copy()->addDays(30); // tratam como crédito → D+30
-                        break;
-
-                    case '14': // Duplicata Mercantil
-                    case '15': // Boleto Bancário
-                        $dataRecebimentoPrevista = now()->copy()->addDays(3);
-                        break;
-
-                    case '16': // Depósito Bancário
-                        $dataRecebimentoPrevista = now(); // já cai no ato do depósito
-                        break;
-
-                    case '90': // Sem Pagamento
-                    case '99': // Outros
-                        $dataRecebimentoPrevista = now(); // genérico
-                        break;
-
-                    default:
-                        $dataRecebimentoPrevista = now();
-                }
-
-                ContaReceber::create([
-                    'nfe_id' => null,
-                    'nfce_id' => $nfce->id,
-                    'data_vencimento' => $request->data_vencimento,
-                    'data_recebimento' =>  $request->data_vencimento,
-                    'valor_integral' => __convert_value_bd($request->valor_total),
-                    'valor_recebido' => 0,
-                    'referencia' => $request->referencia,
-                    'status' => 0,
-                    'empresa_id' => $request->empresa_id,
-                    'cliente_id' => $request->cliente_id,
-                    'tipo_pagamento' => $request->tipo_pagamento,
-                    'observacao' => $request->observacao,
-                    'local_id' => $caixa->local_id,
-                ]);
-
-                if ($request->tipo_pagamento_row) {
-                    for ($i = 0; $i < sizeof($request->tipo_pagamento_row); $i++) {
-                        // if ($request->tipo_pagamento_row[$i] == '06') {
-                        $vencimento = $request->data_vencimento_row[$i];
-                        $dataAtual = date('Y-m-d');
-                        if (strtotime($vencimento) > strtotime($dataAtual)) {
-                            ContaReceber::create([
-                                'nfe_id' => null,
-                                'nfce_id' => $nfce->id,
-                                'cliente_id' => $request->cliente_id,
-                                'data_vencimento' => $request->data_vencimento_row[$i],
-                                'data_recebimento' => $request->data_vencimento_row[$i],
-                                'valor_integral' => __convert_value_bd($request->valor_integral_row[$i]),
-                                'valor_recebido' => 0,
-                                'status' => 0,
-                                'referencia' => "Parcela $i+1 da venda código $nfce->id",
-                                'empresa_id' => $request->empresa_id,
-                                'juros' => 0,
-                                'multa' => 0,
-                                'observacao' => $request->obs_row[$i] ?? '',
-                                'tipo_pagamento' => $request->tipo_pagamento_row[$i],
-                                'local_id' => $caixa->local_id
-                            ]);
-                        }
-                        // }
-                    }
-                    for ($i = 0; $i < sizeof($request->tipo_pagamento_row); $i++) {
-                        if ($request->tipo_pagamento_row[$i]) {
-                            FaturaNfce::create([
-                                'nfce_id' => $nfce->id,
-                                'tipo_pagamento' => $request->tipo_pagamento_row[$i],
-                                'data_vencimento' => $request->data_vencimento_row[$i],
-                                'valor' => __convert_value_bd($request->valor_integral_row[$i])
-                            ]);
-                        }
+                        // Cria fatura correspondente
+                        FaturaNfce::create([
+                            'nfce_id' => $nfce->id,
+                            'tipo_pagamento' => $tipo,
+                            'data_vencimento' => $request->data_vencimento_row[$i],
+                            'valor' => __convert_value_bd($request->valor_integral_row[$i])
+                        ]);
                     }
                 } else {
+                    // Pagamento único
+                    $tipo = $request->tipo_pagamento;
+                    $dias = $tiposDiferenciados[$tipo] ?? 0;
+                    $dataRecebimento = now()->copy()->addDays($dias);
+                    $valor_recebido = !in_array($tipo, $naoRecebidoImediato) ? __convert_value_bd($request->valor_total) : 0;
+                    $status = !in_array($tipo, $naoRecebidoImediato) ? 1 : 0;
+
+                    ContaReceber::create([
+                        'nfe_id' => null,
+                        'nfce_id' => $nfce->id,
+                        'data_vencimento' => $request->data_vencimento,
+                        'data_recebimento' => $dataRecebimento,
+                        'valor_integral' => __convert_value_bd($request->valor_total),
+                        'valor_recebido' => $valor_recebido,
+                        'referencia' => $request->referencia,
+                        'status' => $status,
+                        'empresa_id' => $request->empresa_id,
+                        'cliente_id' => $request->cliente_id,
+                        'tipo_pagamento' => $tipo,
+                        'observacao' => $request->observacao,
+                        'local_id' => $caixa->local_id
+                    ]);
+
                     FaturaNfce::create([
                         'nfce_id' => $nfce->id,
-                        'tipo_pagamento' => $request->tipo_pagamento,
+                        'tipo_pagamento' => $tipo,
                         'data_vencimento' => date('Y-m-d'),
                         'valor' => __convert_value_bd($request->valor_total)
                     ]);
