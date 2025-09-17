@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('banco')->nullable();
             $table->date('inicio');
             $table->date('fim');
+            $table->decimal('saldo_inicial', 15, 2)->nullable();
             $table->decimal('saldo_final', 15, 2)->nullable();
             $table->enum('status', ['pendente', 'conciliado'])->default('pendente');
             $table->timestamps();

@@ -16,7 +16,8 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuExtrato{{ $e->id }}">
                         <li>
-                            <a class="dropdown-item" href="{{ route('extrato.movimentacao_bancaria', ['extrato' => $e->id]) }}">
+                            <a class="dropdown-item"
+                                href="{{ route('extrato.movimentacao_bancaria', ['extrato' => $e->id]) }}">
                                 Relatório de movimentação bancária
                             </a>
                         </li>
@@ -31,7 +32,10 @@
                     {{ \Carbon\Carbon::parse($e->inicio)->format('d/m/Y') }}
                     - {{ \Carbon\Carbon::parse($e->fim)->format('d/m/Y') }}
                 </small></p>
-            <p class="mb-1"><small><strong>Saldo:</strong>
+            <p class="mb-1"><small><strong>Saldo Inicial:</strong>
+                    R$ {{ number_format($e->saldo_inicial ?? 0, 2, ',', '.') }}
+                </small></p>
+            <p class="mb-1"><small><strong>Saldo Final:</strong>
                     R$ {{ number_format($e->saldo_final ?? 0, 2, ',', '.') }}
                 </small></p>
             <p class="mb-1"><small><strong>Status:</strong>
