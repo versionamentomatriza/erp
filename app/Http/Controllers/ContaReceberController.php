@@ -43,8 +43,6 @@ class ContaReceberController extends Controller
         $local_id = $request->get('local_id');
         $ordenar_por = $request->get('ordenar_por'); // Captura o campo para ordenação
 
-        $categoriaConta = CategoriaConta::where('nome', 'LIKE', 'Receita de Mercadorias')->first();
-
         // Query para buscar as contas a receber com os filtros aplicados
         $data = ContaReceber::where('empresa_id', request()->empresa_id)
             ->when(!empty($cliente_id), function ($query) use ($cliente_id) {
@@ -62,9 +60,7 @@ class ContaReceberController extends Controller
             ->when(!$local_id, function ($query) use ($locais) {
                 return $query->whereIn('local_id', $locais);
             })
-            ->when($categoriaConta, function ($query) use ($categoriaConta) {
-                return $query->where('categoria_conta_id', '!=', $categoriaConta->id);
-            })
+            ->where('descricao', '!=', 'Venda PDV')
             // Adicionando a ordenação com base na escolha do usuário
             ->when($ordenar_por, function ($query) use ($ordenar_por) {
                 if ($ordenar_por === 'data_vencimento_asc') {

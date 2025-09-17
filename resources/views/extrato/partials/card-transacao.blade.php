@@ -42,7 +42,7 @@
             data-tipo="{{ $transacao->tipo }}" data-valor="{{ $transacao->valor }}"
             data-descricao="{{ $transacao->descricao }}" data-data="{{ $transacao->data }}">
             <i class="bi bi-plus-circle"></i>
-            Criar consiliável
+            Criar conciliável
         </button>
     </div>
 </div>
