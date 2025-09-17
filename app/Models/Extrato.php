@@ -13,6 +13,7 @@ class Extrato extends Model
         'banco',
         'inicio',
         'fim',
+        'saldo_inicial',
         'saldo_final',
         'empresa_id',
         'status',

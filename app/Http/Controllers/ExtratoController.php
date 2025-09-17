@@ -15,7 +15,6 @@ use App\Models\Transacao;
 use App\Services\ExtratoService;
 use App\Services\OfxService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class ExtratoController extends Controller
@@ -104,6 +103,7 @@ class ExtratoController extends Controller
                         'banco'       => $dadosExtrato['transacoes'][0]['banco'] ?? null,
                         'inicio'      => $dataReferencia->copy()->startOfMonth()->toDateString(),
                         'fim'         => $dataReferencia->copy()->endOfMonth()->toDateString(),
+                        'saldo_inicial' => $dadosExtrato['saldoInicial'] ?? 0,
                         'saldo_final' => $dadosExtrato['saldoFinal'] ?? 0,
                         'empresa_id'  => $empresaId,
                     ]);

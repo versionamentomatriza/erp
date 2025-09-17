@@ -8,42 +8,56 @@ class OfxService
 {
     public static function parse($ofxContent)
     {
-        // Garante que está em UTF-8
+        // Garante UTF-8
         $ofxContent = mb_convert_encoding($ofxContent, 'UTF-8', 'UTF-8, ISO-8859-1, Windows-1252');
-
-        // Normaliza quebras de linha
         $ofxContent = str_replace(["\r\n", "\r"], "\n", $ofxContent);
 
-        // Extrai código e nome do banco
+        // Extrai código/nome do banco
         preg_match('/<BANKID>(.*?)\n/i', $ofxContent, $mBankId);
         preg_match('/<FID>(.*?)\n/i', $ofxContent, $mFid);
-        preg_match('/<ORG>(.*?)\n/i', $ofxContent, $mOrg);
 
         $codigoBanco = $mBankId[1] ?? ($mFid[1] ?? null);
 
         // Extrai transações
         $transactions = self::parseTransactionsRaw($ofxContent);
 
-        // Ordena transações por data
         $transactions = array_filter($transactions, fn($t) => !empty($t['data']));
         usort($transactions, fn($a, $b) => strcmp($a['data'], $b['data']));
 
         $dataInicio = $transactions[0]['data'] ?? null;
         $dataFim    = end($transactions)['data'] ?? null;
 
-        // Saldo final
-        preg_match('/<LEDGERBAL>.*?<BALAMT>(.*?)\n/is', $ofxContent, $mSaldo);
-        $saldoFinal = isset($mSaldo[1]) ? (float) str_replace(',', '.', $mSaldo[1]) : null;
+        // Saldo final (<LEDGERBAL>)
+        preg_match('/<LEDGERBAL>.*?<BALAMT>(.*?)\n/is', $ofxContent, $mSaldoFinal);
+        $saldoFinal = isset($mSaldoFinal[1]) ? (float) str_replace(',', '.', $mSaldoFinal[1]) : null;
 
-        // 🔹 injeta banco em cada transação
-        foreach ($transactions as &$t) $t['banco'] = self::nomeBancoPorCodigo($codigoBanco);
+        // Saldo inicial (<AVAILBAL> ou calculado)
+        preg_match('/<AVAILBAL>.*?<BALAMT>(.*?)\n/is', $ofxContent, $mSaldoInicial);
+        $saldoInicial = isset($mSaldoInicial[1]) ? (float) str_replace(',', '.', $mSaldoInicial[1]) : null;
+
+        // Estratégia híbrida
+        if ($saldoInicial === null) {
+            if ($saldoFinal !== null && !empty($transactions)) {
+                $totalMovimentado = array_sum(array_column($transactions, 'valor'));
+                $saldoInicial = $saldoFinal - $totalMovimentado;
+            } elseif ($saldoFinal !== null) {
+                // Sem transações → saldo inicial = saldo final
+                $saldoInicial = $saldoFinal;
+            }
+        }
+
+        // Injeta nome do banco em cada transação
+        foreach ($transactions as &$t) {
+            $t['banco'] = self::nomeBancoPorCodigo($codigoBanco);
+        }
         unset($t);
 
         return [
-            'transacoes'  => $transactions,
-            'saldoFinal'  => $saldoFinal,
-            'dataInicio'  => $dataInicio,
-            'dataFim'     => $dataFim,
+            'transacoes'   => $transactions,
+            'saldoInicial' => $saldoInicial,
+            'saldoFinal'   => $saldoFinal,
+            'dataInicio'   => $dataInicio,
+            'dataFim'      => $dataFim,
         ];
     }
 
