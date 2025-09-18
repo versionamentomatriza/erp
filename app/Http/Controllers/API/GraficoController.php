@@ -16,7 +16,7 @@ use App\Models\Localizacao;
 
 class GraficoController extends Controller
 {
-    public function dadosDards(Request $request){
+    public function dadosCards(Request $request){
         $periodo = $request->periodo;
         $empresa_id = $request->empresa_id;
         $usuario_id = $request->usuario_id;
@@ -140,7 +140,6 @@ class GraficoController extends Controller
 
         $somaContaReceber = ContaReceber::
         where('empresa_id', $empresa_id)
-        ->where('status', 0)
         ->when($periodo == 1, function ($query) {
             return $query->whereDate('data_vencimento', date('Y-m-d'));
         })
@@ -163,7 +162,6 @@ class GraficoController extends Controller
 
         $somaContaPagar = ContaPagar::
         where('empresa_id', $empresa_id)
-        ->where('status', 0)
         ->when($periodo == 1, function ($query) {
             return $query->whereDate('data_vencimento', date('Y-m-d'));
         })
