@@ -550,6 +550,7 @@ class FrontBoxController extends Controller
 
                 // ------- Regras de datas / pagamentos -------
                 // Helper interno para calcular dias (tratamento PIX maquininha)
+                // DÚVIDA AQUI
                 $calcularDias = function (string $tipo, ?string $subtipo = null) {
                     $map = [
                         '01' => 0,
