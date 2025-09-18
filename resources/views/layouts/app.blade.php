@@ -967,6 +967,10 @@
                                                 <a href="{{ route('caixa.index') }}">Movimentação</a>
                                             </li>
 
+                                            <li>
+                                                <a href="{{ route('extrato.conciliar') }}">Conciliação Bancária</a>
+                                            </li>
+
                             @canany(['conta_pagar_view', 'conta_pagar_create'])
                                         <li>
                                             <a href="{{ route('conta-pagar.index') }}">Contas a Pagar</a>
