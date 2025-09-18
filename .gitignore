@@ -79,6 +79,7 @@ public/xml_dfe/
 public/xml_entrada/
 public/xml_mdfe/
 public/xml_nfe_cancelada/
+public/xml_nfce_cancelada/
 public/xml_nfe_correcao/
 public/xml_nota_servico/
 public/uploads/

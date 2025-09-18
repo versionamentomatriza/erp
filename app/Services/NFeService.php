@@ -689,48 +689,57 @@ class NFeService{
 			$nfe->taginfRespTec($stdResp);
 		}
 
-		//Fatura
-		$stdFat = new \stdClass();
-		$stdFat->nFat = $stdIde->nNF;
-		$stdFat->vOrig = $this->format($item->itens->sum('sub_total') + $item->valor_frete);
-		$stdFat->vDesc = $this->format($item->desconto);
-		$stdFat->vLiq = $stdFat->vOrig;
+		
 
-		$fatura = $nfe->tagfat($stdFat);
+if (count($item->fatura) > 1) {
+    // 🔹 Caso parcelado → gera tagfat + tagdup
+    $stdFat = new \stdClass();
+    $stdFat->nFat = $stdIde->nNF;
+    $stdFat->vOrig = $this->format($item->itens->sum('sub_total') + $item->valor_frete);
+    $stdFat->vDesc = $this->format($item->desconto);
+    $stdFat->vLiq = $stdFat->vOrig;
 
-		$contFatura = 1;
-		foreach ($item->fatura as $ft) {
-			$stdDup = new \stdClass();
-			$stdDup->nDup = "00" . $contFatura;
-			$stdDup->dVenc = substr($ft->data_vencimento, 0, 10);
-			$stdDup->vDup = $this->format($ft->valor);
+    $fatura = $nfe->tagfat($stdFat);
 
-			$nfe->tagdup($stdDup);
-			$contFatura++;
-		}
+    $contFatura = 1;
+    foreach ($item->fatura as $ft) {
+        $stdDup = new \stdClass();
+        $stdDup->nDup = str_pad($contFatura, 3, '0', STR_PAD_LEFT);
+        $stdDup->dVenc = substr($ft->data_vencimento, 0, 10);
+        $stdDup->vDup = $this->format($ft->valor);
 
-		$stdPag = new \stdClass();
-		$pag = $nfe->tagpag($stdPag);
+        $nfe->tagdup($stdDup);
+        $contFatura++;
+    }
+}
 
-		if(sizeof($item->fatura) > 0){
-			foreach ($item->fatura as $ft) {
+// Sempre precisa existir ao menos a tag <pag>
+$stdPag = new \stdClass();
+$pag = $nfe->tagpag($stdPag);
 
-				$stdDetPag = new \stdClass();
-				$stdDetPag->tPag = $ft->tipo_pagamento;
-				if($stdDetPag->tPag == '06'){
-					$stdDetPag->tPag = '05'; 
-				}
-				$stdDetPag->vPag = $this->format($ft->valor);
-				$stdDetPag->indPag = 1;
-				$detPag = $nfe->tagdetPag($stdDetPag);
-			}
-		}else{
-			$stdDetPag = new \stdClass();
-			$stdDetPag->tPag = 90;
-			$stdDetPag->vPag = 0;
-			$stdDetPag->indPag = 1;
-			$detPag = $nfe->tagdetPag($stdDetPag);
-		}
+// Se houver fatura vinculada
+if (count($item->fatura) > 0) {
+    foreach ($item->fatura as $ft) {
+        $stdDetPag = new \stdClass();
+        $stdDetPag->tPag = $ft->tipo_pagamento;
+
+        // Ajusta cartão de crédito → deve ser '03'
+        if ($stdDetPag->tPag == '06') {
+            $stdDetPag->tPag = '03';
+        }
+
+        $stdDetPag->vPag = $this->format($ft->valor);
+        $stdDetPag->indPag = 1; // 0=à vista | 1=à prazo
+        $detPag = $nfe->tagdetPag($stdDetPag);
+    }
+} else {
+    // 🔹 Pagamento à vista sem fatura → gera apenas <detPag>
+    $stdDetPag = new \stdClass();
+    $stdDetPag->tPag = 90; // Sem pagamento
+    $stdDetPag->vPag = 0.00;
+    $stdDetPag->indPag = 0; // à vista
+    $detPag = $nfe->tagdetPag($stdDetPag);
+}
 
 		$stdInfoAdic = new \stdClass();
 
