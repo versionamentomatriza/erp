@@ -4,7 +4,6 @@
 
 @section('content')
     <div class="container py-4">
-
         <div class="card shadow-lg border-0 p-4">
             <!-- Cabeçalho -->
             <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
@@ -12,11 +11,26 @@
                     <h1 class="h3 mb-1">Movimentação Bancária</h1>
                     <div class="text-muted small">
                         <i class="bi bi-building"></i> {{ $empresa->nome_fantasia ?? $empresa->nome }} <br>
-                        <i class="bi bi-calendar3"></i> {{ $extrato->inicio }} — {{ $extrato->fim }}
+                        <i class="bi bi-calendar3"></i> {{ $extrato->banco ?? 'Banco não informado' }}: {{ $extrato->inicio }} — {{ $extrato->fim }}
+                    </div>
+                    <div class="text-muted small">
+                        <i class="bi bi-cash-stack"></i> Saldo inicial do extrato:
+                        <strong>R$ {{ number_format($extrato->saldo_inicial, 2, ',', '.') }}</strong>
                     </div>
                     <div class="text-muted small">
                         <i class="bi bi-cash-stack"></i> Saldo final do extrato:
                         <strong>R$ {{ number_format($extrato->saldo_final, 2, ',', '.') }}</strong>
+                    </div>
+                    <div class="text-muted small">
+                        <i class="bi bi-cash-stack"></i> Saldo de acordo com a movimentação:
+                        <strong>R$ {{ number_format($saldoConciliado, 2, ',', '.') }}</strong>
+                    </div>
+                    <div class="text-muted small">
+                        <i class="bi bi-cash-stack"></i> Diferença (saldo final do extrato - saldo de acordo com a movimentação):
+                        <strong>R$ {{ number_format($extrato->saldo_final - $saldoConciliado, 2, ',', '.') }}</strong>
+                        @if(($extrato->saldo_final - $saldoConciliado) != 0)
+                            <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+                        @endif
                     </div>
                 </div>
                 <div class="d-flex gap-2">
@@ -68,7 +82,6 @@
             </div>
 
             <!-- Tabela -->
-            <div class="bg-white fw-semibold mb-4">Relatório de Movimentação Bancária</div>
             <div class="table-responsive">
                 <table class="table align-middle mb-0">
                     <thead class="table-light">

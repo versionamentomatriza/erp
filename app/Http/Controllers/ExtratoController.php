@@ -68,7 +68,7 @@ class ExtratoController extends Controller
                 if (empty($dadosExtrato) || empty($todasTransacoes)) {
                     return view('extrato.index', [
                         'fornecedores'     => $fornecedores,
-                        'clientes'        => $clientes,
+                        'clientes'         => $clientes,
                         'contasPagar'      => collect(),
                         'contasReceber'    => collect(),
                         'centrosCustos'    => $centrosCustos,
@@ -100,12 +100,12 @@ class ExtratoController extends Controller
                     ]);
                 } else {
                     $extrato = Extrato::create([
-                        'banco'       => $dadosExtrato['transacoes'][0]['banco'] ?? null,
-                        'inicio'      => $dataReferencia->copy()->startOfMonth()->toDateString(),
-                        'fim'         => $dataReferencia->copy()->endOfMonth()->toDateString(),
+                        'banco'         => $dadosExtrato['transacoes'][0]['banco'] ?? null,
+                        'inicio'        => $dataReferencia->copy()->startOfMonth()->toDateString(),
+                        'fim'           => $dataReferencia->copy()->endOfMonth()->toDateString(),
                         'saldo_inicial' => $dadosExtrato['saldoInicial'] ?? 0,
-                        'saldo_final' => $dadosExtrato['saldoFinal'] ?? 0,
-                        'empresa_id'  => $empresaId,
+                        'saldo_final'   => $dadosExtrato['saldoFinal'] ?? 0,
+                        'empresa_id'    => $empresaId,
                     ]);
 
                     $extratos->push($extrato);
@@ -114,15 +114,8 @@ class ExtratoController extends Controller
                 // 🔹 Cria ou vincula transações
                 ExtratoService::criarTransacoes($todasTransacoes, $extrato->id);
 
-                $contasPagar = ContaPagar::where('empresa_id', $empresaId)
-                    ->whereBetween('data_vencimento', [$extrato->inicio, $extrato->fim])
-                    ->orderBy('id', 'desc')
-                    ->get();
-
-                $contasReceber = ContaReceber::where('empresa_id', $empresaId)
-                    ->whereBetween('data_vencimento', [$extrato->inicio, $extrato->fim])
-                    ->orderBy('id', 'desc')
-                    ->get();
+                $contasPagar = buscarContasPorExtrato(ContaPagar::class, $empresaId, $extrato);
+                $contasReceber = buscarContasPorExtrato(ContaReceber::class, $empresaId, $extrato);
 
                 return redirect()->route('extrato.conciliar', ['extrato' => $extrato->id]);
             }
@@ -131,19 +124,12 @@ class ExtratoController extends Controller
             if ($request->get('extrato')) {
                 $extrato = Extrato::find($request->get('extrato'));
 
-                $contasPagar = ContaPagar::where('empresa_id', $empresaId)
-                    ->whereBetween('data_vencimento', [$extrato->inicio, $extrato->fim])
-                    ->orderBy('id', 'desc')
-                    ->get();
-
-                $contasReceber = ContaReceber::where('empresa_id', $empresaId)
-                    ->whereBetween('data_vencimento', [$extrato->inicio, $extrato->fim])
-                    ->orderBy('id', 'desc')
-                    ->get();
+                $contasPagar = buscarContasPorExtrato(ContaPagar::class, $empresaId, $extrato);
+                $contasReceber = buscarContasPorExtrato(ContaReceber::class, $empresaId, $extrato);
 
                 return view('extrato.index', [
                     'fornecedores'     => $fornecedores,
-                    'clientes'        => $clientes,
+                    'clientes'         => $clientes,
                     'contasPagar'      => $contasPagar,
                     'contasReceber'    => $contasReceber,
                     'centrosCustos'    => $centrosCustos,
@@ -157,7 +143,7 @@ class ExtratoController extends Controller
             // Caso nenhum arquivo ou extrato seja fornecido
             return view('extrato.index', [
                 'fornecedores'     => $fornecedores,
-                'clientes'        => $clientes,
+                'clientes'         => $clientes,
                 'contasPagar'      => collect(),
                 'contasReceber'    => collect(),
                 'centrosCustos'    => $centrosCustos,
@@ -178,8 +164,9 @@ class ExtratoController extends Controller
         $empresa = Empresa::find($user->empresa->empresa_id);
         $extrato = Extrato::find($request->query('extrato'));
         $movimentacao = ExtratoService::gerarDRE($extrato);
+        $saldoConciliado = $extrato->calcularSaldoConciliado();
 
-        return view('extrato.movimentacao-bancaria', compact('empresa', 'extrato', 'movimentacao'));
+        return view('extrato.movimentacao-bancaria', compact('empresa', 'extrato', 'movimentacao', 'saldoConciliado'));
     }
 
     public function vincular(Request $request)

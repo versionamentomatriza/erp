@@ -34,4 +34,21 @@ class Extrato extends Model
         $this->status = 'conciliado';
         $this->save();
     }
+
+    public function calcularSaldoConciliado()
+    {
+        $saldo = $this->saldo_inicial;
+
+        foreach ($this->conciliacoes as $conciliacao) {
+            $valor = (float) $conciliacao->valor_conciliado;
+
+            if ($conciliacao->conciliavel_tipo === \App\Models\ContaReceber::class) {
+                $saldo += $valor;
+            } elseif ($conciliacao->conciliavel_tipo === \App\Models\ContaPagar::class) {
+                $saldo -= $valor;
+            }
+        }
+
+        return $saldo;
+    }
 }
