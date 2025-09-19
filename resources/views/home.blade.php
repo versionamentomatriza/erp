@@ -40,7 +40,7 @@
 									<div class="d-flex justify-content-between">
 										<div class="flex-grow-1 overflow-hidden">
 											<h5 class="text-uppercase fs-15 mt-0" title="Contas a Receber">Contas a Receber</h5>
-											<h3 class="my-3 total-receber" style="font-size: 16px;">R$ 0,00</h3>
+											<h3 class="my-3" id="total-receber" style="font-size: 16px;">R$ 0,00</h3>
 										</div>
 										<div class="avatar-sm flex-shrink-0">
 											<span class="avatar-title bg-white bg-opacity-25 text-white rounded rounded-3 fs-3 widget-icon-box-avatar shadow">
@@ -61,7 +61,7 @@
                                 <div class="d-flex justify-content-between">
                                     <div class="flex-grow-1 overflow-hidden">
                                         <h5 class="text-uppercase fs-15 mt-0" title="Contas a Pagar">Contas a Pagar</h5>
-                                        <h3 class="my-3 total-pagar" style="font-size: 16px;">R$ 0,00</h3>
+                                        <h3 class="my-3" id="total-pagar" style="font-size: 16px;">R$ 0,00</h3>
                                     </div>
                                     <div class="avatar-sm flex-shrink-0">
                                         <span class="avatar-title bg-white bg-opacity-25 text-white rounded rounded-3 fs-3 widget-icon-box-avatar shadow">
@@ -333,13 +333,12 @@
                     local_id: local_id
                 })
                 .done((success) => {
-                    // console.log(success)
-                    $('.total-clientes').text(success['clientes'])
-                    $('.total-produtos').text(success['produtos'])
-                    $('.total-vendas').text("R$ " + convertFloatToMoeda(success['vendas']))
-                    $('.total-compras').text("R$ " + convertFloatToMoeda(success['compras']))
-                    $('.total-receber').text("R$ " + convertFloatToMoeda(success['contas_receber']))
-                    $('.total-pagar').text("R$ " + convertFloatToMoeda(success['contas_pagar']))
+                    $('#total-pagar').text(parseFloat(success.contas_pagar).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+                    $('#total-receber').text(parseFloat(success.contas_receber).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+                    $('.total-clientes').text(success.clientes)
+                    $('.total-produtos').text(success.produtos)
+                    $('.total-vendas').text("R$ " + convertFloatToMoeda(success.vendas))
+                    $('.total-compras').text("R$ " + convertFloatToMoeda(success.compras))
                 })
                 .fail((err) => {
                     console.log(err)
