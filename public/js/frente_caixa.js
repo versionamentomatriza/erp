@@ -1361,7 +1361,7 @@ $("#form-pdv").on("submit", function (e) {
     var json = $(this).serializeFormJSON();
 
     if (json.tipo_pagamento === '17') { // PIX
-        if (!json.subtipo_pix) {
+        if (!json.subtipo_pagamento) {
             alert('Selecione se o PIX é direto ou via maquininha.');
             $('#inp-subtipo_pagamento').focus();
             return;
