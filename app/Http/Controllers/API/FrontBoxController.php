@@ -252,10 +252,7 @@ class FrontBoxController extends Controller
     {
         try {
             $nfce = DB::transaction(function () use ($request) {
-<<<<<<< HEAD
-=======
                 // ------- Pré-processamento / configurações -------
->>>>>>> 40bd6d8 (Finalizando no PDV)
                 $config = Empresa::find($request->empresa_id);
                 $caixa = Caixa::where('usuario_id', $request->usuario_id)
                     ->where('status', 1)
@@ -268,66 +265,6 @@ class FrontBoxController extends Controller
                     $numero_nfce = $config->numero_ultima_nfce_homologacao;
                 }
 
-<<<<<<< HEAD
-                $request->merge([
-                    'natureza_id'       => $config->natureza_id_pdv,
-                    'emissor_nome'      => $config->nome,
-                    'emissor_cpf_cnpj'  => $config->cpf_cnpj,
-                    'ambiente'          => $config->ambiente,
-                    'chave'             => '',
-                    'cliente_id'        => $request->cliente_id,
-                    'numero_serie'      => $config->numero_serie_nfce ?: 1,
-                    'lista_id'          => $request->lista_id,
-                    'numero'            => $numero_nfce + 1,
-                    'cliente_nome'      => $request->cliente_nome ?? '',
-                    'cliente_cpf_cnpj'  => $request->cliente_cpf_cnpj ?? '',
-                    'estado'            => 'novo',
-                    'total'             => __convert_value_bd($request->valor_total),
-                    'desconto'          => $request->desconto ? __convert_value_bd($request->desconto) : 0,
-                    'valor_cashback'    => $request->valor_cashback ? __convert_value_bd($request->valor_cashback) : 0,
-                    'acrescimo'         => $request->acrescimo ? __convert_value_bd($request->acrescimo) : 0,
-                    'valor_produtos'    => __convert_value_bd($request->valor_total) ?? 0,
-                    'valor_frete'       => $request->valor_frete ? __convert_value_bd($request->valor_frete) : 0,
-                    'caixa_id'          => $caixa->id,
-                    'local_id'          => $caixa->local_id,
-                    'observacao'        => $request->observacao,
-                    'dinheiro_recebido' => $request->valor_recebido ? __convert_value_bd($request->valor_recebido) : 0,
-                    'troco'             => $request->troco ? __convert_value_bd($request->troco) : 0,
-                    'tipo_pagamento'    => $request->tipo_pagamento_row ? '99' : $request->tipo_pagamento,
-                    'cnpj_cartao'       => $request->cnpj_cartao ?? '',
-                    'bandeira_cartao'   => $request->bandeira_cartao ?? '',
-                    'cAut_cartao'       => $request->cAut_cartao ?? '',
-                    'user_id'           => $request->usuario_id
-                ]);
-
-                $nfce = Nfce::create($request->all());
-
-                // função de calcular dias por tipo de pagamento
-                $calcularDias = function (string $tipo, ?string $subtipo = null) {
-                    $map = [
-                        '01' => 0,
-                        '17' => 0,
-                        '02' => 3,
-                        '03' => 30,
-                        '04' => 1,
-                        '05' => 30,
-                        '06' => 30,
-                        '10' => 30,
-                        '11' => 30,
-                        '12' => 30,
-                        '13' => 30,
-                        '14' => 3,
-                        '15' => 3,
-                        '16' => 0,
-                        '90' => 0,
-                        '99' => 0
-                    ];
-                    return $map[$tipo] ?? 0;
-                };
-
-                // ========== ITENS PRODUTOS ==========
-                if ($request->produto_id) {
-=======
                 // Merge campos para criar NFCE
                 $request->merge([
                     'natureza_id' => $config->natureza_id_pdv,
@@ -366,30 +303,11 @@ class FrontBoxController extends Controller
 
                 // ------- Itens produtos -------
                 if (!empty($request->produto_id)) {
->>>>>>> 40bd6d8 (Finalizando no PDV)
                     foreach ($request->produto_id as $i => $produtoId) {
                         $product = Produto::findOrFail($produtoId);
                         $variacao_id = $request->variacao_id[$i] ?? null;
 
                         ItemNfce::create([
-<<<<<<< HEAD
-                            'nfce_id'        => $nfce->id,
-                            'produto_id'     => (int)$produtoId,
-                            'quantidade'     => __convert_value_bd($request->quantidade[$i]),
-                            'valor_unitario' => __convert_value_bd($request->valor_unitario[$i]),
-                            'sub_total'      => __convert_value_bd($request->subtotal_item[$i]),
-                            'perc_icms'      => __convert_value_bd($product->perc_icms),
-                            'perc_pis'       => __convert_value_bd($product->perc_pis),
-                            'perc_cofins'    => __convert_value_bd($product->perc_cofins),
-                            'perc_ipi'       => __convert_value_bd($product->perc_ipi),
-                            'cst_csosn'      => $product->cst_csosn,
-                            'cst_pis'        => $product->cst_pis,
-                            'cst_cofins'     => $product->cst_cofins,
-                            'cst_ipi'        => $product->cst_ipi,
-                            'cfop'           => $product->cfop_estadual,
-                            'ncm'            => $product->ncm,
-                            'variacao_id'    => $variacao_id,
-=======
                             'nfce_id' => $nfce->id,
                             'produto_id' => (int) $produtoId,
                             'quantidade' => __convert_value_bd($request->quantidade[$i]),
@@ -406,17 +324,13 @@ class FrontBoxController extends Controller
                             'cfop' => $product->cfop_estadual,
                             'ncm' => $product->ncm,
                             'variacao_id' => $variacao_id,
->>>>>>> 40bd6d8 (Finalizando no PDV)
                         ]);
 
                         if ($product->gerenciar_estoque) {
                             $this->util->reduzEstoque($product->id, __convert_value_bd($request->quantidade[$i]), $variacao_id, $caixa->local_id);
                         }
 
-<<<<<<< HEAD
-=======
                         // movimentação do produto
->>>>>>> 40bd6d8 (Finalizando no PDV)
                         $this->util->movimentacaoProduto(
                             $product->id,
                             __convert_value_bd($request->quantidade[$i]),
@@ -429,18 +343,6 @@ class FrontBoxController extends Controller
                     }
                 }
 
-<<<<<<< HEAD
-                // ========== ITENS SERVIÇOS ==========
-                if ($request->servico_id) {
-                    foreach ($request->servico_id as $i => $servicoId) {
-                        ItemServicoNfce::create([
-                            'nfce_id'        => $nfce->id,
-                            'servico_id'     => $servicoId,
-                            'quantidade'     => __convert_value_bd($request->quantidade_servico[$i]),
-                            'valor_unitario' => __convert_value_bd($request->valor_unitario_servico[$i]),
-                            'sub_total'      => __convert_value_bd($request->valor_unitario_servico[$i]) * __convert_value_bd($request->quantidade_servico[$i]),
-                            'observacao'     => ''
-=======
                 // ------- Itens serviços -------
                 if (!empty($request->servico_id)) {
                     foreach ($request->servico_id as $i => $servicoId) {
@@ -451,100 +353,18 @@ class FrontBoxController extends Controller
                             'valor_unitario' => __convert_value_bd($request->valor_unitario_servico[$i]),
                             'sub_total' => __convert_value_bd($request->valor_unitario_servico[$i]) * __convert_value_bd($request->quantidade_servico[$i]),
                             'observacao' => ''
->>>>>>> 40bd6d8 (Finalizando no PDV)
                         ]);
                     }
                 }
 
-<<<<<<< HEAD
-                // ========== AGENDAMENTO ==========
-                if ($request->agendamento_id) {
-=======
                 // ------- Agendamento -------
                 if (!empty($request->agendamento_id)) {
->>>>>>> 40bd6d8 (Finalizando no PDV)
                     $agendamento = Agendamento::findOrFail($request->agendamento_id);
                     $agendamento->status = 1;
                     $agendamento->nfce_id = $nfce->id;
                     $agendamento->save();
                 }
 
-<<<<<<< HEAD
-                // ========== CONTAS A RECEBER & FATURAS ==========
-                $tiposDiferenciados = [
-                    '01' => 0,
-                    '17' => 0,
-                    '02' => 3,
-                    '03' => 30,
-                    '04' => 1,
-                    '05' => 30,
-                    '06' => 30,
-                    '10' => 30,
-                    '11' => 30,
-                    '12' => 30,
-                    '13' => 30,
-                    '14' => 3,
-                    '15' => 3,
-                    '16' => 0,
-                    '90' => 0,
-                    '99' => 0
-                ];
-                $naoRecebidoImediato = ['06', '90', '99'];
-
-                if (!empty($request->tipo_pagamento_row)) {
-                    foreach ($request->tipo_pagamento_row as $i => $tipoRow) {
-                        $dias = $tiposDiferenciados[$tipoRow] ?? 0;
-                        $dataRecebimento = now()->copy()->addDays($dias);
-                        $valor_recebido = !in_array($tipoRow, $naoRecebidoImediato) ? __convert_value_bd($request->valor_integral_row[$i]) : 0;
-                        $status = !in_array($tipoRow, $naoRecebidoImediato) ? 1 : 0;
-
-                        ContaReceber::create([
-                            'nfe_id'           => null,
-                            'nfce_id'          => $nfce->id,
-                            'cliente_id'       => $request->cliente_id,
-                            'data_vencimento'  => $request->data_vencimento_row[$i],
-                            'data_recebimento' => $dataRecebimento,
-                            'valor_integral'   => __convert_value_bd($request->valor_integral_row[$i]),
-                            'valor_recebido'   => $valor_recebido,
-                            'status'           => $status,
-                            'referencia'       => "Parcela " . ($i + 1) . " da venda código {$nfce->id}",
-                            'empresa_id'       => $request->empresa_id,
-                            'tipo_pagamento'   => $tipoRow,
-                            'observacao'       => $request->obs_row[$i] ?? '',
-                            'local_id'         => $caixa->local_id,
-                            'categoria_conta_id' => $request->categoria_conta_id ?? $categoriaContaDefault->id ?? null
-                        ]);
-
-                        FaturaNfce::create([
-                            'nfce_id'        => $nfce->id,
-                            'tipo_pagamento' => $tipoRow,
-                            'data_vencimento' => $request->data_vencimento_row[$i],
-                            'valor'          => __convert_value_bd($request->valor_integral_row[$i])
-                        ]);
-                    }
-                } else {
-                    $tipo = $request->tipo_pagamento;
-                    $dias = $tiposDiferenciados[$tipo] ?? 0;
-                    $valorIntegral = __convert_value_bd($request->valor_total);
-                    $status = $dias === 0 ? 1 : 0;
-                    $valorRecebido = $status ? $valorIntegral : 0;
-
-                    ContaReceber::create([
-                        'nfe_id'           => null,
-                        'nfce_id'          => $nfce->id,
-                        'cliente_id'       => $request->cliente_id,
-                        'data_vencimento'  => $request->data_vencimento,
-                        'data_recebimento' => now()->copy()->addDays($dias),
-                        'valor_integral'   => $valorIntegral,
-                        'valor_recebido'   => $valorRecebido,
-                        'status'           => $status,
-                        'referencia'       => $request->referencia,
-                        'empresa_id'       => $request->empresa_id,
-                        'tipo_pagamento'   => $tipo,
-                        'observacao'       => $request->observacao,
-                        'local_id'         => $caixa->local_id,
-                        'categoria_conta_id' => $request->categoria_conta_id ?? $categoriaContaDefault->id ?? null
-=======
                 // ------- Categoria receita (corrigido) -------
                 $categoriaConta = CategoriaConta::where('nome', 'LIKE', 'Receita de Mercadorias')->first();
 
@@ -590,7 +410,7 @@ class FrontBoxController extends Controller
                         $dataRecebimento = now()->copy()->addDays($dias);
 
                         $valorParcela = __convert_value_bd($request->valor_integral_row[$i]);
-                        $valor_recebido = !in_array($tipoRow, $naoRecebidoImediato) ? $valorParcela : 0;
+                        $valorRecebido = !in_array($tipoRow, $naoRecebidoImediato) ? $valorParcela : 0;
                         $status = !in_array($tipoRow, $naoRecebidoImediato) ? 1 : 0;
 
                         ContaReceber::create([
@@ -601,7 +421,7 @@ class FrontBoxController extends Controller
                             'data_vencimento' => $request->data_vencimento_row[$i],
                             'data_recebimento' => $dataRecebimento,
                             'valor_integral' => $valorParcela,
-                            'valor_recebido' => $valor_recebido,
+                            'valor_recebido' => $valorRecebido,
                             'status' => $status,
                             'referencia' => "Parcela " . ($i + 1) . " da venda código {$nfce->id}",
                             'empresa_id' => $request->empresa_id,
@@ -626,7 +446,8 @@ class FrontBoxController extends Controller
                     $dias = $calcularDias($tipo, $subtipo);
                     $dataRecebimento = now()->copy()->addDays($dias);
 
-                    $valor_recebido = !in_array($tipo, $naoRecebidoImediato) ? __convert_value_bd($request->valor_total) : 0;
+                    $valorIntegral = __convert_value_bd($request->valor_total);
+                    $valorRecebido = !in_array($tipo, $naoRecebidoImediato) ? __convert_value_bd($request->valor_total) : 0;
                     $status = !in_array($tipo, $naoRecebidoImediato) ? 1 : 0;
 
                     ContaReceber::create([
@@ -636,7 +457,7 @@ class FrontBoxController extends Controller
                         'data_vencimento' => $request->data_vencimento,
                         'data_recebimento' => $dataRecebimento,
                         'valor_integral' => __convert_value_bd($request->valor_total),
-                        'valor_recebido' => $valor_recebido,
+                        'valor_recebido' => $valorRecebido,
                         'referencia' => $request->referencia,
                         'status' => $status,
                         'empresa_id' => $request->empresa_id,
@@ -645,7 +466,6 @@ class FrontBoxController extends Controller
                         'observacao' => $request->observacao,
                         'local_id' => $caixa->local_id,
                         'categoria_conta_id' => $categoriaConta->id ?? null
->>>>>>> 40bd6d8 (Finalizando no PDV)
                     ]);
 
                     FaturaNfce::create([
@@ -656,13 +476,8 @@ class FrontBoxController extends Controller
                     ]);
                 }
 
-<<<<<<< HEAD
-                // ========== COMISSÃO FUNCIONÁRIO ==========
-                if ($request->funcionario_id != null) {
-=======
                 // ------- Comissões -------
                 if (!empty($request->funcionario_id)) {
->>>>>>> 40bd6d8 (Finalizando no PDV)
                     $funcionario = Funcionario::where('empresa_id', $request->empresa_id)->first();
                     $comissao = $funcionario->comissao ?? 0;
                     $valorRetorno = $this->calcularComissaoVenda($nfce, $comissao);
@@ -678,25 +493,16 @@ class FrontBoxController extends Controller
                     ]);
                 }
 
-<<<<<<< HEAD
-                // ========== CASHBACK ==========
-                if (isset($request->valor_cashback) && $request->valor_cashback == 0 && $request->permitir_credito) {
-=======
                 // ------- Cashback / rateio -------
                 if (isset($request->valor_cashback) && $request->valor_cashback == 0 && ($request->permitir_credito ?? false)) {
->>>>>>> 40bd6d8 (Finalizando no PDV)
+
                     $this->saveCashBack($nfce);
                 } elseif (isset($request->valor_cashback) && $request->valor_cashback > 0) {
                     $this->rateioCashBack($request->valor_cashback, $nfce);
                 }
 
-<<<<<<< HEAD
-                // ========== PEDIDOS ==========
-                if (isset($request->pedido_id)) {
-=======
                 // ------- Pedido / Delivery updates -------
-                if (!empty($request->pedido_id)) {
->>>>>>> 40bd6d8 (Finalizando no PDV)
+                if (isset($request->pedido_id)) {
                     $pedido = Pedido::findOrfail($request->pedido_id);
                     $pedido->status = 0;
                     $pedido->em_atendimento = 0;
@@ -722,13 +528,10 @@ class FrontBoxController extends Controller
                             'status'             => 0
                         ]);
                     }
-<<<<<<< HEAD
-=======
 
                     $this->sendMessageWhatsApp($pedido, "Seu pedido foi concluído e logo sera entregue!");
                     ItemPedidoDelivery::where('pedido_id', $pedido->id)->update(['estado' => 'finalizado']);
                     $pedido->save();
->>>>>>> 40bd6d8 (Finalizando no PDV)
                 }
 
                 return $nfce;
