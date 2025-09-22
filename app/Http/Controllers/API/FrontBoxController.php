@@ -402,7 +402,8 @@ class FrontBoxController extends Controller
                             'empresa_id'        => $request->empresa_id,
                             'tipo_pagamento'    => $tipoRow,
                             'observacao'        => $request->obs_row[$i] ?? '',
-                            'local_id'          => $caixa->local_id
+                            'local_id'          => $caixa->local_id,
+                            'caixa_id'          => $caixa->id
                         ]);
 
                         FaturaNfce::create([
@@ -432,7 +433,8 @@ class FrontBoxController extends Controller
                         'empresa_id'        => $request->empresa_id,
                         'tipo_pagamento'    => $tipo,
                         'observacao'        => $request->observacao,
-                        'local_id'          => $caixa->local_id
+                        'local_id'          => $caixa->local_id,
+                        'caixa_id'          => $caixa->id
                     ]);
 
                     FaturaNfce::create([
