@@ -10,6 +10,7 @@ use App\Models\ContaPagar;
 use App\Models\ContaReceber;
 use App\Models\Empresa;
 use App\Models\Extrato;
+use App\Models\ExtratoTransacao;
 use App\Models\Fornecedor;
 use App\Models\Transacao;
 use App\Services\ExtratoService;
@@ -177,10 +178,28 @@ class ExtratoController extends Controller
                 'id_conta'          => ['required', 'integer'],
                 'tipo_conta'        => ['required', 'string', 'in:App\Models\ContaPagar,App\Models\ContaReceber'],
                 'ids_transacoes'    => ['required'],
+                'valor_pago'        => ['nullable', 'numeric'],
+                'data_pagamento'    => ['nullable', 'date'],
+                'valor_recebido'    => ['nullable', 'numeric'],
+                'data_recebimento'  => ['nullable', 'date'],
             ]);
 
-            $modelClass = $request->input('tipo_conta');
-            $conta = $modelClass::findOrFail($request->input('id_conta'));
+            $model = $request->input('tipo_conta');
+            $conta = $model::findOrFail($request->input('id_conta'));
+
+            if (!$conta->status) {
+                $dadosAtualizados = ['status' => 1];
+
+                if ($conta instanceof ContaPagar) {
+                    $dadosAtualizados['valor_pago']     = $request->input('valor_pago') ?? $conta->valor_pago;
+                    $dadosAtualizados['data_pagamento'] = $request->input('data_pagamento') ?? $conta->data_pagamento;
+                } elseif ($conta instanceof ContaReceber) {
+                    $dadosAtualizados['valor_recebido']    = $request->input('valor_recebido') ?? $conta->valor_recebido;
+                    $dadosAtualizados['data_recebimento']  = $request->input('data_recebimento') ?? $conta->data_recebimento;
+                }
+
+                $conta->update($dadosAtualizados);
+            }
 
             foreach ($request->input('ids_transacoes') as $id_transacao) {
                 Conciliacao::create([
@@ -302,6 +321,23 @@ class ExtratoController extends Controller
         $conta->delete();
 
         return redirect()->back()->with('success', 'Conta excluída com sucesso.');
+    }
+
+    public function ignorar_transacao(Request $request)
+    {
+        $request->validate([
+            'extrato_id' => 'required|integer|exists:extratos,id',
+            'transacao_id' => 'required|integer|exists:transacoes,id',
+        ]);
+
+        $et = ExtratoTransacao::where('extrato_id', $request->input('extrato_id'))
+            ->where('transacao_id', $request->input('transacao_id'))
+            ->firstOrFail();
+
+        $et->delete();
+
+        return redirect()->to(url()->previous())
+            ->with('success', 'Transação ignorada com sucesso.');
     }
 
     public function finalizar(Request $request)

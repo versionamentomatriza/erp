@@ -184,7 +184,7 @@
         <div class="modal fade" id="modalVincularConta-{{ $conta->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <form method="POST" action="{{ route('extrato.vincular') }}">
+                    <form id="formVincular" method="POST" action="{{ route('extrato.vincular') }}">
                         @csrf
                         <input type="hidden" name="id_conta" value="{{ $conta->id }}">
                         <input type="hidden" name="id_extrato" value="{{ $extrato->id }}">
@@ -196,6 +196,19 @@
                         </div>
 
                         <div class="modal-body">
+                            @if (!$conta->status)
+                                <div class="mb-3">
+                                    <label for="valor_pago" class="form-label">Valor Pago</label>
+                                    <input type="text" name="valor_pago" id="valor_pago" class="form-control"
+                                        placeholder="Digite o valor pago" value="{{ old('valor_pago') }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="data_pagamento" class="form-label">Data de Pagamento</label>
+                                    <input type="date" name="data_pagamento" id="data_pagamento" class="form-control"
+                                        value="{{ old('data_pagamento') }}">
+                                </div>
+                            @endif
                             <p>Selecione as transações para vincular:</p>
                             <div class="list-group">
                                 @forelse($transacoes as $transacao)
@@ -255,3 +268,26 @@
         </ul>
     </nav>
 @endif
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('formVincular');
+    const input = document.getElementById('valor_pago');
+
+    input.addEventListener('input', function () {
+        let value = this.value.replace(/\D/g, ''); // remove tudo que não é dígito
+        value = (value / 100).toFixed(2) + '';     // transforma em decimal
+        value = value.replace('.', ',');           // troca ponto por vírgula
+        value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // adiciona pontos
+
+        this.value = value;
+    });
+
+    form.addEventListener('submit', function () {
+        if (input.value) {
+            let normalized = input.value.replace(/\./g, '').replace(',', '.');
+            input.value = normalized;
+        }
+    });
+});
+</script>

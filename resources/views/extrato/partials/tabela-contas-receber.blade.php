@@ -142,6 +142,19 @@
                             </div>
 
                             <div class="modal-body">
+                                @if (!$conta->status)
+                                    <div class="mb-3">
+                                        <label for="valor_recebido" class="form-label">Valor Recebido</label>
+                                        <input type="text" name="valor_recebido" id="valor_recebido" class="form-control"
+                                            placeholder="Digite o valor recebido" value="{{ old('valor_recebido') }}">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="data_recebimento" class="form-label">Data de Recebimento</label>
+                                        <input type="date" name="data_recebimento" id="data_recebimento" class="form-control"
+                                            value="{{ old('data_recebimento') }}">
+                                    </div>
+                                @endif
                                 <p>Selecione as conciliações que deseja desvincular:</p>
                                 <div class="list-group">
                                     @foreach($conta->conciliacoes as $conciliacao)
@@ -175,7 +188,7 @@
         <div class="modal fade" id="modalVincularConta-{{ $conta->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <form method="POST" action="{{ route('extrato.vincular') }}">
+                    <form id="formVincular" method="POST" action="{{ route('extrato.vincular') }}">
                         @csrf
                         <input type="hidden" name="id_conta" value="{{ $conta->id }}">
                         <input type="hidden" name="id_extrato" value="{{ $extrato->id }}">
@@ -246,3 +259,26 @@
         </ul>
     </nav>
 @endif
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('formVincular');
+    const input = document.getElementById('valor_recebido');
+
+    input.addEventListener('input', function () {
+        let value = this.value.replace(/\D/g, ''); // remove tudo que não é dígito
+        value = (value / 100).toFixed(2) + '';     // transforma em decimal
+        value = value.replace('.', ',');           // troca ponto por vírgula
+        value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // adiciona pontos
+
+        this.value = value;
+    });
+
+    form.addEventListener('submit', function () {
+        if (input.value) {
+            let normalized = input.value.replace(/\./g, '').replace(',', '.');
+            input.value = normalized;
+        }
+    });
+});
+</script>

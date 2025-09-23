@@ -1,49 +1,53 @@
-<div class="card transacao-card mb-2 p-2" data-id="{{$transacao->id ?? '-' }}" data-data="{{ $transacao->data }}">
+<div class="col">
+    <div class="card h-100 shadow-sm border-0">
+        <div class="card-header p-2 d-flex justify-content-between align-items-center 
+        {{ $transacao->tipo === 'CREDIT' ? 'bg-success text-white' : 'bg-warning text-dark' }}">
+            <strong>{{ $transacao->descricao ?? 'Transação sem descrição' }}</strong>
 
-    <div class="d-flex justify-content-between align-items-center mb-1">
-        <small class="text-muted">
-            <strong>#{{ $transacao->id ?? '-' }}</strong>
-            → Conta(s):
-            @if($transacao->conciliacoes->isNotEmpty())
-                <strong>
-                    {{ $transacao->conciliacoes->pluck('conciliavel_id')->implode(', ') }}
-                </strong>
-            @else
-                <strong>-</strong>
-            @endif
-        </small>
-        @if ($transacao->conciliada())
-            <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i></span>
-        @else
-            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle-fill"></i></span>
-        @endif
-    </div>
-
-    <div class="d-flex flex-wrap justify-content-between small text-muted">
-        <div><strong>Data:</strong>
-            {{ \Carbon\Carbon::parse($transacao->data ?? now())->format('d/m/Y') }}
+            <div class="d-flex align-items-center">
+                <!-- Dropdown menu -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                        id="menuTransacao{{ $transacao->id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                        ⋮
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuTransacao{{ $transacao->id }}">
+                        <li>
+                            <!-- Abrir modal Criar Conciliável -->
+                            <a class="dropdown-item" href="javascript:void(0)" data-bs-toggle="modal"
+                                data-bs-target="#modalCriarConta" data-id="{{ $transacao->id }}"
+                                data-tipo="{{ $transacao->tipo }}" data-valor="{{ $transacao->valor }}"
+                                data-descricao="{{ $transacao->descricao }}" data-data="{{ $transacao->data }}">
+                                Criar Conciliável
+                            </a>
+                        </li>
+                        <li>
+                            <!-- Ignorar transação -->
+                            <a class="dropdown-item text-danger"
+                                href="{{ route('extrato.ignorar_transacao', ['extrato_id' => $extrato->id, 'transacao_id' => $transacao->id]) }}">
+                                Ignorar Transação
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
-        <div><strong>Valor:</strong> R$
-            {{ number_format(abs($transacao->valor ?? 0), 2, ',', '.') }}
-        </div>
-        <div><strong>Tipo:</strong>
-            {{ ($transacao->tipo) === 'DEBIT' ? 'DÉBITO' : 'CRÉDITO' }}
-        </div>
-        <div><strong>Banco:</strong> {{ $transacao->banco ?? '-' }}</div>
-        <div><strong>Descrição:</strong> {{ $transacao->descricao ?? '-' }}</div>
-    </div>
 
-    {{-- 🔹 Botão para criar Conta Pagar ou Receber --}}
-
-    <div class="mt-2">
-        <button type="button"
-            class="btn btn-success btn-sm w-100 d-flex align-items-center justify-content-center gap-1 py-1"
-            data-bs-toggle="modal" data-bs-target="#modalCriarConta" data-id="{{ $transacao->id }}"
-            data-tipo="{{ $transacao->tipo }}" data-valor="{{ $transacao->valor }}"
-            data-descricao="{{ $transacao->descricao }}" data-data="{{ $transacao->data }}">
-            <i class="bi bi-plus-circle"></i>
-            Criar conciliável
-        </button>
+        <div class="card-body p-2">
+            <p class="mb-1"><small><strong>Data:</strong>
+                    {{ \Carbon\Carbon::parse($transacao->data)->format('d/m/Y') }}
+                </small></p>
+            <p class="mb-1"><small><strong>Valor:</strong>
+                    R$ {{ number_format($transacao->valor, 2, ',', '.') }}
+                </small></p>
+            <p class="mb-1"><small><strong>Status:</strong>
+                    @if($transacao->conciliada())
+                        <span class="badge bg-success">Conciliado</span>
+                    @else
+                        <span class="badge bg-warning text-dark">Pendente</span>
+                    @endif
+                </small></p>
+        </div>
     </div>
 </div>
 
@@ -193,7 +197,7 @@
                 const categoriaTipo = option.getAttribute('data-tipo');
                 option.style.display =
                     (tipo === 'DEBIT' && (categoriaTipo === 'custo' || categoriaTipo === 'despesa')) ||
-                    (tipo === 'CREDIT' && categoriaTipo === 'receita')
+                        (tipo === 'CREDIT' && categoriaTipo === 'receita')
                         ? '' : 'none';
             });
             selectCategoria.selectedIndex = -1;
