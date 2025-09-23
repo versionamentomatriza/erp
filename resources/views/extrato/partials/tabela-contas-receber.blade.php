@@ -38,7 +38,7 @@
                         </div>
                         <div class="col-md-3">
                             <p class="mb-1 text-secondary small fw-semibold">Recebido em</p>
-                            <p class="mb-0">{{ $conta->data_pagamento ? \Carbon\Carbon::parse($conta->data_pagamento)->format('d/m/Y') : '-' }}</p>
+                            <p class="mb-0">{{ $conta->data_recebimento ? \Carbon\Carbon::parse($conta->data_recebimento)->format('d/m/Y') : '-' }}</p>
                         </div>
                         <div class="col-md-3">
                             <p class="mb-1 text-secondary small fw-semibold">Valor Integral</p>
