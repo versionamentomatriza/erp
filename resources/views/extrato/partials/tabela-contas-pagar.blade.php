@@ -7,7 +7,6 @@
 @endphp
 
 <style>
-    /* Efeito elegante nos cards */
     .card-conta {
         transition: all 0.2s ease-in-out;
         border-left: 5px solid transparent;
@@ -22,15 +21,14 @@
 
 <div class="row g-3">
     @forelse($contasPagarPaginadas as $conta)
-        <div class="col-12">
-            @php
-                $isConciliada = $conta->conciliada();
-                $statusLabel = $isConciliada ? 'Conciliada' : 'Pendente';
-                $statusClass = $isConciliada ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning';
-            @endphp
+        @php
+            $isConciliada = $conta->conciliada();
+            $statusLabel = $isConciliada ? 'Conciliada' : 'Pendente';
+            $statusClass = $isConciliada ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning';
+        @endphp
 
+        <div class="col-12">
             <div class="card card-conta shadow-sm border-0 rounded-3 mb-4 position-relative">
-                <!-- Badge de status -->
                 <span
                     class="position-absolute top-0 end-0 mt-2 me-2 px-2 py-1 small text-uppercase fw-semibold {{ $statusClass }}"
                     style="border-radius: 0.25rem; font-size: 0.65rem;">
@@ -38,48 +36,39 @@
                 </span>
 
                 <div class="card-body p-3">
-                    <!-- Cabeçalho com ID e valores -->
                     <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                        <h6 class="text-primary fw-bold mb-0">
-                            <i class="bi bi-hash"></i> #{{ $conta->id }}
-                        </h6>
-
-                        <!-- Valor pago em destaque -->
+                        <h6 class="text-primary fw-bold mb-0"><i class="bi bi-hash"></i> #{{ $conta->id }}</h6>
                         @if($conta->valor_pago)
-                            <div>
-                                <span class="fw-bold text-success fs-6">
-                                    R$ {{ number_format($conta->valor_pago, 2, ',', '.') }}
-                                </span>
-                            </div>
+                            <span class="fw-bold text-success fs-6">R$
+                                {{ number_format($conta->valor_pago, 2, ',', '.') }}</span>
                         @endif
                     </div>
 
-                    <!-- Detalhes do card -->
                     <div class="row gy-3">
-                        <!-- Descrição -->
                         <div class="col-md-12">
                             <p class="mb-1 text-secondary small fw-semibold">Descrição</p>
                             <p class="mb-0">{{ $conta->descricao ?? '-' }}</p>
                         </div>
 
-                        <!-- Pagamento -->
-                        <div class="col-md-6">
-                            <p class="mb-1 text-secondary small fw-semibold">Pagamento realizado em</p>
-                            <p class="mb-0">
-                                {{ \Carbon\Carbon::parse($conta->data_pagamento ?? now())->format('d/m/Y') }}
+                        <div class="col-md-3">
+                            <p class="mb-1 text-secondary small fw-semibold">Vencido em</p>
+                            <p class="mb-0">{{ \Carbon\Carbon::parse($conta->data_vencimento)->format('d/m/Y') }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1 text-secondary small fw-semibold">Pago em</p>
+                            <p class="mb-0">{{ \Carbon\Carbon::parse($conta->data_pagamento ?? now())->format('d/m/Y') }}
                             </p>
                         </div>
-
-                        <!-- Valor original (opcional) -->
-                        <div class="col-md-6">
+                        <div class="col-md-3">
+                            <p class="mb-1 text-secondary small fw-semibold">Valor Integral</p>
+                            <p class="mb-0">R$ {{ number_format($conta->valor_integral ?? 0, 2, ',', '.') }}</p>
+                        </div>
+                        <div class="col-md-3">
                             <p class="mb-1 text-secondary small fw-semibold">Valor Pago</p>
-                            <p class="mb-0">
-                                R$ {{ number_format($conta->valor_pago ?? 0, 2, ',', '.') }}
-                            </p>
+                            <p class="mb-0">R$ {{ number_format($conta->valor_pago ?? 0, 2, ',', '.') }}</p>
                         </div>
 
                         @if ($conta->centroCusto)
-                            <!-- Centro de Custo -->
                             <div class="col-md-6">
                                 <p class="mb-1 text-secondary small fw-semibold">Centro de Custo</p>
                                 <p class="mb-0">{{ $conta->centroCusto->descricao ?? '-' }}</p>
@@ -87,17 +76,14 @@
                         @endif
 
                         @if ($conta->fornecedor)
-                            <!-- Fornecedor / Cliente -->
                             <div class="col-md-6">
                                 <p class="mb-1 text-secondary small fw-semibold">Fornecedor</p>
                                 <p class="mb-0">
-                                    {{ $conta->fornecedor->nome_fantasia ?? $conta->fornecedor->razao_social ?? '-' }}
-                                </p>
+                                    {{ $conta->fornecedor->nome_fantasia ?? $conta->fornecedor->razao_social ?? '-' }}</p>
                             </div>
                         @endif
 
                         @if ($conta->observacao)
-                            <!-- Observação -->
                             <div class="col-12">
                                 <p class="mb-1 text-secondary small fw-semibold">Observação</p>
                                 <p class="mb-0">{{ $conta->observacao }}</p>
@@ -105,17 +91,16 @@
                         @endif
                     </div>
 
-                    <!-- Rodapé com ações -->
                     <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2 flex-wrap">
                         @if ($conta->conciliacoes->isNotEmpty())
                             <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#modalDesvincularContas-{{ $conta->id }}" title="Desvincular transações">
-                                <i class="bi bi-link-45deg"></i> Desvincular
+                                data-bs-target="#modalDesvincularContas-{{ $conta->id }}">
+                                <i class="bi bi-link-45deg"></i> Desconciliar
                             </button>
                         @else
                             <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#modalVincularConta-{{ $conta->id }}" title="Vincular a uma transação">
-                                <i class="bi bi-plus-circle"></i> Vincular
+                                data-bs-target="#modalVincularConta-{{ $conta->id }}">
+                                <i class="bi bi-plus-circle"></i> Conciliar
                             </button>
 
                             <form action="{{ route('extrato.excluir_conta') }}" method="POST" class="d-inline"
@@ -123,15 +108,13 @@
                                 @csrf
                                 <input type="hidden" name="id" value="{{ $conta->id }}">
                                 <input type="hidden" name="tipo" value="{{ get_class($conta) }}">
-                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Excluir conta">
-                                    <i class="bi bi-trash"></i> Excluir
-                                </button>
+                                <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i>
+                                    Excluir</button>
                             </form>
                         @endif
                     </div>
                 </div>
             </div>
-
         </div>
 
         <!-- Modal Desvincular -->
@@ -139,19 +122,19 @@
             <div class="modal fade" id="modalDesvincularContas-{{ $conta->id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
-                        <form method="POST" action="{{ route('extrato.desvincular') }}">
+                        <form id="formDesvincular-{{ $conta->id }}" method="POST" action="{{ route('extrato.desvincular') }}">
                             @csrf
                             <input type="hidden" name="id_extrato" value="{{ $extrato->id ?? null }}">
                             <input type="hidden" name="id_conta" value="{{ $conta->id }}">
                             <input type="hidden" name="tipo_conta" value="{{ get_class($conta) }}">
 
                             <div class="modal-header">
-                                <h5 class="modal-title">Desvincular transações conciliadas</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                <h5 class="modal-title">Desconciliar transações</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
 
                             <div class="modal-body">
-                                <p>Selecione as conciliações que deseja desvincular:</p>
+                                <p>Selecione as conciliações que deseja desconciliar:</p>
                                 <div class="list-group">
                                     @foreach($conta->conciliacoes as $conciliacao)
                                         <label class="list-group-item d-flex">
@@ -161,8 +144,8 @@
                                                 {{ $conciliacao->transacao->descricao ?? 'Sem descrição' }}
                                                 <br>
                                                 <small class="text-muted">
-                                                    {{ \Carbon\Carbon::parse($conciliacao->transacao->data)->format('d/m/Y') }}
-                                                    - R$ {{ number_format($conciliacao->transacao->valor, 2, ',', '.') }}
+                                                    {{ \Carbon\Carbon::parse($conciliacao->transacao->data)->format('d/m/Y') }} - R$
+                                                    {{ number_format($conciliacao->transacao->valor, 2, ',', '.') }}
                                                 </small>
                                             </span>
                                         </label>
@@ -172,7 +155,7 @@
 
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-danger">Desvincular Selecionadas</button>
+                                <button type="submit" class="btn btn-danger">Desconciliar Selecionadas</button>
                             </div>
                         </form>
                     </div>
@@ -184,38 +167,37 @@
         <div class="modal fade" id="modalVincularConta-{{ $conta->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <form id="formVincular" method="POST" action="{{ route('extrato.vincular') }}">
+                    <form id="formConciliarPagamento-{{ $conta->id }}" method="POST"
+                        action="{{ route('extrato.vincular') }}">
                         @csrf
                         <input type="hidden" name="id_conta" value="{{ $conta->id }}">
                         <input type="hidden" name="id_extrato" value="{{ $extrato->id }}">
                         <input type="hidden" name="tipo_conta" value="{{ get_class($conta) }}">
 
                         <div class="modal-header">
-                            <h5 class="modal-title">Vincular transações à conta #{{ $conta->id }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            <h5 class="modal-title">Conciliar conta #{{ $conta->id }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
 
                         <div class="modal-body">
                             @if (!$conta->status)
                                 <div class="mb-3">
-                                    <label for="valor_pago" class="form-label">Valor Pago</label>
-                                    <input type="text" name="valor_pago" id="valor_pago" class="form-control"
-                                        placeholder="Digite o valor pago" value="{{ old('valor_pago') }}">
+                                    <label for="valor_pago-{{ $conta->id }}" class="form-label">Valor Pago</label>
+                                    <input type="text" name="valor_pago" id="valor_pago-{{ $conta->id }}" class="form-control"
+                                        placeholder="Digite o valor pago" value="{{ old('valor_pago') }}" required>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="data_pagamento" class="form-label">Data de Pagamento</label>
-                                    <input type="date" name="data_pagamento" id="data_pagamento" class="form-control"
-                                        value="{{ old('data_pagamento') }}">
+                                    <label for="data_pagamento-{{ $conta->id }}" class="form-label">Data de Pagamento</label>
+                                    <input type="date" name="data_pagamento" id="data_pagamento-{{ $conta->id }}"
+                                        class="form-control" value="{{ old('data_pagamento') }}" required>
                                 </div>
                             @endif
-                            <p>Selecione as transações para vincular:</p>
+
+                            <p>Selecione as transações para conciliar:</p>
                             <div class="list-group">
                                 @forelse($transacoes as $transacao)
-                                    @php
-                                        $tipoEsperado = str_contains(get_class($conta), 'ContaPagar') ? 'DEBIT' : 'CREDIT';
-                                    @endphp
-
+                                    @php $tipoEsperado = str_contains(get_class($conta), 'ContaPagar') ? 'DEBIT' : 'CREDIT'; @endphp
                                     @continue($transacao->tipo !== $tipoEsperado)
 
                                     <label class="list-group-item d-flex">
@@ -224,33 +206,29 @@
                                         <span>
                                             {{ $transacao->descricao ?? 'Sem descrição' }}
                                             <br>
-                                            <small class="text-muted">
-                                                {{ \Carbon\Carbon::parse($transacao->data)->format('d/m/Y') }}
-                                                - R$ {{ number_format($transacao->valor, 2, ',', '.') }}
-                                            </small>
+                                            <small
+                                                class="text-muted">{{ \Carbon\Carbon::parse($transacao->data)->format('d/m/Y') }}
+                                                - R$ {{ number_format($transacao->valor, 2, ',', '.') }}</small>
                                         </span>
                                     </label>
                                 @empty
-                                    <div class="alert alert-warning">
-                                        Nenhuma transação disponível para vincular.
-                                    </div>
+                                    <div class="alert alert-warning">Nenhuma transação disponível para conciliar.</div>
                                 @endforelse
                             </div>
                         </div>
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Vincular Selecionadas</button>
+                            <button type="submit" class="btn btn-primary">Conciliar Selecionadas</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
+
     @empty
         <div class="col-12">
-            <div class="alert alert-info text-center">
-                Nenhuma conta a pagar encontrada.
-            </div>
+            <div class="alert alert-info text-center">Nenhuma conta a pagar encontrada.</div>
         </div>
     @endforelse
 </div>
@@ -260,9 +238,7 @@
         <ul class="pagination justify-content-center">
             @for ($i = 1; $i <= $totalPaginasPagamento; $i++)
                 <li class="page-item {{ $i == $pagePagamento ? 'active' : '' }}">
-                    <a class="page-link" href="{{ request()->fullUrlWithQuery(['page_pagamento' => $i]) }}">
-                        {{ $i }}
-                    </a>
+                    <a class="page-link" href="{{ request()->fullUrlWithQuery(['page_pagamento' => $i]) }}">{{ $i }}</a>
                 </li>
             @endfor
         </ul>
@@ -270,24 +246,28 @@
 @endif
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('formVincular');
-    const input = document.getElementById('valor_pago');
+    document.addEventListener('DOMContentLoaded', function () {
+        const forms = document.querySelectorAll('form[id^="formConciliarPagamento"]');
 
-    input.addEventListener('input', function () {
-        let value = this.value.replace(/\D/g, ''); // remove tudo que não é dígito
-        value = (value / 100).toFixed(2) + '';     // transforma em decimal
-        value = value.replace('.', ',');           // troca ponto por vírgula
-        value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // adiciona pontos
+        forms.forEach(form => {
+            const contaId = form.id.split('-')[1];
+            const input = document.getElementById(`valor_pago-${contaId}`);
+            if (!input) return;
 
-        this.value = value;
+            input.addEventListener('input', function () {
+                let value = this.value.replace(/\D/g, '');
+                value = (value / 100).toFixed(2) + '';
+                value = value.replace('.', ',');
+                value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                this.value = value;
+            });
+
+            form.addEventListener('submit', function () {
+                if (input.value) {
+                    let normalized = input.value.replace(/\./g, '').replace(',', '.');
+                    input.value = normalized;
+                }
+            });
+        });
     });
-
-    form.addEventListener('submit', function () {
-        if (input.value) {
-            let normalized = input.value.replace(/\./g, '').replace(',', '.');
-            input.value = normalized;
-        }
-    });
-});
 </script>
