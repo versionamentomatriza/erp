@@ -75,7 +75,7 @@
                     <input type="hidden" name="extrato_id" id="extratoId" value="{{ $extrato->id ?? null }}">
                     <input type="hidden" name="tipo" id="tipoConta">
 
-                    <div class="row">
+                    <div class="row mb-2">
                         <div class="col">
                             <label for="descricaoConta" class="form-label">Descrição</label>
                             <input type="text" name="descricao" id="descricaoConta" class="form-control"
@@ -83,7 +83,7 @@
                         </div>
                     </div>
 
-                    <div class="row" id="grupoFornecedor" style="display:none;">
+                    <div class="row mb-2" id="grupoFornecedor" style="display:none;">
                         <div class="col">
                             <label for="fornecedorConta" class="form-label">Fornecedor</label>
                             <select name="fornecedor_id" id="fornecedorConta" class="form-select select2"
@@ -93,7 +93,7 @@
                         </div>
                     </div>
 
-                    <div class="row" id="grupoCliente" style="display:none;">
+                    <div class="row mb-2" id="grupoCliente" style="display:none;">
                         <div class="col">
                             <label for="clienteConta" class="form-label">Cliente</label>
                             <select name="cliente_id" id="clienteConta" class="form-select select2" style="width:100%;"
@@ -103,7 +103,7 @@
                         </div>
                     </div>
 
-                    <div class="row">
+                    <div class="row mb-2">
                         <div class="col-6">
                             <label for="valorConta" class="form-label">Valor</label>
                             <div class="input-group">
@@ -119,7 +119,7 @@
                         </div>
                     </div>
 
-                    <div class="rol">
+                    <div class="row mb-2">
                         <div class="col">
                             <label for="categoriaConta" class="form-label">Categoria da Conta</label>
                             <select name="categoria_conta_id" id="categoriaConta" class="form-select" required>
@@ -133,7 +133,7 @@
                         </div>
                     </div>
 
-                    <div class="row">
+                    <div class="row mb-2">
                         <div class="col">
                             <label for="contaFinanceira" class="form-label">Conta Financeira</label>
                             <select name="conta_empresa_id" id="contaFinanceira" class="form-select" required>
@@ -145,7 +145,7 @@
                         </div>
                     </div>
 
-                    <div class="row">
+                    <div class="row mb-2">
                         <div class="col">
                             <label for="centroCusto" class="form-label">Centro de Custo</label>
                             <select name="centro_custo_id" id="centroCusto" class="form-select">
