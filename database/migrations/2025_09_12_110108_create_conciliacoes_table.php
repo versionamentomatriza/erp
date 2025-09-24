@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('transacao_id');
             $table->unsignedBigInteger('extrato_id');
+            $table->unsignedBigInteger('conta_empresa_id');
             $table->string('conciliavel_tipo'); // polimórfico
             $table->unsignedBigInteger('conciliavel_id');
             $table->decimal('valor_conciliado', 16, 7);
@@ -22,6 +23,7 @@ return new class extends Migration
 
             $table->foreign('transacao_id')->references('id')->on('transacoes')->onDelete('cascade');
             $table->foreign('extrato_id')->references('id')->on('extratos')->onDelete('cascade');
+            $table->foreign('conta_empresa_id')->references('id')->on('conta_empresas')->onDelete('cascade');
 
             $table->index(['conciliavel_tipo', 'conciliavel_id']); // melhora consultas polimórficas
         });

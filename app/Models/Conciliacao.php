@@ -20,6 +20,7 @@ class Conciliacao extends Model
         'conciliavel_tipo',
         'valor_conciliado',
         'data_conciliacao',
+        'conta_empresa_id',
     ];
 
     public function transacao()
@@ -30,6 +31,11 @@ class Conciliacao extends Model
     public function extrato()
     {
         return $this->belongsTo(Extrato::class, 'extrato_id');
+    }
+
+    public function contaEmpresa()
+    {
+        return $this->belongsTo(Extrato::class, 'conta_empresa_id');
     }
 
     public function conciliavel()

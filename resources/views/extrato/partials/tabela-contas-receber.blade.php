@@ -48,18 +48,33 @@
                             <p class="mb-1 text-secondary small fw-semibold">Valor Recebido</p>
                             <p class="mb-0">R$ {{ number_format($conta->valor_recebido ?? 0, 2, ',', '.') }}</p>
                         </div>
+                        @if ($conta->cliente)
+                            <div class="col-md-12">
+                                <p class="mb-1 text-secondary small fw-semibold">Cliente</p>
+                                <p class="mb-0">
+                                    {{ $conta->cliente->nome_fantasia ?? $conta->cliente->razao_social ?? '-' }}</p>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2 flex-wrap">
                         @if ($conta->conciliacoes->isNotEmpty())
-                            <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal"
+                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
                                 data-bs-target="#modalDesvincularContas-{{ $conta->id }}">
-                                <i class="bi bi-link-45deg"></i> Desconciliar
+                                Desconciliar
                             </button>
                         @else
-                            <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
+                            <form action="{{ route('extrato.excluir_conta') }}" method="POST" class="d-inline"
+                                onsubmit="return confirm('Tem certeza que deseja excluir esta conta?')">
+                                @csrf
+                                <input type="hidden" name="id" value="{{ $conta->id }}">
+                                <input type="hidden" name="tipo" value="{{ get_class($conta) }}">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    Excluir</button>
+                            </form>
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal"
                                 data-bs-target="#modalVincularConta-{{ $conta->id }}">
-                                <i class="bi bi-plus-circle"></i> Conciliar
+                                Conciliar
                             </button>
                         @endif
                     </div>
@@ -78,8 +93,8 @@
                         <input type="hidden" name="id_conta" value="{{ $conta->id }}">
                         <input type="hidden" name="tipo_conta" value="{{ get_class($conta) }}">
 
-                        <div class="modal-header">
-                            <h5 class="modal-title">Desconciliar transações da conta #{{ $conta->id }}</h5>
+                        <div class="modal-header border-bottom py-3 bg-laranja-matriza">
+                            <h5 class="modal-title fw-semibold mb-0">Desconciliar transações</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
 
@@ -87,7 +102,7 @@
                             <p>Selecione as conciliações que deseja desconciliar:</p>
                             <div class="list-group">
                                 @foreach($conta->conciliacoes as $conciliacao)
-                                    <label class="list-group-item d-flex">
+                                    <label class="list-group-item d-flex" style="border: none;">
                                         <input type="checkbox" name="ids_transacoes[]" value="{{ $conciliacao->transacao->id }}" class="form-check-input me-2">
                                         <span>
                                             {{ $conciliacao->transacao->descricao ?? 'Sem descrição' }}<br>
@@ -118,12 +133,24 @@
                         <input type="hidden" name="id_extrato" value="{{ $extrato->id }}">
                         <input type="hidden" name="tipo_conta" value="{{ get_class($conta) }}">
 
-                        <div class="modal-header">
-                            <h5 class="modal-title">Conciliar conta #{{ $conta->id }}</h5>
+                        <div class="modal-header border-bottom py-3 bg-verde-matriza">
+                            <h5 class="modal-title fw-semibold mb-0">Conciliar conta #{{ $conta->id }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
 
                         <div class="modal-body">
+                            <div class="row mb-3">
+                                <div class="col">
+                                    <label for="contaFinanceira" class="form-label">Conta Financeira</label>
+                                    <select name="id_conta_empresa" id="contaFinanceira" class="form-select" required>
+                                        <option value="">Selecione</option>
+                                        @foreach ($contasFinanceiras as $conta)
+                                            <option value="{{ $conta->id }}">{{ $conta->nome }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            
                             @if (!$conta->status)
                                 <div class="mb-3">
                                     <label for="valor_recebido-{{ $conta->id }}" class="form-label">Valor Recebido</label>
@@ -142,7 +169,7 @@
                                     @php $tipoEsperado = str_contains(get_class($conta), 'ContaPagar') ? 'DEBIT' : 'CREDIT'; @endphp
                                     @continue($transacao->tipo !== $tipoEsperado)
 
-                                    <label class="list-group-item d-flex">
+                                    <label class="list-group-item d-flex" style="border: none;">
                                         <input type="checkbox" name="ids_transacoes[]" value="{{ $transacao->id }}" class="form-check-input me-2">
                                         <span>
                                             {{ $transacao->descricao ?? 'Sem descrição' }}<br>
@@ -156,8 +183,8 @@
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Vincular Selecionadas</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">Conciliar Selecionadas</button>
                         </div>
                     </form>
                 </div>
