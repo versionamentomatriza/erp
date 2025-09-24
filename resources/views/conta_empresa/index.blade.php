@@ -44,7 +44,6 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th>Nome</th>
-                                    <th>Plano de conta</th>
                                     <th>Banco</th>
                                     <th>Agência</th>
                                     <th>Conta</th>
@@ -57,7 +56,6 @@
                                 @forelse($data as $item)
                                 <tr>
                                     <td>{{ $item->nome }}</td>
-                                    <td>{{ $item->plano->descricao }}</td>
                                     <td>{{ $item->banco }}</td>
                                     <td>{{ $item->agencia }}</td>
                                     <td>{{ $item->conta }}</td>
@@ -93,7 +91,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="8" class="text-center">Nada encontrado</td>
+                                    <td colspan="7" class="text-center">Nada encontrado</td>
                                 </tr>
                                 @endforelse
                             </tbody>
