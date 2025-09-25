@@ -984,7 +984,7 @@
                             @endcanany
 
                             <li>
-                                <a href="{{ route('contas-empresa.index') }}">Contas Financeiras</a>
+                                <a href="{{ route('contas-financeiras.index') }}">Contas Financeiras</a>
                             </li>
 							
 							@can('contas_boleto_view')

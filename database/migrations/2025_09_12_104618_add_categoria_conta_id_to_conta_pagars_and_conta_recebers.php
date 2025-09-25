@@ -12,19 +12,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('conta_pagars', function (Blueprint $table) {
-            $table->unsignedBigInteger('categoria_conta_id')->nullable()->after('local_id');
-            $table->foreign('categoria_conta_id')
-                ->references('id')
-                ->on('categoria_contas')
-                ->onDelete('set null');
+            if (!Schema::hasColumn('conta_pagars', 'categoria_conta_id')) {
+                $table->unsignedBigInteger('categoria_conta_id')->nullable()->after('local_id');
+                $table->foreign('categoria_conta_id')
+                    ->references('id')
+                    ->on('categoria_contas')
+                    ->onDelete('set null');
+            }
         });
 
         Schema::table('conta_recebers', function (Blueprint $table) {
-            $table->unsignedBigInteger('categoria_conta_id')->nullable()->after('local_id');
-            $table->foreign('categoria_conta_id')
-                ->references('id')
-                ->on('categoria_contas')
-                ->onDelete('set null');
+            if (!Schema::hasColumn('conta_recebers', 'categoria_conta_id')) {
+                $table->unsignedBigInteger('categoria_conta_id')->nullable()->after('local_id');
+                $table->foreign('categoria_conta_id')
+                    ->references('id')
+                    ->on('categoria_contas')
+                    ->onDelete('set null');
+            }
         });
     }
 

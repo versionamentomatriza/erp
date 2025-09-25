@@ -6,7 +6,7 @@ use App\Models\CategoriaConta;
 use App\Models\CentroCusto;
 use App\Models\Cliente;
 use App\Models\Conciliacao;
-use App\Models\ContaEmpresa;
+use App\Models\ContaFinanceira;
 use App\Models\ContaPagar;
 use App\Models\ContaReceber;
 use App\Models\Empresa;
@@ -31,7 +31,7 @@ class ExtratoController extends Controller
         $clientes = Cliente::where('empresa_id', $empresaId)->get();
         $extratos = Extrato::where('empresa_id', $empresaId)->get();
         $centrosCustos = CentroCusto::where('empresa_id', $empresaId)->get();
-        $contasFinanceiras = ContaEmpresa::where('empresa_id', $empresaId)->get();
+        $contasFinanceiras = ContaFinanceira::where('empresa_id', $empresaId)->get();
         $categoriasContas = CategoriaConta::where('empresa_id', $empresaId)
             ->orWhereNull('empresa_id')
             ->get();
@@ -179,15 +179,15 @@ class ExtratoController extends Controller
     {
         try {
             $request->validate([
-                'id_extrato'        => ['required', 'integer'],
-                'id_conta_empresa'  => ['required', 'integer'],
-                'id_conta'          => ['required', 'integer'],
-                'tipo_conta'        => ['required', 'string', 'in:App\Models\ContaPagar,App\Models\ContaReceber'],
-                'ids_transacoes'    => ['required'],
-                'valor_pago'        => ['nullable', 'numeric'],
-                'data_pagamento'    => ['nullable', 'date'],
-                'valor_recebido'    => ['nullable', 'numeric'],
-                'data_recebimento'  => ['nullable', 'date'],
+                'id_extrato'            => ['required', 'integer'],
+                'id_conta_financeira'   => ['required', 'integer'],
+                'id_conta'              => ['required', 'integer'],
+                'tipo_conta'            => ['required', 'string', 'in:App\Models\ContaPagar,App\Models\ContaReceber'],
+                'ids_transacoes'        => ['required'],
+                'valor_pago'            => ['nullable', 'numeric'],
+                'data_pagamento'        => ['nullable', 'date'],
+                'valor_recebido'        => ['nullable', 'numeric'],
+                'data_recebimento'      => ['nullable', 'date'],
             ]);
 
             $model = $request->input('tipo_conta');
@@ -210,7 +210,7 @@ class ExtratoController extends Controller
             foreach ($request->input('ids_transacoes') as $id_transacao) {
                 Conciliacao::create([
                     'extrato_id'        => $request->input('id_extrato'),
-                    'conta_empresa_id'  => $request->input('id_conta_empresa'),
+                    'conta_financeira_id'  => $request->input('id_conta_financeira'),
                     'transacao_id'      => $id_transacao,
                     'conciliavel_id'    => $request->input('id_conta'),
                     'conciliavel_tipo'  => $request->input('tipo_conta'),

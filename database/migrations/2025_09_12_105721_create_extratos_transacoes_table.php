@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('extratos_transacoes', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('extrato_id');
-            $table->unsignedBigInteger('transacao_id');
+        if (!Schema::hasTable('extratos_transacoes')) {
+            Schema::create('extratos_transacoes', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('extrato_id');
+                $table->unsignedBigInteger('transacao_id');
 
-            $table->foreign('extrato_id')->references('id')->on('extratos')->onDelete('cascade');
-            $table->foreign('transacao_id')->references('id')->on('transacoes')->onDelete('cascade');
+                $table->foreign('extrato_id')->references('id')->on('extratos')->onDelete('cascade');
+                $table->foreign('transacao_id')->references('id')->on('transacoes')->onDelete('cascade');
 
-            $table->unique(['extrato_id', 'transacao_id']);
-        });
+                $table->unique(['extrato_id', 'transacao_id']);
+            });
+        }
     }
 
     /**

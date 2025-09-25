@@ -43,6 +43,14 @@
     </div>
     @endif
 
+    <div class="col-md-4">
+        {!!Form::select('plano_conta_id', 'Plano de conta')
+        ->attrs(['class' => 'form-select'])
+        ->required()
+        ->options(isset($item) ? [$item->plano_conta_id => $item->plano->descricao] : [])
+        !!}
+    </div>
+
     <hr class="mt-4">
     <div class="col-12" style="text-align: right;">
         <button type="submit" class="btn btn-success px-5" id="btn-store">Salvar</button>

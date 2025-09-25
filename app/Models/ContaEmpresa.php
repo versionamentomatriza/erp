@@ -21,9 +21,4 @@ class ContaEmpresa extends Model
     {
         return $this->hasMany(ItemContaEmpresa::class, 'conta_id');
     }
-
-     public function conciliaveis()
-    {
-        return $this->hasMany(Conciliacao::class, 'conta_empresa_id');
-    }
 }

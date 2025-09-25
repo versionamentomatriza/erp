@@ -169,7 +169,7 @@
                             <div class="row mb-3">
                                 <div class="col">
                                     <label for="contaFinanceira" class="form-label">Conta Financeira</label>
-                                    <select name="id_conta_empresa" id="contaFinanceira" class="form-select" required>
+                                    <select name="id_conta_financeira" id="contaFinanceira" class="form-select" required>
                                         <option value="">Selecione</option>
                                         @foreach ($contasFinanceiras as $conta)
                                             <option value="{{ $conta->id }}">{{ $conta->nome }}</option>
@@ -178,7 +178,7 @@
                                 </div>
                             </div>
 
-                            @if (!$conta->status)
+                            @if ($conta->status === 0)
                                 <div class="mb-3">
                                     <label for="valor_pago-{{ $conta->id }}" class="form-label">Valor Pago</label>
                                     <input type="text" name="valor_pago" id="valor_pago-{{ $conta->id }}" class="form-control"
