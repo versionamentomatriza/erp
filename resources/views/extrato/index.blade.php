@@ -39,6 +39,50 @@
                             @endif
                         </div>
 
+                        @if ($extrato)
+                            <div class="mb-4">
+                                <h6 class="mb-3"><i class="bi bi-list-ul"></i> Contas financeiras envolvidas</h6>
+
+                                <!-- Contas Financeiras -->
+                                <div class="row g-3 mb-3">
+                                    @foreach($contasFinanceirasEnvolvidas as $conta)
+                                        @php
+                                            $saldoCalculado = $conta->calcularSaldoAtual($extrato->fim);
+                                        @endphp
+                                        <div class="col-md-6">
+                                            <div class="card shadow-none border-0">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">{{ $conta->nome }}</h5>
+                                                    <div class="text-muted small">Banco: {{ $conta->banco ?? '-' }} | Agência:
+                                                        {{ $conta->agencia ?? '-' }}</div>
+                                                    <hr class="my-2">
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>Saldo Inicial:</span>
+                                                        <span>R$ {{ number_format($conta->saldo_inicial, 2, ',', '.') }}</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>Saldo Atual (BD):</span>
+                                                        <span>R$ {{ number_format($conta->saldo_atual, 2, ',', '.') }}</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between fw-semibold">
+                                                        <span>
+                                                            Saldo Calculado:
+                                                        </span>
+                                                        <span>
+                                                            @if(abs($saldoCalculado - $conta->saldo_atual) > 0)
+                                                                <i class="bi bi-exclamation-triangle-fill text-warning ms-1" title="Diferença detectada entre o saldo calculado e o saldo atual da conta."></i>
+                                                            @endif
+                                                            R$ {{ number_format($saldoCalculado, 2, ',', '.') }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
                         @if ($naoRelacionadas > 0)
                             <p class="small mb-1">
                                 <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>

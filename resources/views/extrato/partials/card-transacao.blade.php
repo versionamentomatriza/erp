@@ -136,7 +136,7 @@
                     <div class="row mb-2">
                         <div class="col">
                             <label for="contaFinanceira" class="form-label">Conta Financeira</label>
-                            <select name="conta_empresa_id" id="contaFinanceira" class="form-select" required>
+                            <select name="conta_financeira_id" id="contaFinanceira" class="form-select" required>
                                 <option value="">Selecione</option>
                                 @foreach ($contasFinanceiras as $conta)
                                     <option value="{{ $conta->id }}">{{ $conta->nome }}</option>
