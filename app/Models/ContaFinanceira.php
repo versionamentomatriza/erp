@@ -9,6 +9,16 @@ class ContaFinanceira extends Model
 {
     use HasFactory;
 
+    public $fillable = [
+        'empresa_id',
+        'nome',
+        'banco',
+        'agencia',
+        'conta',
+        'saldo_inicial',
+        'saldo_atual',
+    ];
+
     protected $table = 'contas_financeiras';
 
     public function conciliacoes(){
