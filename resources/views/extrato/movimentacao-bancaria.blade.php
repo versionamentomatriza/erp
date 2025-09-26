@@ -95,35 +95,7 @@
                     @php
                         $saldoCalculado = $conta->calcularSaldoAtual($extrato->fim);
                     @endphp
-                    <div class="col-md-4">
-                        <div class="card shadow-none border-0">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ $conta->nome }}</h5>
-                                <div class="text-muted small">Banco: {{ $conta->banco ?? '-' }} | Agência:
-                                    {{ $conta->agencia ?? '-' }}</div>
-                                <hr class="my-2">
-                                <div class="d-flex justify-content-between">
-                                    <span>Saldo Inicial:</span>
-                                    <span>R$ {{ number_format($conta->saldo_inicial, 2, ',', '.') }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <span>Saldo Atual (BD):</span>
-                                    <span>R$ {{ number_format($conta->saldo_atual, 2, ',', '.') }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between fw-semibold">
-                                    <span>
-                                        Saldo Calculado:
-                                    </span>
-                                    <span>
-                                        @if(abs($saldoCalculado - $conta->saldo_atual) > 0)
-                                            <i class="bi bi-exclamation-triangle-fill text-warning ms-1" title="Diferença detectada entre o saldo calculado e o saldo atual da conta."></i>
-                                        @endif
-                                        R$ {{ number_format($saldoCalculado, 2, ',', '.') }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @include('extrato.partials.card-conta-financeira', ['conta' => $conta, 'extrato' => $extrato]);
                 @endforeach
             </div>
 

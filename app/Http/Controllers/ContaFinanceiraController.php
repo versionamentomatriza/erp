@@ -18,7 +18,8 @@ class ContaFinanceiraController extends Controller
         return view('contas-financeiras.create');
     }
 
-    public function edit(Request $request, $id){
+    public function edit(Request $request, $id)
+    {
         $item = ContaFinanceira::findOrFail($id);
         return view('contas-financeiras.edit', compact('item'));
     }
@@ -47,27 +48,38 @@ class ContaFinanceiraController extends Controller
         }
     }
 
-    public function update(Request $request, $id){
-
-        try{
+    public function update(Request $request, $id)
+    {
+        try {
             $item = ContaFinanceira::findOrFail($id);
 
+            // Se for atualização do saldo apenas (via modal)
+            if ($request->has('saldo_atual') && !$request->has('nome')) {
+                $item->saldo_atual = __convert_value_bd($request->saldo_atual);
+                $item->save();
+
+                session()->flash("flash_success", "Saldo atualizado!");
+                return redirect()->back();
+            }
+
+            // Caso contrário, atualização completa
             $request->merge([
                 'saldo_inicial' => __convert_value_bd($request->saldo_inicial),
                 'saldo_atual'   => __convert_value_bd($request->saldo_atual)
             ]);
 
             $item->fill($request->all())->save();
+
             session()->flash("flash_success", "Conta atualizada!");
             return redirect()->route('contas-financeiras.index');
-
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             session()->flash("flash_error", "Algo deu errado: " . $e->getMessage());
             return redirect()->back();
         }
     }
 
-    public function destroy($id){
+    public function destroy($id)
+    {
         $item = ContaFinanceira::findOrFail($id);
         $item->delete();
         session()->flash("flash_success", "Conta removida");
