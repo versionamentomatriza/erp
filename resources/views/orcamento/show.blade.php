@@ -46,7 +46,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="7" class="text-center">Nada encontrado</td>
+                                    <td colspan="8" class="text-center">Nada encontrado</td>
                                 </tr>
                                 @endforelse
                             </tbody>
