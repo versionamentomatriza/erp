@@ -451,22 +451,25 @@ public function nfe(Request $request)
 
     public function conta_pagar(Request $request)
     {
-        $locais = __getLocaisAtivoUsuario();
-        $locais = $locais->pluck(['id']);
+        $locais         = __getLocaisAtivoUsuario();
+        $locais         = $locais->pluck(['id']);
+        $start          = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end            = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
+        $empresaId      = $request->input('empresa_id');
+        $status         = $request->status;
+        $local_id       = $request->local_id;
+        $centroCustoId  = $request->centro_custo_id;
 
-        $start_date = $request->start_date;
-        $end_date = $request->end_date;
-        $status = $request->status;
-        $local_id = $request->local_id;
-        $centroCustoId = $request->centro_custo_id;
 
-
-        $data = ContaPagar::where('empresa_id', $request->empresa_id)
-            ->when(!empty($start_date), function ($query) use ($start_date) {
-                return $query->whereDate('data_vencimento', '>=', $start_date);
+        $data = ContaPagar::where('empresa_id', $empresaId)
+            ->when($start && $end, function ($query) use ($start, $end) {
+                return $query->whereBetween('created_at', [$start, $end]);
             })
-            ->when(!empty($end_date), function ($query) use ($end_date) {
-                return $query->whereDate('data_vencimento', '<=', $end_date);
+            ->when($start && !$end, function ($query) use ($start) {
+                return $query->whereDate('created_at', '>=', $start);
+            })
+            ->when(!$start && $end, function ($query) use ($end,) {
+                return $query->whereDate('created_at', '<=', $end);
             })
             ->when(!empty($status), function ($query) use ($status) {
                 if ($status == -1) {
@@ -511,22 +514,25 @@ public function nfe(Request $request)
 
     public function conta_receber(Request $request)
     {
-        $locais = __getLocaisAtivoUsuario();
-        $locais = $locais->pluck(['id']);
+        $locais         = __getLocaisAtivoUsuario();
+        $locais         = $locais->pluck(['id']);
+        $start          = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end            = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
+        $empresaId      = $request->input('empresa_id');
+        $status         = $request->status;
+        $local_id       = $request->local_id;
+        $centroCustoId  = $request->centro_custo_id;
 
-        $start_date = $request->start_date;
-        $end_date = $request->end_date;
-        $status = $request->status;
-        $local_id = $request->local_id;
-        $centroCustoId = $request->centro_custo_id;
 
-
-        $data = ContaReceber::where('empresa_id', $request->empresa_id)
-            ->when(!empty($start_date), function ($query) use ($start_date) {
-                return $query->whereDate('data_vencimento', '>=', $start_date);
+        $data = ContaReceber::where('empresa_id', $empresaId)
+            ->when($start && $end, function ($query) use ($start, $end) {
+                return $query->whereBetween('created_at', [$start, $end]);
             })
-            ->when(!empty($end_date), function ($query) use ($end_date,) {
-                return $query->whereDate('data_vencimento', '<=', $end_date);
+            ->when($start && !$end, function ($query) use ($start) {
+                return $query->whereDate('created_at', '>=', $start);
+            })
+            ->when(!$start && $end, function ($query) use ($end,) {
+                return $query->whereDate('created_at', '<=', $end);
             })
             ->when(!empty($status), function ($query) use ($status) {
                 if ($status == -1) {
@@ -571,16 +577,20 @@ public function nfe(Request $request)
 
     public function comissao(Request $request)
     {
-        $start_date = $request->start_date;
-        $end_date = $request->end_date;
+        $start          = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end            = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
+        $empresaId      = $request->input('empresa_id');
         $funcionario_id = $request->funcionario_id;
 
-        $data = ComissaoVenda::where('empresa_id', $request->empresa_id)
-            ->when(!empty($start_date), function ($query) use ($start_date) {
-                return $query->whereDate('created_at', '>=', $start_date);
+        $data = ComissaoVenda::where('empresa_id', $empresaId)
+            ->when($start && $end, function ($query) use ($start, $end) {
+                return $query->whereBetween('created_at', [$start, $end]);
             })
-            ->when(!empty($end_date), function ($query) use ($end_date,) {
-                return $query->whereDate('created_at', '<=', $end_date);
+            ->when($start && !$end, function ($query) use ($start) {
+                return $query->whereDate('created_at', '>=', $start);
+            })
+            ->when(!$start && $end, function ($query) use ($end,) {
+                return $query->whereDate('created_at', '<=', $end);
             })
             ->when(!empty($funcionario_id), function ($query) use ($funcionario_id) {
                 return $query->where('funcionario_id', $funcionario_id);
@@ -615,21 +625,24 @@ public function nfe(Request $request)
 
     public function vendas(Request $request)
     {
-        $empresaId = $request->empresa_id;
-        $centroCustoId = $request->centro_custo_id;
-        $estado = $request->estado;
-        $cidade = $request->cidade_id;
-        $startDate = $request->start_date;
-        $endDate = $request->end_date;
+        $empresaId      = $request->empresa_id;
+        $centroCustoId  = $request->centro_custo_id;
+        $estado         = $request->estado;
+        $cidade         = $request->cidade_id;
+        $start          = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end            = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
 
         // Aplicando filtros corretamente
         $vendas = Nfe::where('empresa_id', $empresaId)
             ->where('tpNF', 1)
-            ->when(!empty($startDate), function ($query) use ($startDate) {
-                return $query->whereDate('created_at', '>=', $startDate);
+            ->when($start && $end, function ($query) use ($start, $end) {
+                return $query->whereBetween('created_at', [$start, $end]);
             })
-            ->when(!empty($endDate), function ($query) use ($endDate) {
-                return $query->whereDate('created_at', '<=', $endDate);
+            ->when($start && !$end, function ($query) use ($start) {
+                return $query->whereDate('created_at', '>=', $start);
+            })
+            ->when(!$start && $end, function ($query) use ($end,) {
+                return $query->whereDate('created_at', '<=', $end);
             })
             ->when($centroCustoId, function ($query) use ($centroCustoId) {
                 return $query->where('centro_custo_id', $centroCustoId);
@@ -724,21 +737,24 @@ public function nfe(Request $request)
 
     public function compras(Request $request)
     {
-        $locais = __getLocaisAtivoUsuario();
-        $locais = $locais->pluck('id');
+        $locais             = __getLocaisAtivoUsuario();
+        $locais             = $locais->pluck('id');
+        $empresaId          = $request->input('empresa_id');
+        $start              = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end                = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
+        $local_id           = $request->local_id;
+        $centro_custo_id    = $request->centro_custo_id;
 
-        $start_date = $request->start_date;
-        $end_date = $request->end_date;
-        $local_id = $request->local_id;
-        $centro_custo_id = $request->centro_custo_id;
-
-        $data = Nfe::where('empresa_id', $request->empresa_id)
+        $data = Nfe::where('empresa_id', $empresaId)
             ->where('tpNF', 0) // Apenas compras
-            ->when(!empty($start_date), function ($query) use ($start_date) {
-                return $query->whereDate('created_at', '>=', $start_date);
+            ->when($start && $end, function ($query) use ($start, $end) {
+                return $query->whereBetween('created_at', [$start, $end]);
             })
-            ->when(!empty($end_date), function ($query) use ($end_date) {
-                return $query->whereDate('created_at', '<=', $end_date);
+            ->when($start && !$end, function ($query) use ($start) {
+                return $query->whereDate('created_at', '>=', $start);
+            })
+            ->when(!$start && $end, function ($query) use ($end,) {
+                return $query->whereDate('created_at', '<=', $end);
             })
             ->when($local_id, function ($query) use ($local_id) {
                 return $query->where('local_id', $local_id);
@@ -781,21 +797,21 @@ public function nfe(Request $request)
 
     public function taxas(Request $request)
     {
-        $data_inicial = $request->data_inicial;
-        $data_final = $request->data_final;
+        $start          = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end            = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
+        $empresaId      = $request->input('empresa_id');
+        $taxas          = TaxaPagamento::where('empresa_id', $empresaId)->get();
+        $tipos          = $taxas->pluck('tipo_pagamento')->toArray();
 
-        if ($data_final && $data_final) {
-            $data_inicial = $this->parseDate($data_inicial);
-            $data_final = $this->parseDate($data_final);
-        }
-        $taxas = TaxaPagamento::where('empresa_id', request()->empresa_id)->get();
-        $tipos = $taxas->pluck('tipo_pagamento')->toArray();
-        $vendas = Nfe::where('empresa_id', request()->empresa_id)
-            ->when($data_inicial != '', function ($q) use ($data_inicial) {
-                return $q->whereDate('created_at', '>=', $data_inicial);
+        $vendas = Nfe::where('empresa_id', $empresaId)
+            ->when($start && $end, function ($query) use ($start, $end) {
+                return $query->whereBetween('created_at', [$start, $end]);
             })
-            ->when($data_final != '', function ($q) use ($data_final) {
-                return $q->whereDate('created_at', '<=', $data_final);
+            ->when($start && !$end, function ($query) use ($start) {
+                return $query->whereDate('created_at', '>=', $start);
+            })
+            ->when(!$start && $end, function ($query) use ($end,) {
+                return $query->whereDate('created_at', '<=', $end);
             })
             ->get();
 
@@ -806,7 +822,7 @@ public function nfe(Request $request)
                 foreach ($v->fatura as $ft) {
                     $fp = $ft->tipo_pagamento;
                     if (in_array($fp, $tipos)) {
-                        $taxa = TaxaPagamento::where('empresa_id', request()->empresa_id)
+                        $taxa = TaxaPagamento::where('empresa_id', $empresaId)
                             ->where('tipo_pagamento', $fp)
                             ->when($bandeira_cartao != '' && $bandeira_cartao != '99', function ($q) use ($bandeira_cartao) {
                                 return $q->where('bandeira_cartao', $bandeira_cartao);
@@ -831,7 +847,7 @@ public function nfe(Request $request)
             } else {
                 if (in_array($v->tipo_pagamento, $tipos)) {
                     $total = $v->valor_total - $v->desconto + $v->acrescimo;
-                    $taxa = TaxaPagamento::where('empresa_id', request()->empresa_id)
+                    $taxa = TaxaPagamento::where('empresa_id', $empresaId)
                         ->when($bandeira_cartao != '' && $bandeira_cartao != '99', function ($q) use ($bandeira_cartao) {
                             return $q->where('bandeira_cartao', $bandeira_cartao);
                         })
@@ -856,12 +872,15 @@ public function nfe(Request $request)
             }
         }
 
-        $vendasCaixa = Nfce::where('empresa_id', request()->empresa_id)
-            ->when($data_inicial != '', function ($q) use ($data_inicial) {
-                return $q->whereDate('created_at', '>=', $data_inicial);
+        $vendasCaixa = Nfce::where('empresa_id', $empresaId)
+            ->when($start && $end, function ($query) use ($start, $end) {
+                return $query->whereBetween('created_at', [$start, $end]);
             })
-            ->when($data_final != '', function ($q) use ($data_final) {
-                return $q->whereDate('created_at', '<=', $data_final);
+            ->when($start && !$end, function ($query) use ($start) {
+                return $query->whereDate('created_at', '>=', $start);
+            })
+            ->when(!$start && $end, function ($query) use ($end,) {
+                return $query->whereDate('created_at', '<=', $end);
             })
             ->get();
 
@@ -870,7 +889,7 @@ public function nfe(Request $request)
             if (sizeof($v->fatura) > 1) {
                 foreach ($v->fatura as $ft) {
                     if (in_array($ft->tipo_pagamento, $tipos)) {
-                        $taxa = TaxaPagamento::where('empresa_id', request()->empresa_id)
+                        $taxa = TaxaPagamento::where('empresa_id', $empresaId)
                             ->when($bandeira_cartao != '' && $bandeira_cartao != '99', function ($q) use ($bandeira_cartao) {
                                 return $q->where('bandeira_cartao', $bandeira_cartao);
                             })
@@ -894,7 +913,7 @@ public function nfe(Request $request)
                 }
             } else {
                 if (in_array($v->tipo_pagamento, $tipos)) {
-                    $taxa = TaxaPagamento::where('empresa_id', request()->empresa_id)
+                    $taxa = TaxaPagamento::where('empresa_id', $empresaId)
                         ->when($bandeira_cartao != '' && $bandeira_cartao != '99', function ($q) use ($bandeira_cartao) {
                             return $q->where('bandeira_cartao', $bandeira_cartao);
                         })
@@ -948,18 +967,22 @@ public function nfe(Request $request)
     public function lucro(Request $request)
     {
 
-        $locais = __getLocaisAtivoUsuario();
-        $locais = $locais->pluck(['id']);
-        $start_date = $request->start_date;
-        $end_date = $request->end_date;
-        $local_id = $request->local_id;
+        $locais         = __getLocaisAtivoUsuario();
+        $locais         = $locais->pluck(['id']);
+        $start          = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end            = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
+        $empresaId      = $request->input('empresa_id');
+        $local_id       = $request->local_id;
 
-        $nfe = Nfe::where('empresa_id', $request->empresa_id)
-            ->when(!empty($start_date), function ($query) use ($start_date) {
-                return $query->whereDate('created_at', '>=', $start_date);
+        $nfe = Nfe::where('empresa_id', $empresaId)
+             ->when($start && $end, function ($query) use ($start, $end) {
+                return $query->whereBetween('created_at', [$start, $end]);
             })
-            ->when(!empty($end_date), function ($query) use ($end_date,) {
-                return $query->whereDate('created_at', '<=', $end_date);
+            ->when($start && !$end, function ($query) use ($start) {
+                return $query->whereDate('created_at', '>=', $start);
+            })
+            ->when(!$start && $end, function ($query) use ($end,) {
+                return $query->whereDate('created_at', '<=', $end);
             })
             ->when($local_id, function ($query) use ($local_id) {
                 return $query->where('local_id', $local_id);
@@ -971,12 +994,15 @@ public function nfe(Request $request)
             ->where('tpNF', 1)
             ->get();
 
-        $nfce = Nfce::where('empresa_id', $request->empresa_id)
-            ->when(!empty($start_date), function ($query) use ($start_date) {
-                return $query->whereDate('created_at', '>=', $start_date);
+        $nfce = Nfce::where('empresa_id', $empresaId)
+             ->when($start && $end, function ($query) use ($start, $end) {
+                return $query->whereBetween('created_at', [$start, $end]);
             })
-            ->when(!empty($end_date), function ($query) use ($end_date,) {
-                return $query->whereDate('created_at', '<=', $end_date);
+            ->when($start && !$end, function ($query) use ($start) {
+                return $query->whereDate('created_at', '>=', $start);
+            })
+            ->when(!$start && $end, function ($query) use ($end,) {
+                return $query->whereDate('created_at', '<=', $end);
             })
             ->when($local_id, function ($query) use ($local_id) {
                 return $query->where('local_id', $local_id);
@@ -1060,18 +1086,18 @@ public function nfe(Request $request)
             ->toArray();
 
         // Dados de entrada: datas e tipo de ordenação
-        $start_date = $request->input('start_date') . ' 00:00:00';
-        $end_date = $request->input('end_date') . ' 23:59:59';
-        $tipo = $request->input('tipo');
+        $start  = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end    = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
+        $tipo   = $request->input('tipo');
 
         // Filtrar produtos com movimentações de redução (baixa) no período selecionado e associadas aos usuarios que movimentaram um caixa xa da empresa
-        $produtos = Produto::whereHas('movimentacoes', function ($query) use ($start_date, $end_date, $usuariosIds) {
-            $query->whereBetween('created_at', [$start_date, $end_date])
+        $produtos = Produto::whereHas('movimentacoes', function ($query) use ($start, $end, $usuariosIds) {
+            $query->whereBetween('created_at', [$start, $end])
                 ->where('tipo', 'reducao') // Filtra apenas reduções (baixas)
                 ->whereIn('user_id', $usuariosIds); // Filtra pela movimentação dos usuários da empresa
         })
-            ->with(['movimentacoes' => function ($query) use ($start_date, $end_date, $usuariosIds) {
-                $query->whereBetween('created_at', [$start_date, $end_date])
+            ->with(['movimentacoes' => function ($query) use ($start, $end, $usuariosIds) {
+                $query->whereBetween('created_at', [$start, $end])
                     ->where('tipo', 'reducao') // Movimentações de redução (baixa)
                     ->whereIn('user_id', $usuariosIds); // Movimentações
             }])
@@ -1126,10 +1152,10 @@ public function nfe(Request $request)
 
         public function agendamentos(Request $request)
         {
-            $start_date = $request->input('start_date') . ' 00:01:00';
-            $end_date = $request->input('end_date') . ' 23:59:59';
+            $start  = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+            $end    = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
         
-            $agendamentos = Agendamento::whereBetween('data', [$start_date, $end_date])
+            $agendamentos = Agendamento::whereBetween('data', [$start, $end])
                 ->with(['funcionario', 'cliente', 'itens.servico'])
                 ->get();
         
