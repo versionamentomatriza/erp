@@ -48,6 +48,7 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th>Cliente</th>
+                                    <th>Nome Fantasia</th>
                                     <th>CPF/CNPJ</th>
                                     <th>Número</th>
                                     <th>Valor</th>
@@ -59,6 +60,7 @@
                                 @foreach($data as $item)
                                 <tr>
                                     <td>{{ $item->cliente ? $item->cliente->razao_social : "--" }}</td>
+                                    <td>{{ $item->cliente ? $item->cliente->nome_fantasia : "--" }}</td>
                                     <td>{{ $item->cliente ? $item->cliente->cpf_cnpj : "--" }}</td>
                                     <td>{{ $item->numero ? $item->id : '' }}</td>
                                     <td>{{ __moeda($item->total) }}</td>
