@@ -27,6 +27,7 @@ use Dompdf\Dompdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\BaseExport;
 use App\Models\Caixa;
+use Illuminate\Support\Carbon;
 
 class RelatorioController extends Controller
 {
@@ -125,25 +126,39 @@ class RelatorioController extends Controller
 
 public function clientes(Request $request)
 {
-    $tipo = $request->tipo;
-    $start_date = $request->start_date;
-    $end_date = $request->end_date;
+    $start      = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+    $end        = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
+    $tipo       = $request->input('tipo');
+    $empresaId  = $request->input('empresa_id');
 
-    $data = Cliente::where('empresa_id', $request->empresa_id)
-        ->when(!empty($start_date), function ($query) use ($start_date) {
-            return $query->whereDate('created_at', '>=', $start_date);
-        })
-        ->when(!empty($end_date), function ($query) use ($end_date,) {
-            return $query->whereDate('created_at', '<=', $end_date);
-        })->get();
+    $data = Cliente::where('empresa_id', $empresaId)
+            ->when($start && $end, fn($q) => $q->whereBetween('created_at', [$start, $end]))
+            ->when($start && !$end, fn($q) => $q->where('created_at', '>=', $start))
+            ->when(!$start && $end, fn($q) => $q->where('created_at', '<=', $end))
+            ->get();
 
-    if ($tipo != '') {
+    if ($tipo !== '') {
+        $ids = $data->pluck('id');
+
+        $nfes = Nfe::selectRaw('cliente_id, SUM(total) as soma')
+            ->whereIn('cliente_id', $ids)
+            ->groupBy('cliente_id')
+            ->pluck('soma', 'cliente_id');
+
+        $nfces = Nfce::selectRaw('cliente_id, SUM(total) as soma')
+            ->whereIn('cliente_id', $ids)
+            ->groupBy('cliente_id')
+            ->pluck('soma', 'cliente_id');
+
         foreach ($data as $item) {
-            $sumNfe = Nfe::where('cliente_id', $item->id)->sum('total');
-            $sumNfce = Nfce::where('cliente_id', $item->id)->sum('total');
-            $item->total = $sumNfe + $sumNfce;
+            $sumNfe  = $nfes[$item->id] ?? 0;
+            $sumNfce = $nfces[$item->id] ?? 0;
+            $item->setAttribute('total', $sumNfe + $sumNfce);
         }
-        $data = $tipo == 1 ? $data->sortByDesc('total') : $data->sortBy('total');
+
+        $data = $tipo == 1
+            ? $data->sortByDesc('total')->values()
+            : $data->sortBy('total')->values();
     }
 
     $exportar_excel = $request->get('export');
@@ -168,17 +183,16 @@ public function clientes(Request $request)
 
 public function fornecedores(Request $request)
 {
-    $tipo = $request->tipo;
-    $start_date = $request->start_date;
-    $end_date = $request->end_date;
+    $start      = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+    $end        = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
+    $tipo       = $request->input('tipo');
+    $empresaId  = $request->input('empresa_id');
 
-    $data = Fornecedor::where('empresa_id', $request->empresa_id)
-        ->when(!empty($start_date), function ($query) use ($start_date) {
-            return $query->whereDate('created_at', '>=', $start_date);
-        })
-        ->when(!empty($end_date), function ($query) use ($end_date,) {
-            return $query->whereDate('created_at', '<=', $end_date);
-        })->get();
+    $data = Fornecedor::where('empresa_id', $empresaId)
+            ->when($start && $end, fn($q) => $q->whereBetween('created_at', [$start, $end]))
+            ->when($start && !$end, fn($q) => $q->where('created_at', '>=', $start))
+            ->when(!$start && $end, fn($q) => $q->where('created_at', '<=', $end))
+            ->get();
 
     if ($tipo != '') {
         foreach ($data as $item) {
