@@ -17,6 +17,7 @@
                 <div class="row">
 
                     <h4>Cliente: <strong style="color: steelblue">{{ $data->cliente_id ? $data->cliente->razao_social : 'Consumidor Final'}}</strong></h4>
+                    <h4>Nome Fantasia: <strong style="color: steelblue">{{ $data->cliente_id ? $data->cliente->nome_fantasia : 'Consumidor Final'}}</strong></h4>
                     <h4>Data: <strong style="color: steelblue">{{ __data_pt($data->created_at) }}</strong></h4>
 
                     <h4>Total: <strong class="text-success">R$ {{ __moeda($data->total) }}</strong></h4>
