@@ -228,11 +228,15 @@ public function fornecedores(Request $request)
 
 public function nfe(Request $request)
 {
-    $locais = __getLocaisAtivoUsuario()->pluck(['id']);
+    $start      = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+    $end        = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
+    $empresaId  = $request->input('empresa_id');
+    $locais     = __getLocaisAtivoUsuario()->pluck(['id']);
 
-    $data = Nfe::where('empresa_id', $request->empresa_id)
-        ->when(!empty($request->start_date), fn($q) => $q->whereDate('data_emissao', '>=', $request->start_date))
-        ->when(!empty($request->end_date), fn($q) => $q->whereDate('data_emissao', '<=', $request->end_date))
+    $data = Nfe::where('empresa_id', $empresaId)
+        ->when($start && $end, fn($q) => $q->whereBetween('created_at', [$start, $end]))
+        ->when($start && !$end, fn($q) => $q->whereDate('data_emissao', '>=', $start))
+        ->when(!$start && $end, fn($q) => $q->whereDate('data_emissao', '<=', $end))
         ->when(!empty($request->cliente), fn($q) => $q->where('cliente_id', $request->cliente))
         ->when(!empty($request->estado), fn($q) => $q->where('estado', $request->estado))
         ->when(!empty($request->tipo), fn($q) => $q->where('tpNF', $request->tipo))
@@ -263,7 +267,6 @@ public function nfe(Request $request)
         new BaseExport(['data' => $data], 'exports.nfe'),
         'nfe.xlsx'
     );
-    
 }
     
 
@@ -271,22 +274,24 @@ public function nfe(Request $request)
     {
         $locais = __getLocaisAtivoUsuario()->pluck('id');
 
-        $start_date = $request->start_date;
-        $end_date = $request->end_date;
+        $start      = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end        = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
         $cliente_id = $request->cliente_id;
-        $estado = $request->estado;
-        $local_id = $request->local_id;
+        $estado     = $request->estado;
+        $local_id   = $request->local_id;
         $empresa_id = $request->empresa_id ?? auth()->user()->empresa_id; // Certifique-se que empresa_id está definido.
 
         $query = Nfce::where('empresa_id', $empresa_id);
 
         // Filtro por data de cadastro (created_at)
-        if (!empty($start_date) && !empty($end_date) && $start_date <= $end_date) {
-            $query->whereBetween('created_at', [$start_date . ' 00:00:00', $end_date . ' 23:59:59']);
-        } elseif (!empty($start_date)) {
-            $query->whereDate('created_at', '>=', $start_date);
-        } elseif (!empty($end_date)) {
-            $query->whereDate('created_at', '<=', $end_date);
+        if ($start && $end) {
+            if ($start <= $end) {
+                $query->whereBetween('created_at', [$start, $end]);
+            }
+        } elseif ($start) {
+            $query->whereDate('created_at', '>=', $start);
+        } elseif ($end) {
+            $query->whereDate('created_at', '<=', $end);
         }
 
         // Outros filtros opcionais
@@ -335,17 +340,21 @@ public function nfe(Request $request)
         $locais = __getLocaisAtivoUsuario();
         $locais = $locais->pluck(['id']);
 
-        $start_date = $request->start_date;
-        $end_date = $request->end_date;
-        $estado = $request->estado;
-        $local_id = $request->local_id;
+        $start      = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end        = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
+        $estado     = $request->estado;
+        $local_id   = $request->local_id;
+        $empresaId  = $request->input('empresa_id');
 
         $data = Cte::where('empresa_id', $request->empresa_id)
-            ->when(!empty($start_date), function ($query) use ($start_date) {
-                return $query->whereDate('created_at', '>=', $start_date);
+            ->when($start && $end, function ($query) use ($start, $end) {
+                return $query->whereBetween('created_at', [$start, $end]);
             })
-            ->when(!empty($end_date), function ($query) use ($end_date,) {
-                return $query->whereDate('created_at', '<=', $end_date);
+            ->when($start && !$end, function ($query) use ($start) {
+                return $query->whereDate('created_at', '>=', $start);
+            })
+            ->when(!$start && $end, function ($query) use ($end,) {
+                return $query->whereDate('created_at', '<=', $end);
             })
             ->when(!empty($estado), function ($query) use ($estado) {
                 return $query->where('estado', $estado);
@@ -384,19 +393,23 @@ public function nfe(Request $request)
 
     public function mdfe(Request $request)
     {
-        $locais = __getLocaisAtivoUsuario();
-        $locais = $locais->pluck(['id']);
-        $start_date = $request->start_date;
-        $end_date = $request->end_date;
-        $estado = $request->estado;
-        $local_id = $request->local_id;
+        $locais     = __getLocaisAtivoUsuario();
+        $locais     = $locais->pluck(['id']);
+        $empresaId  = $request->input('empresa_id');
+        $start      = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
+        $end        = $request->filled('end_date') ? Carbon::parse($request->end_date)->endOfDay() : null;
+        $estado     = $request->estado;
+        $local_id   = $request->local_id;
 
         $data = Mdfe::where('empresa_id', $request->empresa_id)
-            ->when(!empty($start_date), function ($query) use ($start_date) {
-                return $query->whereDate('created_at', '>=', $start_date);
+            ->when($start && $end, function ($query) use ($start, $end) {
+                return $query->whereBetween('created_at', [$start, $end]);
             })
-            ->when(!empty($end_date), function ($query) use ($end_date,) {
-                return $query->whereDate('created_at', '<=', $end_date);
+            ->when($start && !$end, function ($query) use ($start) {
+                return $query->whereDate('created_at', '>=', $start);
+            })
+            ->when(!$start && $end, function ($query) use ($end,) {
+                return $query->whereDate('created_at', '<=', $end);
             })
             ->when(!empty($estado), function ($query) use ($estado) {
                 return $query->where('estado_emissao', $estado);
