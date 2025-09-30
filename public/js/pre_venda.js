@@ -677,49 +677,66 @@ function selecionaLista() {
 }
 
 $(".btn-add-item").click(() => {
-  let qtd = $("#inp-quantidade").val();
-  let value_unit = $("#inp-valor_unitario").val();
-  value_unit = convertMoedaToFloat(value_unit);
-  qtd = convertMoedaToFloat(qtd);
-  $("#inp-subtotal").val(convertFloatToMoeda(qtd * value_unit));
-  setTimeout(() => {
-    let abertura = $("#abertura").val();
+  let product_id = $("#inp-produto_id").val();
+  let query = {
+    produto_id: product_id,
+  }
 
-    if (abertura) {
-      let qtd = $("#inp-quantidade").val();
-      let value_unit = $("#inp-valor_unitario").val();
-      let sub_total = $("#inp-subtotal").val();
-      let product_id = $("#inp-produto_id").val();
-      // let key = $("#inp-key").val()
+  $.get(path_url + "api/produtos/estoque", query)
+    .done((res) => {
+      if(parseFloat(res.quantidade) <= 0){
+        $('#inp-produto_id').val(null).trigger('change');;
+        $('.qtd').val('');
+        $('.value_unit').val('');
+        swal("Alerta", "Produto sem estoque", "warning");
+      }else{
+        let qtd = $("#inp-quantidade").val();
+        let value_unit = $("#inp-valor_unitario").val();
+        value_unit = convertMoedaToFloat(value_unit);
+        qtd = convertMoedaToFloat(qtd);
+        $("#inp-subtotal").val(convertFloatToMoeda(qtd * value_unit));
+        setTimeout(() => {
+          let abertura = $("#abertura").val();
 
-      if (qtd && value_unit && product_id && sub_total) {
-        let dataRequest = {
-          qtd: qtd,
-          value_unit: value_unit,
-          sub_total: sub_total,
-          product_id: product_id,
-        };
-        $.get(path_url + "api/frenteCaixa/linhaProdutoVenda", dataRequest)
-          .done((e) => {
-            $(".table-itens tbody").append(e);
-            calcTotal();
-          })
-          .fail((e) => {
-            console.log(e);
-          });
-      } else {
-        swal(
-          "Atenção",
-          "Informe corretamente os campos para continuar!",
-          "warning"
-        );
+          if (abertura) {
+            let qtd = $("#inp-quantidade").val();
+            let value_unit = $("#inp-valor_unitario").val();
+            let sub_total = $("#inp-subtotal").val();
+            // let key = $("#inp-key").val()
+
+            if (qtd && value_unit && product_id && sub_total) {
+              let dataRequest = {
+                qtd: qtd,
+                value_unit: value_unit,
+                sub_total: sub_total,
+                product_id: product_id,
+              };
+              $.get(path_url + "api/frenteCaixa/linhaProdutoVenda", dataRequest)
+                .done((e) => {
+                  $(".table-itens tbody").append(e);
+                  calcTotal();
+                })
+                .fail((e) => {
+                  console.log(e);
+                });
+            } else {
+              swal(
+                "Atenção",
+                "Informe corretamente os campos para continuar!",
+                "warning"
+              );
+            }
+          } else {
+            swal("Atenção", "Abra o caixa para continuar!", "warning").then(() => {
+              validaCaixa();
+            });
+          }
+        }, 100);
       }
-    } else {
-      swal("Atenção", "Abra o caixa para continuar!", "warning").then(() => {
-        validaCaixa();
-      });
-    }
-  }, 100);
+    })
+    .fail((e) => {
+      console.log(e);
+    });
 });
 
 function validaCaixa() {
