@@ -135,6 +135,14 @@ class ProdutoController extends Controller
         return response()->json($data, 200);
     }
 
+    public function pesquisaEstoque(Request $request)
+    {
+        $data = Estoque::where('produto_id', $request->produto_id)
+            ->first();
+
+        return response()->json($data, 200);
+    }
+
     public function pesquisaCardapio(Request $request)
     {
         $data = Produto::orderBy('nome', 'desc')
