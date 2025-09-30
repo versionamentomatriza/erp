@@ -182,6 +182,7 @@ Route::get('/produtos-reserva', 'ProdutoController@pesquisaReserva');
 Route::group(['prefix' => 'produtos'], function () {
     Route::get('/', 'ProdutoController@pesquisa');
     Route::get('/com-estoque', 'ProdutoController@pesquisaComEstoque');
+    Route::get('/estoque', 'ProdutoController@pesquisaEstoque');
     Route::get('/cardapio', 'ProdutoController@pesquisaCardapio');
     Route::get('/delivery', 'ProdutoController@pesquisaDelivery');
     Route::get('/find', 'ProdutoController@find');
