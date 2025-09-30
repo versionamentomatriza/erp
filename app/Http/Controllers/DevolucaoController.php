@@ -338,117 +338,135 @@ class DevolucaoController extends Controller
         return $fornecedor;
     }
 
-    public function finishXml(Request $request)
-    {
-        try {
+public function finishXml(Request $request)
+{
+    try {
+        DB::transaction(function () use ($request) {
 
-            DB::transaction(function () use ($request) {
+            $empresa = Empresa::findOrFail($request->empresa_id);
 
-                $fornecedor_id = isset($request->fornecedor_id) ? $request->fornecedor_id : null;
-                $empresa = Empresa::findOrFail($request->empresa_id);
-
-                if (isset($request->fornecedor_id)) {
-                    if ($request->fornecedor_id == null) {
-                        $fornecedor_id = $this->cadastrarFornecedor($request);
-                    } else {
-                        $this->atualizaFornecedor($request);
-                    }
-                }
-                $transportadora_id = $request->transportadora_id;
-                if ($request->transportadora_id == null) {
-                    $transportadora_id = $this->cadastrarTransportadora($request);
-                } else {
-                    $this->atualizaTransportadora($request);
-                }
-                $config = Empresa::find($request->empresa_id);
-
-                $caixa = __isCaixaAberto();
-
-                $request->merge([
-                    'emissor_nome' => $config->nome,
-                    'emissor_cpf_cnpj' => $config->cpf_cnpj,
-                    'ambiente' => $config->ambiente,
-                    'chave' => '',
-                    'fornecedor_id' => $fornecedor_id,
-                    'transportadora_id' => $transportadora_id,
-                    'numero_serie' => $empresa->numero_serie_nfe ? $empresa->numero_serie_nfe : 0,
-                    'numero' => $request->numero_nfe ? $request->numero_nfe : 0,
-                    'chave_importada' => $request->chave_importada,
-                    'estado' => 'novo',
-                    'total' => __convert_value_bd($request->valor_total),
-                    'desconto' => $request->desconto ? __convert_value_bd($request->desconto) : 0,
-                    'acrescimo' => $request->acrescimo ? __convert_value_bd($request->acrescimo) : 0,
-                    'valor_produtos' => __convert_value_bd($request->valor_produtos),
-                    'valor_frete' => $request->valor_frete ? __convert_value_bd($request->valor_frete) : 0,
-                    'caixa_id' => $caixa ? $caixa->id : null,
-                    'local_id' => $caixa->local_id,
-                    'tipo_pagamento' => isset($request->tipo_pagamento[0]) ? $request->tipo_pagamento[0] : null,
-                    'user_id' => \Auth::user()->id
+            // --- Fornecedor ---
+            $fornecedor_id = null;
+            if (!$request->fornecedor_id) {
+                // cria novo fornecedor
+                $fornecedor = $this->cadastraFornecedor([
+                    'empresa_id'       => $request->empresa_id,
+                    'razao_social'     => $request->fornecedor_nome,
+                    'nome_fantasia'    => $request->nome_fantasia,
+                    'cpf_cnpj'         => $request->fornecedor_cpf_cnpj,
+                    'ie'               => $request->ie,
+                    'contribuinte'     => $request->contribuinte,
+                    'consumidor_final' => $request->consumidor_final,
+                    'email'            => $request->email ?? '',
+                    'telefone'         => $request->telefone ?? '',
+                    'cidade_id'        => $request->fornecedor_cidade,
+                    'rua'              => $request->fornecedor_rua,
+                    'cep'              => $request->cep,
+                    'numero'           => $request->fornecedor_numero,
+                    'bairro'           => $request->fornecedor_bairro,
+                    'complemento'      => $request->complemento
                 ]);
-                 //dd($request->all());
-                // dd($request->tipo_pagamento[]);
-                $nfe = Nfe::create($request->all());
-                for ($i = 0; $i < sizeof($request->produto_id); $i++) {
-                    if ($request->produto_id[$i] == 0) {
-                        //cadastrar produto
-                        $product = $this->cadastrarProduto($request, $i, $caixa->local_id);
-                    } else {
-                        $product = Produto::findOrFail($request->produto_id[$i]);
-                    }
+                $fornecedor_id = $fornecedor->id;
+            } else {
+                // atualiza fornecedor existente
+                $this->atualizaFornecedor($request);
+                $fornecedor_id = $request->fornecedor_id;
+            }
 
-                    ItemNfe::create([
-                        'nfe_id' => $nfe->id,
-                        'produto_id' => $product->id,
-                        'quantidade' => __convert_value_bd($request->quantidade[$i]),
-                        'valor_unitario' => __convert_value_bd($request->valor_unitario[$i]),
-                        'sub_total' => __convert_value_bd($request->sub_total[$i]),
-                        'perc_icms' => __convert_value_bd($request->perc_icms[$i]),
-                        'perc_pis' => __convert_value_bd($request->perc_pis[$i]),
-                        'perc_cofins' => __convert_value_bd($request->perc_cofins[$i]),
-                        'perc_ipi' => __convert_value_bd($request->perc_ipi[$i]),
-                        'cst_csosn' => $request->cst_csosn[$i],
-                        'cst_pis' => $request->cst_pis[$i],
-                        'cst_cofins' => $request->cst_cofins[$i],
-                        'cst_ipi' => $request->cst_ipi[$i],
-                        'perc_red_bc' => $request->perc_red_bc[$i] ? __convert_value_bd($request->perc_red_bc[$i]) : 0,
-                        'cfop' => $request->cfop[$i],
-                        'ncm' => $request->ncm[$i],
-                        'codigo_beneficio_fiscal' => $request->codigo_beneficio_fiscal[$i],
+            // --- Transportadora ---
+            $transportadora_id = $request->transportadora_id;
+            if (!$request->transportadora_id) {
+                $transportadora_id = $this->cadastrarTransportadora($request);
+            } else {
+                $this->atualizaTransportadora($request);
+            }
 
-                        'vbc_icms' => __convert_value_bd($request->vbc_icms[$i]),
-                        'vbc_pis' => __convert_value_bd($request->vbc_pis[$i]),
-                        'vbc_cofins' => __convert_value_bd($request->vbc_cofins[$i]),
-                        'vbc_ipi' => __convert_value_bd($request->vbc_ipi[$i]),
-                        'cEnq' => $request->cEnq[$i],
+            $config = Empresa::find($request->empresa_id);
+            $caixa  = __isCaixaAberto();
 
-                    ]);
+            $request->merge([
+                'emissor_nome'     => $config->nome,
+                'emissor_cpf_cnpj' => $config->cpf_cnpj,
+                'ambiente'         => $config->ambiente,
+                'chave'            => '',
+                'fornecedor_id'    => $fornecedor_id,
+                'transportadora_id'=> $transportadora_id,
+                'numero_serie'     => $empresa->numero_serie_nfe ? $empresa->numero_serie_nfe : 0,
+                'numero'           => $request->numero_nfe ? $request->numero_nfe : 0,
+                'chave_importada'  => $request->chave_importada,
+                'estado'           => 'novo',
+                'total'            => __convert_value_bd($request->valor_total),
+                'desconto'         => $request->desconto ? __convert_value_bd($request->desconto) : 0,
+                'acrescimo'        => $request->acrescimo ? __convert_value_bd($request->acrescimo) : 0,
+                'valor_produtos'   => __convert_value_bd($request->valor_produtos),
+                'valor_frete'      => $request->valor_frete ? __convert_value_bd($request->valor_frete) : 0,
+                'caixa_id'         => $caixa ? $caixa->id : null,
+                'local_id'         => $caixa->local_id,
+                'tipo_pagamento'   => isset($request->tipo_pagamento[0]) ? $request->tipo_pagamento[0] : null,
+                'user_id'          => \Auth::user()->id
+            ]);
 
+            // cria a NFe
+            $nfe = Nfe::create($request->all());
+
+            // --- Itens ---
+            for ($i = 0; $i < sizeof($request->produto_id); $i++) {
+                if ($request->produto_id[$i] == 0) {
+                    $product = $this->cadastrarProduto($request, $i, $caixa->local_id);
+                } else {
+                    $product = Produto::findOrFail($request->produto_id[$i]);
                 }
-				/*
-                if($request->tipo_pagamento){
-                    for ($i = 0; $i < sizeof($request->tipo_pagamento); $i++) {
-                        if ($request->tipo_pagamento[$i]) {
-                            FaturaNfe::create([
-                                'nfe_id' => $nfe->id,
-                                'tipo_pagamento' => $request->tipo_pagamento[$i],
-                                'data_vencimento' => $request->data_vencimento[$i],
-                                'valor' => __convert_value_bd($request->valor_fatura[$i])
-                            ]);
-                        }
 
+                ItemNfe::create([
+                    'nfe_id'                  => $nfe->id,
+                    'produto_id'              => $product->id,
+                    'quantidade'              => __convert_value_bd($request->quantidade[$i]),
+                    'valor_unitario'          => __convert_value_bd($request->valor_unitario[$i]),
+                    'sub_total'               => __convert_value_bd($request->sub_total[$i]),
+                    'perc_icms'               => __convert_value_bd($request->perc_icms[$i]),
+                    'perc_pis'                => __convert_value_bd($request->perc_pis[$i]),
+                    'perc_cofins'             => __convert_value_bd($request->perc_cofins[$i]),
+                    'perc_ipi'                => __convert_value_bd($request->perc_ipi[$i]),
+                    'cst_csosn'               => $request->cst_csosn[$i],
+                    'cst_pis'                 => $request->cst_pis[$i],
+                    'cst_cofins'              => $request->cst_cofins[$i],
+                    'cst_ipi'                 => $request->cst_ipi[$i],
+                    'perc_red_bc'             => $request->perc_red_bc[$i] ? __convert_value_bd($request->perc_red_bc[$i]) : 0,
+                    'cfop'                    => $request->cfop[$i],
+                    'ncm'                     => $request->ncm[$i],
+                    'codigo_beneficio_fiscal' => $request->codigo_beneficio_fiscal[$i],
+                    'vbc_icms'                => __convert_value_bd($request->vbc_icms[$i]),
+                    'vbc_pis'                 => __convert_value_bd($request->vbc_pis[$i]),
+                    'vbc_cofins'              => __convert_value_bd($request->vbc_cofins[$i]),
+                    'vbc_ipi'                 => __convert_value_bd($request->vbc_ipi[$i]),
+                    'cEnq'                    => $request->cEnq[$i],
+                ]);
+            }
+
+            // --- Fatura (opcional) ---
+            if ($request->tipo_pagamento) {
+                for ($i = 0; $i < sizeof($request->tipo_pagamento); $i++) {
+                    if ($request->tipo_pagamento[$i]) {
+                        FaturaNfe::create([
+                            'nfe_id'        => $nfe->id,
+                            'tipo_pagamento'=> $request->tipo_pagamento[$i],
+                            'data_vencimento'=> $request->data_vencimento[$i],
+                            'valor'         => __convert_value_bd($request->valor_fatura[$i])
+                        ]);
                     }
                 }
-				*/
-            });
-session()->flash("flash_success", "Importação de devolução cadastrada!");
-} catch (\Exception $e) {
-    // echo $e->getMessage() . '<br>' . $e->getLine();
-    // die;
-    session()->flash("flash_error", 'Algo deu errado ' . $e->getMessage());
+            }
+
+        });
+
+        session()->flash("flash_success", "Importação de devolução cadastrada!");
+    } catch (\Exception $e) {
+        session()->flash("flash_error", 'Algo deu errado: ' . $e->getMessage());
+    }
+
+    return redirect()->route('devolucao.index');
 }
 
-return redirect()->route('devolucao.index');
-}
 
 private function atualizaFornecedor($request)
 {

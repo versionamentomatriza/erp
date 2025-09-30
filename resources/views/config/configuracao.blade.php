@@ -134,7 +134,6 @@
                                 </div>
                                 <div class="col-md-2 mt-3">
                                     {!!Form::tel('ie', 'Inscrição estadual')
-                                    ->attrs(['data-mask' => '000000000000'])
                                     ->required()
                                     !!}
                                 </div>

@@ -44,6 +44,7 @@
                             <p><b>Total de serviços: <strong class="text-primary">{{ sizeof($item->itens) }}</strong></b></p>
                             <p><b>Desconto: <strong class="text-danger">{{ __moeda($item->desconto) }}</strong></b></p>
                             <p><b>Atendente: <strong class="text-primary">{{ $item->funcionario ? $item->funcionario->nome : '' }}</strong></b></p>
+							<p><b>Observações: <strong class="text-primary">{{ $item->observacao }}</strong></b></p>
                             
                         </div>
 
@@ -164,7 +165,9 @@
                                 @endcan
                                 @endif
 
-                                <a href="javascript:window.print()" class="btn btn-primary"><i class="ri-printer-line"></i> Imprimir</a>
+								<a href="{{ route('agendamento.pdf', $item->id) }}" target="_blank" class="btn btn-info ">
+									<i class="ri-printer-line"></i> Imprimir
+								</a>
                             </form>
                         </div>
                     </div>   

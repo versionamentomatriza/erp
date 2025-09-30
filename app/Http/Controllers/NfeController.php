@@ -449,6 +449,8 @@ class NfeController extends Controller
                 $tipoPagamento = $request->tipo_pagamento;
 
                 $caixa = __isCaixaAberto();
+				
+				//dd($request->valor_produtos);
                 $valor_produto =  number_format($request->valor_produtos, 2);
 
                 if ($caixa != null) {
@@ -468,7 +470,7 @@ class NfeController extends Controller
                     'total' => __convert_value_bd($request->valor_total),
                     'desconto' => $request->desconto ? __convert_value_bd($request->desconto) : 0,
                     'acrescimo' => $request->acrescimo ? __convert_value_bd($request->acrescimo) : 0,
-                    'valor_produtos' => __convert_value_bd($valor_produto),
+                    'valor_produtos' => $request->valor_produtos,
                     'valor_frete' => $request->valor_frete ? __convert_value_bd($request->valor_frete) : 0,
                     'caixa_id' => $caixa ? $caixa->id : null,
                     'local_id' => $caixa->local_id,

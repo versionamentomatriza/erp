@@ -17,6 +17,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\ConfigGeral;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class AgendamentoController extends Controller
 {
@@ -189,4 +191,35 @@ class AgendamentoController extends Controller
                 'caixa', 'config', 'tiposPagamento'));
 
     }
+	
+	public function imprimir($id)
+	{
+		$item = Agendamento::with(['cliente', 'funcionario', 'itens.servico'])
+			->findOrFail($id);
+
+		$title = 'Relatório de Agendamento';
+
+		return view('agendamento.imprimir', compact('item', 'title'));
+	}
+	
+public function pdf($id)
+{
+    $item = Agendamento::with(['cliente', 'funcionario', 'itens.servico'])
+        ->findOrFail($id);
+
+    $options = new \Dompdf\Options();
+    $options->set('defaultFont', 'DejaVu Sans');
+    $options->set('isRemoteEnabled', true);
+
+    $dompdf = new \Dompdf\Dompdf($options);
+
+    $html = view('agendamento.pdf', compact('item'))->render();
+
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    return $dompdf->stream("agendamento_{$id}.pdf", ["Attachment" => false]);
+}
+
 }

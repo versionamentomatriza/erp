@@ -1,12 +1,8 @@
 <div class="row">
     <div class="col-md-12">
-        @isset($item)
-        @if($item->fornecedor)
-        @php
-        $isCompra = 1;
-        @endphp
-        @endif
-        @endif
+@if( (isset($item) && $item->fornecedor) || isset($fornecedor) )
+    @php $isCompra = 1; @endphp
+@endif
         <ul class="nav nav-tabs nav-primary" role="tablist">
             <li class="nav-item" role="presentation">
                 <a class="nav-link active" data-bs-toggle="tab" href="#cliente" role="tab" aria-selected="true">
@@ -727,75 +723,6 @@
                 </div>
                 <div class="card mt-1">
                     <div class="row m-3">
-                        <div class="table-responsive">
-                            <table class="table table-dynamic table-fatura" style="width: 800px">
-                                <thead>
-                                    <tr>
-                                        <th>Tipo de Pagamento</th>
-                                        <th>Data Vencimento</th>
-                                        <th>Valor</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="body-pagamento" class="datatable-body">
-                                    @if(isset($item) && sizeof($item->fatura) > 0)
-                                    @foreach ($item->fatura as $f)
-                                    <tr class="dynamic-form">
-                                        <td width="300">
-                                            <select name="tipo_pagamento[]" class="form-control tipo_pagamento select2">
-                                                <option value="">Selecione..</option>
-                                                @foreach(App\Models\Nfe::tiposPagamento() as $key => $c)
-                                                <option @if($f->tipo_pagamento == $key) selected @endif value="{{$key}}">{{$c}}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td width="150">
-                                            <input value="{{ $f->data_vencimento }}" type="date" class="form-control" name="data_vencimento[]" id="">
-                                        </td>
-                                        <td width="150">
-                                            <input value="{{ __moeda($f->valor) }}" type="tel" class="form-control moeda valor_fatura" name="valor_fatura[]" id="valor">
-                                        </td>
-                                        <td width="30">
-                                            <button class="btn btn-danger btn-remove-tr">
-                                                <i class="ri-delete-bin-line"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                    @else
-                                    <tr class="dynamic-form">
-                                        <td width="300">
-                                            <select name="tipo_pagamento[]" class="form-control tipo_pagamento select2">
-                                                <option value="">Selecione..</option>
-                                                @foreach(App\Models\Nfe::tiposPagamento() as $key => $c)
-                                                <option value="{{$key}}">{{$c}}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td width="150">
-                                            <input type="date" class="form-control date_atual" name="data_vencimento[]" id="" value="">
-                                        </td>
-                                        <td width="150">
-                                            <input type="tel" class="form-control moeda valor_faturas" name="valor_faturas[]" id="valor">
-                                        </td>
-                                        <td width="30">
-                                            <button class="btn btn-danger btn-remove-tr">
-                                                <i class="ri-delete-bin-line"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    @endisset
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <button type="button" class="btn btn-info btn-add-tr px-5">
-                                    Adicionar Pagamento
-                                </button>
-                            </div>
-                        </div>
-
 
                         <div class="col-3 mt-4">
                             <h5>Total da Fatura: <strong class="total_fatura">R$</strong></h5>

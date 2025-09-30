@@ -1012,7 +1012,7 @@
             <td class="" style="width: 200px;">
                 Valor Líquido:
                 <strong>
-                    {{__moeda($item->valor_total - $item->desconto + $item->acrescimo)}}
+                    {{__moeda($somaTotalItens - $item->desconto + $item->acrescimo)}}
                 </strong>
             </td>
 
