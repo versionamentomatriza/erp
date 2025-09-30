@@ -760,6 +760,8 @@ Route::group(['prefix' => 'caixa'], function () {
         Route::resource('agendamentos', 'AgendamentoController');
         Route::put('agendamentos-update-status/{id}', 'AgendamentoController@updateStatus')->name('agendamentos.update-status');
         Route::get('/agendamentos-pdv/{id}', 'AgendamentoController@pdv')->name('agendamentos.pdv');
+		Route::get('agendamento/imprimir/{id}', 'AgendamentoController@imprimir')->name('agendamento.imprimir');
+		Route::get('agendamento/pdf/{id}', 'AgendamentoController@pdf')->name('agendamento.pdf');
 
         Route::resource('config-reserva', 'ConfigReservaController');
         Route::resource('categoria-acomodacao', 'CategoriaAcomodacaoController');
