@@ -6,10 +6,12 @@ use App\Models\CategoriaConta;
 use App\Models\CentroCusto;
 use App\Models\Cliente;
 use App\Models\Conciliacao;
+use App\Models\ContaFinanceira;
 use App\Models\ContaPagar;
 use App\Models\ContaReceber;
 use App\Models\Empresa;
 use App\Models\Extrato;
+use App\Models\ExtratoTransacao;
 use App\Models\Fornecedor;
 use App\Models\Transacao;
 use App\Services\ExtratoService;
@@ -29,6 +31,7 @@ class ExtratoController extends Controller
         $clientes = Cliente::where('empresa_id', $empresaId)->get();
         $extratos = Extrato::where('empresa_id', $empresaId)->get();
         $centrosCustos = CentroCusto::where('empresa_id', $empresaId)->get();
+        $contasFinanceiras = ContaFinanceira::where('empresa_id', $empresaId)->get();
         $categoriasContas = CategoriaConta::where('empresa_id', $empresaId)
             ->orWhereNull('empresa_id')
             ->get();
@@ -67,15 +70,16 @@ class ExtratoController extends Controller
 
                 if (empty($dadosExtrato) || empty($todasTransacoes)) {
                     return view('extrato.index', [
-                        'fornecedores'     => $fornecedores,
-                        'clientes'         => $clientes,
-                        'contasPagar'      => collect(),
-                        'contasReceber'    => collect(),
-                        'centrosCustos'    => $centrosCustos,
-                        'categoriasContas' => $categoriasContas,
-                        'extratos'         => $extratos,
-                        'extrato'          => null,
-                        'transacoes'       => collect(),
+                        'fornecedores'      => $fornecedores,
+                        'clientes'          => $clientes,
+                        'contasFinanceiras' => $contasFinanceiras,
+                        'contasPagar'       => collect(),
+                        'contasReceber'     => collect(),
+                        'centrosCustos'     => $centrosCustos,
+                        'categoriasContas'  => $categoriasContas,
+                        'extratos'          => $extratos,
+                        'extrato'           => null,
+                        'transacoes'        => collect(),
                     ])->with('error', 'Nenhum extrato válido foi processado. Tente enviar novamente.');
                 }
 
@@ -127,30 +131,37 @@ class ExtratoController extends Controller
                 $contasPagar = buscarContasPorExtrato(ContaPagar::class, $empresaId, $extrato);
                 $contasReceber = buscarContasPorExtrato(ContaReceber::class, $empresaId, $extrato);
 
+                $contasFinanceirasEnvolvidas = $extrato->conciliacoes->map(function ($conciliacao) {
+                    return $conciliacao->contaFinanceira;
+                })->unique('id');
+
                 return view('extrato.index', [
-                    'fornecedores'     => $fornecedores,
-                    'clientes'         => $clientes,
-                    'contasPagar'      => $contasPagar,
-                    'contasReceber'    => $contasReceber,
-                    'centrosCustos'    => $centrosCustos,
-                    'categoriasContas' => $categoriasContas,
-                    'extratos'         => $extratos,
-                    'extrato'          => $extrato,
-                    'transacoes'       => $extrato->transacoes,
+                    'fornecedores'                  => $fornecedores,
+                    'clientes'                      => $clientes,
+                    'contasFinanceiras'             => $contasFinanceiras,
+                    'contasPagar'                   => $contasPagar,
+                    'contasReceber'                 => $contasReceber,
+                    'centrosCustos'                 => $centrosCustos,
+                    'categoriasContas'              => $categoriasContas,
+                    'extratos'                      => $extratos,
+                    'extrato'                       => $extrato,
+                    'transacoes'                    => $extrato->transacoes,
+                    'contasFinanceirasEnvolvidas'   => $contasFinanceirasEnvolvidas,
                 ]);
             }
 
             // Caso nenhum arquivo ou extrato seja fornecido
             return view('extrato.index', [
-                'fornecedores'     => $fornecedores,
-                'clientes'         => $clientes,
-                'contasPagar'      => collect(),
-                'contasReceber'    => collect(),
-                'centrosCustos'    => $centrosCustos,
-                'categoriasContas' => $categoriasContas,
-                'extratos'         => $extratos,
-                'extrato'          => null,
-                'transacoes'       => collect(),
+                'fornecedores'      => $fornecedores,
+                'clientes'          => $clientes,
+                'contasFinanceiras' => $contasFinanceiras,
+                'contasPagar'       => collect(),
+                'contasReceber'     => collect(),
+                'centrosCustos'     => $centrosCustos,
+                'categoriasContas'  => $categoriasContas,
+                'extratos'          => $extratos,
+                'extrato'           => null,
+                'transacoes'        => collect(),
             ]);
         } catch (\Throwable $e) {
             dd($e->getMessage());
@@ -165,31 +176,54 @@ class ExtratoController extends Controller
         $extrato = Extrato::find($request->query('extrato'));
         $movimentacao = ExtratoService::gerarDRE($extrato);
         $saldoConciliado = $extrato->calcularSaldoConciliado();
+        $contasFinanceiras = $extrato->conciliacoes->map(function ($conciliacao) {
+            return $conciliacao->contaFinanceira;
+        })->unique('id');
 
-        return view('extrato.movimentacao-bancaria', compact('empresa', 'extrato', 'movimentacao', 'saldoConciliado'));
+        return view('extrato.movimentacao-bancaria', compact('empresa', 'extrato', 'movimentacao', 'saldoConciliado', 'contasFinanceiras'));
     }
 
     public function vincular(Request $request)
     {
         try {
             $request->validate([
-                'id_extrato'        => ['required', 'integer'],
-                'id_conta'          => ['required', 'integer'],
-                'tipo_conta'        => ['required', 'string', 'in:App\Models\ContaPagar,App\Models\ContaReceber'],
-                'ids_transacoes'    => ['required'],
+                'id_extrato'            => ['required', 'integer'],
+                'id_conta_financeira'   => ['required', 'integer'],
+                'id_conta'              => ['required', 'integer'],
+                'tipo_conta'            => ['required', 'string', 'in:App\Models\ContaPagar,App\Models\ContaReceber'],
+                'ids_transacoes'        => ['required'],
+                'valor_pago'            => ['nullable', 'numeric'],
+                'data_pagamento'        => ['nullable', 'date'],
+                'valor_recebido'        => ['nullable', 'numeric'],
+                'data_recebimento'      => ['nullable', 'date'],
             ]);
 
-            $modelClass = $request->input('tipo_conta');
-            $conta = $modelClass::findOrFail($request->input('id_conta'));
+            $model = $request->input('tipo_conta');
+            $conta = $model::findOrFail($request->input('id_conta'));
+
+            if (!$conta->status) {
+                $dadosAtualizados = ['status' => 1];
+
+                if ($conta instanceof ContaPagar) {
+                    $dadosAtualizados['valor_pago']     = $request->input('valor_pago') ?? $conta->valor_pago;
+                    $dadosAtualizados['data_pagamento'] = $request->input('data_pagamento') ?? $conta->data_pagamento;
+                } elseif ($conta instanceof ContaReceber) {
+                    $dadosAtualizados['valor_recebido']    = $request->input('valor_recebido') ?? $conta->valor_recebido;
+                    $dadosAtualizados['data_recebimento']  = $request->input('data_recebimento') ?? $conta->data_recebimento;
+                }
+
+                $conta->update($dadosAtualizados);
+            }
 
             foreach ($request->input('ids_transacoes') as $id_transacao) {
                 Conciliacao::create([
-                    'extrato_id'        => $request->input('id_extrato'),
-                    'transacao_id'      => $id_transacao,
-                    'conciliavel_id'    => $request->input('id_conta'),
-                    'conciliavel_tipo'  => $request->input('tipo_conta'),
-                    'data_conciliacao'  => now(),
-                    'valor_conciliado'  => $conta->valor_pago ?? $conta->valor_recebido,
+                    'extrato_id'            => $request->input('id_extrato'),
+                    'conta_financeira_id'   => $request->input('id_conta_financeira'),
+                    'transacao_id'          => $id_transacao,
+                    'conciliavel_id'        => $request->input('id_conta'),
+                    'conciliavel_tipo'      => $request->input('tipo_conta'),
+                    'data_conciliacao'      => now(),
+                    'valor_conciliado'      => $conta->valor_pago ?? $conta->valor_recebido,
                 ]);
             }
 
@@ -225,16 +259,17 @@ class ExtratoController extends Controller
     {
         // Validação dos dados
         $validated = $request->validate([
-            'descricao'           => 'required|string|max:255',
-            'valor'               => 'required|numeric|min:0',
-            'data_vencimento'     => 'required|date',
-            'centro_custo_id'     => 'nullable|integer',
-            'fornecedor_id'       => 'nullable|integer',
-            'cliente_id'          => 'nullable|integer',
-            'categoria_conta_id'  => 'required|integer',
-            'tipo'                => 'required|in:DEBIT,CREDIT',
-            'transacao_id'        => 'required|integer|exists:transacoes,id',
-            'extrato_id'          => 'required|integer',
+            'descricao'             => 'required|string|max:255',
+            'valor'                 => 'required|numeric|min:0',
+            'data_vencimento'       => 'required|date',
+            'centro_custo_id'       => 'nullable|integer',
+            'fornecedor_id'         => 'nullable|integer',
+            'cliente_id'            => 'nullable|integer',
+            'categoria_conta_id'    => 'required|integer',
+            'tipo'                  => 'required|in:DEBIT,CREDIT',
+            'transacao_id'          => 'required|integer|exists:transacoes,id',
+            'extrato_id'            => 'required|integer',
+            'conta_financeira_id'   => 'required|integer',
         ]);
 
         $user = auth()->user();
@@ -246,6 +281,7 @@ class ExtratoController extends Controller
             'empresa_id'         => optional($user->empresa)->empresa_id ?? $user->empresa_id ?? null,
             'centro_custo_id'    => $validated['centro_custo_id'] ?? null,
             'categoria_conta_id' => $validated['categoria_conta_id'],
+            'status'             => 1,
         ];
 
         // Ajusta conforme o tipo de conta
@@ -267,12 +303,13 @@ class ExtratoController extends Controller
         $valorConciliado = $conta->valor_pago ?? $conta->valor_recebido;
 
         Conciliacao::create([
-            'transacao_id'     => $transacao->id,
-            'extrato_id'       => (int) $request->input('extrato_id'),
-            'conciliavel_id'   => $conta->id,
-            'conciliavel_tipo' => get_class($conta),
-            'valor_conciliado' => $valorConciliado,
-            'data_conciliacao' => now(),
+            'transacao_id'          => $transacao->id,
+            'extrato_id'            => (int) $request->input('extrato_id'),
+            'conta_financeira_id'   => (int) $request->input('conta_financeira_id'),
+            'conciliavel_id'        => $conta->id,
+            'conciliavel_tipo'      => get_class($conta),
+            'valor_conciliado'      => $valorConciliado,
+            'data_conciliacao'      => now(),
         ]);
 
         return redirect()->to(url()->previous())
@@ -302,6 +339,23 @@ class ExtratoController extends Controller
         $conta->delete();
 
         return redirect()->back()->with('success', 'Conta excluída com sucesso.');
+    }
+
+    public function ignorar_transacao(Request $request)
+    {
+        $request->validate([
+            'extrato_id' => 'required|integer|exists:extratos,id',
+            'transacao_id' => 'required|integer|exists:transacoes,id',
+        ]);
+
+        $et = ExtratoTransacao::where('extrato_id', $request->input('extrato_id'))
+            ->where('transacao_id', $request->input('transacao_id'))
+            ->firstOrFail();
+
+        $et->delete();
+
+        return redirect()->to(url()->previous())
+            ->with('success', 'Transação ignorada com sucesso.');
     }
 
     public function finalizar(Request $request)

@@ -113,11 +113,6 @@
                                 <i class="bi bi-link-45deg"></i> Desvincular
                             </button>
                         @else
-                            <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#modalVincularConta-{{ $conta->id }}" title="Vincular a uma transação">
-                                <i class="bi bi-plus-circle"></i> Vincular
-                            </button>
-
                             <form action="{{ route('extrato.excluir_conta') }}" method="POST" class="d-inline"
                                 onsubmit="return confirm('Tem certeza que deseja excluir esta conta?')">
                                 @csrf
@@ -127,6 +122,10 @@
                                     <i class="bi bi-trash"></i> Excluir
                                 </button>
                             </form>
+                            <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modalVincularConta-{{ $conta->id }}" title="Vincular a uma transação">
+                                <i class="bi bi-plus-circle"></i> Vincular
+                            </button>
                         @endif
                     </div>
                 </div>
@@ -196,6 +195,19 @@
                         </div>
 
                         <div class="modal-body">
+                            <div class="mb-3">
+                                <p>Selecione a conta movimentada:</p>
+
+                                <select class="form-select" id="id_conta_financeira" name="id_conta_financeira" required>
+                                    <option value="" selected disabled>Selecione uma conta</option>
+                                    @foreach ($contasFinanceiras as $contaFinanceira)
+                                        <option value="{{ $contaFinanceira->id }}">
+                                            {{ $contaFinanceira->nome }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             <p>Selecione as transações para vincular:</p>
                             <div class="list-group">
                                 @forelse($transacoes as $transacao)

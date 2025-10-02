@@ -104,11 +104,6 @@
                                 <i class="bi bi-link-45deg"></i> Desvincular
                             </button>
                         @else
-                            <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#modalVincularConta-{{ $conta->id }}" title="Vincular a uma transação">
-                                <i class="bi bi-plus-circle"></i> Vincular
-                            </button>
-
                             <form action="{{ route('extrato.excluir_conta') }}" method="POST" class="d-inline"
                                 onsubmit="return confirm('Tem certeza que deseja excluir esta conta?')">
                                 @csrf
@@ -118,6 +113,10 @@
                                     <i class="bi bi-trash"></i> Excluir
                                 </button>
                             </form>
+                            <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modalVincularConta-{{ $conta->id }}" title="Vincular a uma transação">
+                                <i class="bi bi-plus-circle"></i> Vincular
+                            </button>
                         @endif
                     </div>
                 </div>

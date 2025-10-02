@@ -39,6 +39,22 @@
                             @endif
                         </div>
 
+                        @if ($extrato)
+                            <div class="mb-4">
+                                <h6 class="mb-3"><i class="bi bi-list-ul"></i> Contas financeiras envolvidas nesta conciliação</h6>
+
+                                <!-- Contas Financeiras -->
+                                <div class="row g-3 mb-3">
+                                    @foreach($contasFinanceirasEnvolvidas as $conta)
+                                        @php
+                                            $saldoCalculado = $conta->calcularSaldoAtual($extrato->fim);
+                                        @endphp
+                                        @include('extrato.partials.card-conta-financeira', ['conta' => $conta, 'extrato' => $extrato])
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
                         @if ($naoRelacionadas > 0)
                             <p class="small mb-1">
                                 <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>

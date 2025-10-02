@@ -16,6 +16,7 @@ class Conciliacao extends Model
     protected $fillable = [
         'transacao_id',
         'extrato_id',
+        'conta_financeira_id',
         'conciliavel_id',
         'conciliavel_tipo',
         'valor_conciliado',
@@ -30,6 +31,11 @@ class Conciliacao extends Model
     public function extrato()
     {
         return $this->belongsTo(Extrato::class, 'extrato_id');
+    }
+
+    public function contaFinanceira()
+    {
+        return $this->belongsTo(ContaFinanceira::class, 'conta_financeira_id');
     }
 
     public function conciliavel()

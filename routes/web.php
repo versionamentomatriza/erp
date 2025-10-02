@@ -326,6 +326,7 @@ Route::middleware(['authh', 'validaEmpresa'])->group(function () {
     Route::get('nuvem-shop-produtos-galery-delete', 'NuvemShopProdutoController@galeryDelete')->name('nuvem-shop-produtos.galery-delete');
     Route::post('nuvem-shop-produtos-galery-store', 'NuvemShopProdutoController@galeryStore')->name('nuvem-shop-produtos-galery-store');
 
+    Route::resource('contas-financeiras', 'ContaFinanceiraController');
     Route::resource('contas-empresa', 'ContaEmpresaController');
     Route::resource('contas-boleto', 'ContaBoletoController');
     Route::resource('remessa-boleto', 'RemessaBoletoController');
