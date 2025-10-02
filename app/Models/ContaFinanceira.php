@@ -33,29 +33,26 @@ class ContaFinanceira extends Model
      * @param string|\DateTime $dataLimite
      * @return float
      */
-    public function calcularSaldoAtual($dataLimite = null)
+    public function calcularSaldoAtual($extratoId = null)
     {
-        $dataLimite = $dataLimite ? Carbon::parse($dataLimite) : Carbon::now();
-
         // Define os tipos de conciliáveis usando o morph map
         $tipos = [
-            'conta_pagar' => \App\Models\ContaPagar::class,
+            'conta_pagar'   => \App\Models\ContaPagar::class,
             'conta_receber' => \App\Models\ContaReceber::class,
         ];
 
-        // Soma das contas a pagar (subtrai do saldo)
-        $totalPagar = $this->conciliacoes()
-            ->where('conciliavel_tipo', $tipos['conta_pagar'])
-            ->whereDate('data_conciliacao', '<=', $dataLimite)
-            ->sum('valor_conciliado');
+        $queryPagar = $this->conciliacoes()->where('conciliavel_tipo', $tipos['conta_pagar']);
+        $queryReceber = $this->conciliacoes()->where('conciliavel_tipo', $tipos['conta_receber']);
 
-        // Soma das contas a receber (adiciona ao saldo)
-        $totalReceber = $this->conciliacoes()
-            ->where('conciliavel_tipo', $tipos['conta_receber'])
-            ->whereDate('data_conciliacao', '<=', $dataLimite)
-            ->sum('valor_conciliado');
+        // Se foi passado um extratoId, filtra até ele
+        if ($extratoId) {
+            $queryPagar->where('extrato_id', '<=', $extratoId);
+            $queryReceber->where('extrato_id', '<=', $extratoId);
+        }
 
-        // Saldo final = saldo inicial + totalReceber - totalPagar
+        $totalPagar = $queryPagar->sum('valor_conciliado');
+        $totalReceber = $queryReceber->sum('valor_conciliado');
+
         return $this->saldo_inicial + $totalReceber - $totalPagar;
     }
 }

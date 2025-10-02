@@ -47,7 +47,7 @@
                                 <div class="row g-3 mb-3">
                                     @foreach($contasFinanceirasEnvolvidas as $conta)
                                         @php
-                                            $saldoCalculado = $conta->calcularSaldoAtual($extrato->fim);
+                                            $saldoCalculado = $conta->calcularSaldoAtual($extrato->id);
                                         @endphp
                                         @include('extrato.partials.card-conta-financeira', ['conta' => $conta, 'extrato' => $extrato])
                                     @endforeach
