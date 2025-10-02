@@ -443,7 +443,7 @@ class ExtratoController extends Controller
                     'conciliavel_id'    => $conta->id,
                     'conciliavel_tipo'  => get_class($conta),
                     'valor_conciliado'  => abs($diferenca),
-                    'data_conciliacao'  => now(),
+                    'data_conciliacao'  => Extrato::findOrFail($request->input('extrato_id'))->inicio ?? now(),
                 ]);
             } elseif ($diferenca < 0) {
                 // FALTANTE → CONTA A RECEBER

@@ -51,4 +51,27 @@ class Extrato extends Model
 
         return $saldo;
     }
+
+    public function calcularSaldosPorContaEmpresa()
+    {
+        $saldos = [];
+
+        foreach ($this->conciliacoes as $conciliacao) {
+            $contaEmpresaId = $conciliacao->conta_empresa_id;
+
+            if (!isset($saldos[$contaEmpresaId])) {
+                $saldos[$contaEmpresaId] = 0.0;
+            }
+
+            $valor = (float) $conciliacao->valor_conciliado;
+
+            if ($conciliacao->conciliavel_tipo === \App\Models\ContaReceber::class) {
+                $saldos[$contaEmpresaId] += $valor;
+            } elseif ($conciliacao->conciliavel_tipo === \App\Models\ContaPagar::class) {
+                $saldos[$contaEmpresaId] -= $valor;
+            }
+        }
+
+        return $saldos; // array: [conta_empresa_id => saldo_conciliado]
+    }
 }

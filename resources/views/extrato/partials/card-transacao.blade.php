@@ -1,141 +1,176 @@
-<div class="card transacao-card mb-2 p-2" data-id="{{$transacao->id ?? '-' }}" data-data="{{ $transacao->data }}">
+<div class="col">
+    <div class="card card-conta h-100 shadow-sm border-0">
+        <div class="card-header p-2 d-flex justify-content-between align-items-center ">
+            <strong>{{ $transacao->descricao ?? 'Transação sem descrição' }}</strong>
 
-    <div class="d-flex justify-content-between align-items-center mb-1">
-        <small class="text-muted">
-            <strong>#{{ $transacao->id ?? '-' }}</strong>
-            → Conta(s):
-            @if($transacao->conciliacoes->isNotEmpty())
-                <strong>
-                    {{ $transacao->conciliacoes->pluck('conciliavel_id')->implode(', ') }}
-                </strong>
-            @else
-                <strong>-</strong>
-            @endif
-        </small>
-        @if ($transacao->conciliada())
-            <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i></span>
-        @else
-            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle-fill"></i></span>
-        @endif
-    </div>
+            <div class="d-flex align-items-center">
+                <!-- Dropdown menu -->
+                <div class="dropdown">
+                    <button class="btn btn-sm dropdown-toggle no-shadow" type="button"
+                        id="menuTransacao{{ $transacao->id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                        ⋮
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuTransacao{{ $transacao->id }}">
+                        <li>
+                            <!-- Abrir modal Criar Conciliável -->
+                            <a class="dropdown-item" href="javascript:void(0)" data-bs-toggle="modal"
+                                data-bs-target="#modalCriarConta" data-id="{{ $transacao->id }}"
+                                data-tipo="{{ $transacao->tipo }}" data-valor="{{ $transacao->valor }}"
+                                data-descricao="{{ $transacao->descricao }}" data-data="{{ $transacao->data }}">
+                                Criar Conciliável
+                            </a>
+                        </li>
+                        <li>
+                            <!-- Ignorar transação -->
+                            <a class="dropdown-item text-danger"
+                                href="{{ route('extrato.ignorar_transacao', ['extrato_id' => $extrato->id, 'transacao_id' => $transacao->id]) }}"
+                                onclick="return confirm('Tem certeza que deseja ignorar esta transação?');">
+                                Ignorar Transação
+                            </a>
 
-    <div class="d-flex flex-wrap justify-content-between small text-muted">
-        <div><strong>Data:</strong>
-            {{ \Carbon\Carbon::parse($transacao->data ?? now())->format('d/m/Y') }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
-        <div><strong>Valor:</strong> R$
-            {{ number_format(abs($transacao->valor ?? 0), 2, ',', '.') }}
-        </div>
-        <div><strong>Tipo:</strong>
-            {{ ($transacao->tipo) === 'DEBIT' ? 'DÉBITO' : 'CRÉDITO' }}
-        </div>
-        <div><strong>Banco:</strong> {{ $transacao->banco ?? '-' }}</div>
-        <div><strong>Descrição:</strong> {{ $transacao->descricao ?? '-' }}</div>
-    </div>
 
-    {{-- 🔹 Botão para criar Conta Pagar ou Receber --}}
-
-    <div class="mt-2">
-        <button type="button"
-            class="btn btn-success btn-sm w-100 d-flex align-items-center justify-content-center gap-1 py-1"
-            data-bs-toggle="modal" data-bs-target="#modalCriarConta" data-id="{{ $transacao->id }}"
-            data-tipo="{{ $transacao->tipo }}" data-valor="{{ $transacao->valor }}"
-            data-descricao="{{ $transacao->descricao }}" data-data="{{ $transacao->data }}">
-            <i class="bi bi-plus-circle"></i>
-            Criar conciliável
-        </button>
+        <div class="card-body p-2">
+            <p class="mb-1"><small><strong>Data:</strong>
+                    {{ \Carbon\Carbon::parse($transacao->data)->format('d/m/Y') }}
+                </small></p>
+            <p class="mb-1"><small><strong>Valor:</strong>
+                    R$ {{ number_format($transacao->valor, 2, ',', '.') }}
+                </small></p>
+            <p class="mb-1"><small><strong>Tipo:</strong>
+                    {{ $transacao->tipo === 'CREDIT' ? 'Crédito' : 'Débito' }}
+                </small></p>
+            <p class="mb-1"><small><strong>Status:</strong>
+                    @if($transacao->conciliada())
+                        <span class="badge bg-success">Conciliado</span>
+                    @else
+                        <span class="badge bg-warning text-dark">Pendente</span>
+                    @endif
+                </small></p>
+        </div>
     </div>
 </div>
 
 <div class="modal fade" id="modalCriarConta" tabindex="-1" aria-labelledby="modalCriarContaLabel" aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content shadow-lg border-0 rounded-3">
-            <form id="formCriarConta" method="POST" action="{{ route('extrato.criar_conta') }}" class="p-0">
+        <div class="modal-content border-0 rounded-2 shadow-sm">
+            <form id="formCriarConta" method="POST" action="{{ route('extrato.criar_conta') }}">
                 @csrf
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold text-primary" id="modalCriarContaLabel">Criar Conta</h5>
+
+                <!-- Cabeçalho -->
+                <div id="modalCriarHeader" class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-semibold mb-0" id="modalCriarContaLabel">
+                        Criar Conta
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
 
+                <!-- Corpo -->
                 <div class="modal-body">
                     <input type="hidden" name="transacao_id" id="transacaoId">
-                    <input type="hidden" name="extrato_id" id="extratoId" value="{{$extrato->id ?? null}}">
+                    <input type="hidden" name="extrato_id" id="extratoId" value="{{ $extrato->id ?? null }}">
                     <input type="hidden" name="tipo" id="tipoConta">
 
-                    <div class="mb-3">
-                        <label for="descricaoConta" class="form-label fw-semibold">Descrição</label>
-                        <input type="text" name="descricao" id="descricaoConta" class="form-control rounded-3"
-                            placeholder="Ex: Pagamento de fornecedor" required>
-                    </div>
-
-                    <div class="mb-3" id="grupoFornecedor" style="display:none;">
-                        <label for="fornecedorConta" class="form-label fw-semibold">Fornecedor</label>
-
-                        {{-- Select vazio, será carregado via AJAX --}}
-                        <select name="fornecedor_id" id="fornecedorConta" class="form-select rounded-3 select2"
-                            style="width:100%;" data-empresa-id="{{ $extrato->empresa_id }}">
-                            <option value="">Digite ao menos 2 caracteres...</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3" id="grupoCliente" style="display:none;">
-                        <label for="clienteConta" class="form-label fw-semibold">Cliente</label>
-
-                        {{-- Select vazio, também carregado via AJAX --}}
-                        <select name="cliente_id" id="clienteConta" class="form-select rounded-3 select2"
-                            style="width:100%;" data-empresa-id="{{ $extrato->empresa_id }}">
-                            <option value="">Digite ao menos 2 caracteres...</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="valorConta" class="form-label fw-semibold">Valor</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-secondary">R$</span>
-                            <input type="number" step="0.01" name="valor" id="valorConta"
-                                class="form-control rounded-end" required>
+                    <div class="row mb-2">
+                        <div class="col">
+                            <label for="descricaoConta" class="form-label">Descrição</label>
+                            <input type="text" name="descricao" id="descricaoConta" class="form-control"
+                                placeholder="Ex: Pagamento de fornecedor" required>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="dataVencimento" class="form-label fw-semibold">Data de Vencimento</label>
-                        <input type="date" name="data_vencimento" id="dataVencimento" class="form-control rounded-3"
-                            required readonly>
+                    <div class="row mb-2" id="grupoFornecedor" style="display:none;">
+                        <div class="col">
+                            <label for="fornecedorConta" class="form-label">Fornecedor</label>
+                            <select name="fornecedor_id" id="fornecedorConta" class="form-select select2"
+                                style="width:100%;" data-empresa-id="{{ $extrato->empresa_id }}">
+                                <option value="">Digite ao menos 2 caracteres...</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="categoriaConta" class="form-label fw-semibold">Categoria da Conta</label>
-                        <select name="categoria_conta_id" id="categoriaConta" class="form-select rounded-3" required>
-                            <option value="">Selecione</option>
-                            @foreach ($categoriasContas as $categoria)
-                                <option value="{{ $categoria->id }}" data-tipo="{{ strtolower($categoria->tipo) }}">
-                                    {{ $categoria->nome }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="row mb-2" id="grupoCliente" style="display:none;">
+                        <div class="col">
+                            <label for="clienteConta" class="form-label">Cliente</label>
+                            <select name="cliente_id" id="clienteConta" class="form-select select2" style="width:100%;"
+                                data-empresa-id="{{ $extrato->empresa_id }}">
+                                <option value="">Digite ao menos 2 caracteres...</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="centroCusto" class="form-label fw-semibold">Centro de Custo</label>
-                        <select name="centro_custo_id" id="centroCusto" class="form-select rounded-3">
-                            <option value="">Selecione</option>
-                            @foreach ($centrosCustos as $centro)
-                                <option value="{{ $centro->id }}">{{ $centro->descricao }}</option>
-                            @endforeach
-                        </select>
+                    <div class="row mb-2">
+                        <div class="col-6">
+                            <label for="valorConta" class="form-label">Valor</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">R$</span>
+                                <input type="number" step="0.01" name="valor" id="valorConta" class="form-control"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label for="dataVencimento" class="form-label">Data de Vencimento</label>
+                            <input type="date" name="data_vencimento" id="dataVencimento" class="form-control" required
+                                readonly>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="observacaoConta" class="form-label fw-semibold">Observação</label>
-                        <textarea name="observacao" id="observacaoConta" class="form-control rounded-3" rows="2"
-                            placeholder="Opcional"></textarea>
+                    <div class="row mb-2">
+                        <div class="col">
+                            <label for="categoriaConta" class="form-label">Categoria da Conta</label>
+                            <select name="categoria_conta_id" id="categoriaConta" class="form-select" required>
+                                <option value="">Selecione</option>
+                                @foreach ($categoriasContas as $categoria)
+                                    <option value="{{ $categoria->id }}" data-tipo="{{ strtolower($categoria->tipo) }}">
+                                        {{ $categoria->nome }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col">
+                            <label for="contaFinanceira" class="form-label">Conta Financeira</label>
+                            <select name="conta_financeira_id" id="contaFinanceira" class="form-select" required>
+                                <option value="">Selecione</option>
+                                @foreach ($contasFinanceiras as $conta)
+                                    <option value="{{ $conta->id }}">{{ $conta->nome }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col">
+                            <label for="centroCusto" class="form-label">Centro de Custo</label>
+                            <select name="centro_custo_id" id="centroCusto" class="form-select">
+                                <option value="">Selecione</option>
+                                @foreach ($centrosCustos as $centro)
+                                    <option value="{{ $centro->id }}">{{ $centro->descricao }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <label for="observacaoConta" class="form-label">Observação</label>
+                            <textarea name="observacao" id="observacaoConta" class="form-control" rows="2"
+                                placeholder="Opcional"></textarea>
+                        </div>
                     </div>
                 </div>
 
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary px-4 d-flex align-items-center gap-2">
-                        <i class="bi bi-save"></i> Salvar
+                <!-- Rodapé -->
+                <div class="modal-footer d-flex justify-content-end">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        Salvar
                     </button>
                 </div>
             </form>
@@ -193,7 +228,7 @@
                 const categoriaTipo = option.getAttribute('data-tipo');
                 option.style.display =
                     (tipo === 'DEBIT' && (categoriaTipo === 'custo' || categoriaTipo === 'despesa')) ||
-                    (tipo === 'CREDIT' && categoriaTipo === 'receita')
+                        (tipo === 'CREDIT' && categoriaTipo === 'receita')
                         ? '' : 'none';
             });
             selectCategoria.selectedIndex = -1;
@@ -225,6 +260,7 @@
             const descricao = button.getAttribute('data-descricao');
             const valor = button.getAttribute('data-valor');
             const data = button.getAttribute('data-data');
+            const header = document.getElementById('modalCriarHeader');
 
             $('#transacaoId').val(id);
             $('#tipoConta').val(tipo);
@@ -234,6 +270,10 @@
             $('#modalCriarContaLabel').text(
                 tipo === 'DEBIT' ? 'Criar Conta a Pagar' : 'Criar Conta a Receber'
             );
+
+            header.classList.remove('bg-laranja-matriza', 'bg-verde-matriza');
+            tipo === 'DEBIT' ? header.classList.add('bg-laranja-matriza') : header.classList.add('bg-verde-matriza');
+
 
             filtrarCategorias(tipo);
             toggleFornecedorCliente(tipo);

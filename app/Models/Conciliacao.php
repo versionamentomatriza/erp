@@ -21,6 +21,7 @@ class Conciliacao extends Model
         'conciliavel_tipo',
         'valor_conciliado',
         'data_conciliacao',
+        'conta_financeira_id',
     ];
 
     public function transacao()

@@ -11,20 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('conciliacoes', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('transacao_id');
-            $table->unsignedBigInteger('extrato_id');
-            $table->string('conciliavel_tipo'); // polimórfico
-            $table->unsignedBigInteger('conciliavel_id');
-            $table->decimal('valor_conciliado', 16, 7);
-            $table->date('data_conciliacao');
+        if (!Schema::hasTable('conciliacoes')) {
+            Schema::create('conciliacoes', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('transacao_id');
+                $table->unsignedBigInteger('extrato_id');
+                $table->string('conciliavel_tipo'); // polimórfico
+                $table->unsignedBigInteger('conciliavel_id');
+                $table->decimal('valor_conciliado', 16, 7);
+                $table->date('data_conciliacao');
 
-            $table->foreign('transacao_id')->references('id')->on('transacoes')->onDelete('cascade');
-            $table->foreign('extrato_id')->references('id')->on('extratos')->onDelete('cascade');
+                $table->foreign('transacao_id')->references('id')->on('transacoes')->onDelete('cascade');
+                $table->foreign('extrato_id')->references('id')->on('extratos')->onDelete('cascade');
+                $table->foreign('conta_empresa_id')->references('id')->on('conta_empresas')->onDelete('cascade');
 
-            $table->index(['conciliavel_tipo', 'conciliavel_id']); // melhora consultas polimórficas
-        });
+                $table->index(['conciliavel_tipo', 'conciliavel_id']); // melhora consultas polimórficas
+            });
+        }
     }
 
     /**

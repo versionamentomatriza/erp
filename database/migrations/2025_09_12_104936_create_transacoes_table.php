@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transacoes', function (Blueprint $table) {
-            $table->id();
-            $table->string('codigo')->nullable();
-            $table->enum('tipo', ['DEBIT', 'CREDIT']);
-            $table->string('banco')->nullable();
-            $table->string('descricao')->nullable();
-            $table->date('data');
-            $table->decimal('valor', 15, 2);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('transacoes')) {
+            Schema::create('transacoes', function (Blueprint $table) {
+                $table->id();
+                $table->string('codigo')->nullable();
+                $table->enum('tipo', ['DEBIT', 'CREDIT']);
+                $table->string('banco')->nullable();
+                $table->string('descricao')->nullable();
+                $table->date('data');
+                $table->decimal('valor', 15, 2);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

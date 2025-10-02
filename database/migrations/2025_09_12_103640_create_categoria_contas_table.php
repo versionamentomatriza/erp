@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categoria_contas', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('empresa_id')->nullable();
-            $table->string('nome');
-            $table->string('tipo');
-            $table->string('grupo_dre');
-            $table->text('descricao')->nullable();
+        if (!Schema::hasTable('categoria_contas')) {
+            Schema::create('categoria_contas', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('empresa_id')->nullable();
+                $table->string('nome');
+                $table->string('tipo');
+                $table->string('grupo_dre');
+                $table->text('descricao')->nullable();
 
-            $table->foreign('empresa_id')->references('id')->on('empresas')->onDelete('cascade');
-        });
+                $table->foreign('empresa_id')->references('id')->on('empresas')->onDelete('cascade');
+            });
+        }
     }
 
     /**

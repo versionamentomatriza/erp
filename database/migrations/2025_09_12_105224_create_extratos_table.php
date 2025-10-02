@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('extratos', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('empresa_id');
-            $table->string('banco')->nullable();
-            $table->date('inicio');
-            $table->date('fim');
-            $table->decimal('saldo_inicial', 15, 2)->nullable();
-            $table->decimal('saldo_final', 15, 2)->nullable();
-            $table->enum('status', ['pendente', 'conciliado'])->default('pendente');
-            $table->timestamps();
+        if (!Schema::hasTable('extratos')) {
+            Schema::create('extratos', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('empresa_id');
+                $table->string('banco')->nullable();
+                $table->date('inicio');
+                $table->date('fim');
+                $table->decimal('saldo_inicial', 15, 2)->nullable();
+                $table->decimal('saldo_final', 15, 2)->nullable();
+                $table->enum('status', ['pendente', 'conciliado'])->default('pendente');
+                $table->timestamps();
 
-            $table->foreign('empresa_id')->references('id')->on('empresas')->onDelete('cascade');
-        });
+                $table->foreign('empresa_id')->references('id')->on('empresas')->onDelete('cascade');
+            });
+        }
     }
 
     /**

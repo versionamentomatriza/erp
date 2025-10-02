@@ -963,13 +963,13 @@
                     </a>
                     <div class="collapse" id="sidebarPagar">
                         <ul class="side-nav-second-level">
-											<li>
-                                                <a href="{{ route('caixa.index') }}">Movimentação</a>
-                                            </li>
+                            <li>
+                                <a href="{{ route('caixa.index') }}">Movimentação</a>
+                            </li>
 
-                                            <li>
-                                                <a href="{{ route('extrato.conciliar') }}">Conciliação Bancária</a>
-                                            </li>
+                            <li>
+                                <a href="{{ route('extrato.conciliar') }}">Conciliação Bancária</a>
+                            </li>
 
                             @canany(['conta_pagar_view', 'conta_pagar_create'])
                                         <li>
@@ -982,6 +982,10 @@
                                             <a href="{{ route('conta-receber.index') }}">Contas a Receber</a>
                                         </li>
                             @endcanany
+
+                            <li>
+                                <a href="{{ route('contas-financeiras.index') }}">Contas Financeiras</a>
+                            </li>
 							
 							@can('contas_boleto_view')
                             <li>

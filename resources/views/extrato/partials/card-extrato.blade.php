@@ -1,6 +1,6 @@
 <div class="col">
     <div class="card h-100 shadow-sm border-0 {{ request()->get('extrato') == $e->id ? 'border-primary' : '' }}">
-        <div class="card-header bg-success text-white p-2 d-flex justify-content-between align-items-center">
+        <div class="card-header bg-verde-matriza p-2 d-flex justify-content-between align-items-center">
             <strong>{{ $e->banco ?? 'Banco não informado' }}</strong>
 
             <div class="d-flex align-items-center">
@@ -10,7 +10,7 @@
 
                 <!-- Dropdown menu -->
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-light text-success dropdown-toggle" type="button"
+                    <button class="btn btn-sm bg-white dropdown-toggle" type="button"
                         id="menuExtrato{{ $e->id }}" data-bs-toggle="dropdown" aria-expanded="false">
                         ⋮
                     </button>
