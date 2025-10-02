@@ -144,7 +144,7 @@
                             </div>
                         @endif
 
-                        <div style="max-height: 200vh; overflow-y: auto;" id="listaTransacoes">
+                        <div style="max-height: 250vh; overflow-y: auto;" id="listaTransacoes">
                             @foreach ($transacoes as $transacao)
                                 @include('extrato.partials.card-transacao', ['transacao' => $transacao])
                             @endforeach

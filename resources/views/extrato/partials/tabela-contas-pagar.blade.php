@@ -167,8 +167,20 @@
                         </div>
 
                         <div class="modal-body">
+                            @if($conta->status === 0)
+                                <div class="mb-3">
+                                    <label for="valor_pago" class="form-label">Valor Pago</label>
+                                    <input type="text" id="valor_pago-{{ $conta->id }}" class="form-control" name="valor_pago"
+                                        placeholder="Digite o valor pago" value="{{ number_format($conta->valor_integral, 2, ',', '.') }}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="data_pagamento" class="form-label">Data do Pagamento</label>
+                                    <input type="date" class="form-control" name="data_pagamento" id="data_pagamento" required>
+                                </div>
+                            @endif
                             <div class="mb-3">
-                                <p>Selecione a conta movimentada:</p>
+                                <label for="id_conta_financeira" class="form-label">Selecione a conta movimentada</label>
 
                                 <select class="form-select" id="id_conta_financeira" name="id_conta_financeira" required>
                                     <option value="" selected disabled>Selecione uma conta</option>

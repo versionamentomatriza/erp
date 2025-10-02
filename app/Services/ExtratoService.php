@@ -32,7 +32,7 @@ class ExtratoService
         $get = fn($map, $k) => (float)($map[$k] ?? 0);
 
         // Blocos DRE
-        $receita_bruta       = $get($rec, 'receita_bruta');                          
+        $receita_bruta       = $get($rec, 'receita_bruta');
         $deducao_receita     = $get($pag, 'deducao_receita') + $get($rec, 'deducao_receita'); // pode estar em pagar (impostos sobre vendas)
         $custo               = $get($pag, 'custo');
         $despesa_venda       = $get($pag, 'despesa_venda');
@@ -65,6 +65,8 @@ class ExtratoService
             'resultado_antes_ir'    => $resultado_antes_ir,
             'ir_csll'               => $ir_csll,
             'lucro_liquido'         => $lucro_liquido,
+            'contas_receber_por_grupo' => self::agruparContasPorGrupo($contasReceber),
+            'contas_pagar_por_grupo'   => self::agruparContasPorGrupo($contasPagar),
             // úteis para detalhamento por grupo na tela:
             'sum_receber_por_grupo' => $rec,
             'sum_pagar_por_grupo'   => $pag,
@@ -114,5 +116,11 @@ class ExtratoService
                     return (float)$v;
                 });
             });
+    }
+
+    private static function agruparContasPorGrupo($collection)
+    {
+        return $collection
+            ->groupBy(fn($i) => optional($i->categoriaConta)->grupo_dre ?? 'nao_classificado');
     }
 }

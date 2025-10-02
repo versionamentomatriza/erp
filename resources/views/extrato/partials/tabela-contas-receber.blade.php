@@ -140,6 +140,19 @@
                         </div>
 
                         <div class="modal-body">
+                            @if($conta->status === 0)
+                                <div class="mb-3">
+                                    <label for="valor_recebido" class="form-label">Valor Recebido</label>
+                                    <input type="text" id="valor_recebido-{{ $conta->id }}" class="form-control" name="valor_recebido"
+                                        placeholder="Digite o valor recebido" value="{{ number_format($conta->valor_integral, 2, ',', '.') }}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="data_recebimento" class="form-label">Data do Recebimento</label>
+                                    <input type="date" class="form-control" name="data_recebimento" id="data_recebimento" required>
+                                </div>
+                            @endif
+
                             <div class="row mb-3">
                                 <div class="col">
                                     <label for="contaFinanceira" class="form-label">Conta Financeira</label>
