@@ -63,37 +63,98 @@
                         @endif
 
                         <div class="container py-3">
+                            @php
+                                $receberActive = request()->filled('conta_receber_cliente_id') ||
+                                                request()->filled('conta_receber_descricao') ||
+                                                request()->filled('conta_receber_data_inicio') ||
+                                                request()->filled('conta_receber_data_fim');
+                            @endphp
+
                             <!-- Nav Tabs -->
                             <ul class="nav nav-tabs" id="financeTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="pagar-tab" data-bs-toggle="tab"
+                                    <button class="nav-link {{ $receberActive ? '' : 'active' }}" id="pagar-tab" data-bs-toggle="tab"
                                         data-bs-target="#pagar" type="button" role="tab">Pagamentos</button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="receber-tab" data-bs-toggle="tab" data-bs-target="#receber"
-                                        type="button" role="tab">Recebimentos</button>
+                                    <button class="nav-link {{ $receberActive ? 'active' : '' }}" id="receber-tab" data-bs-toggle="tab"
+                                        data-bs-target="#receber" type="button" role="tab">Recebimentos</button>
                                 </li>
                             </ul>
 
-                            <!-- Tab Content -->
                             <div class="tab-content p-4 bg-white" id="financeTabsContent">
-
                                 <!-- Contas a Pagar -->
-                                <div class="tab-pane fade show active" id="pagar" role="tabpanel">
+                                <div class="tab-pane fade {{ $receberActive ? '' : 'show active' }}" id="pagar" role="tabpanel">
+                                    @if ($extrato)
+                                        <form action="{{ url()->current() }}" method="GET" class="row g-3 mb-3">
+                                            @csrf
+                                            <div class="col-md-12">
+                                                <input type="hidden" name="extrato" value="{{ $extrato->id }}">
+                                                <label class="form-label">Descrição</label>
+                                                <input type="text" class="form-control" name="descricao" placeholder="Descrição da conta"
+                                                    value="{{ request()->descricao }}">
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label class="form-label">Vencimento de</label>
+                                                <input type="date" class="form-control" name="conta_pagar_data_inicio" value="{{ request()->conta_pagar_data_inicio }}">
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label class="form-label">Até</label>
+                                                <input type="date" class="form-control" name="conta_pagar_data_fim" value="{{ request()->conta_pagar_data_fim }}">
+                                            </div>
+
+                                            <div class="col-12 text-end">
+                                                <button class="btn btn-primary" type="submit">
+                                                    <i class="bi bi-search"></i> Buscar Contas a Pagar
+                                                </button>
+                                            </div>
+                                        </form>
+                                    @endif
+
                                     @include('extrato.partials.tabela-contas-pagar', [
-                                                'contasPagar' => $contasPagar,
-                                                'transacoes' => $transacoes,
-                                                'extrato' => $extrato
-                                            ])
+                                        'contasPagar' => $contasPagar,
+                                        'transacoes' => $transacoes,
+                                        'extrato' => $extrato
+                                    ])
                                 </div>
 
                                 <!-- Contas a Receber -->
-                                <div class="tab-pane fade" id="receber" role="tabpanel">
+                                <div class="tab-pane fade {{ $receberActive ? 'show active' : '' }}" id="receber" role="tabpanel">
+                                    @if ($extrato)
+                                        <form action="{{ url()->current() }}" method="GET" class="row g-3 mb-3">
+                                            @csrf
+                                            <div class="col-md-12">
+                                                <input type="hidden" name="extrato" value="{{ $extrato->id }}">
+                                                <label class="form-label">Descrição</label>
+                                                <input type="text" class="form-control" name="conta_receber_descricao" placeholder="Descrição da conta"
+                                                    value="{{ request()->conta_receber_descricao }}">
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label class="form-label">Vencimento de</label>
+                                                <input type="date" class="form-control" name="conta_receber_data_inicio" value="{{ request()->conta_receber_data_inicio }}">
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label class="form-label">Até</label>
+                                                <input type="date" class="form-control" name="conta_receber_data_fim" value="{{ request()->conta_receber_data_fim }}">
+                                            </div>
+
+                                            <div class="col-12 text-end">
+                                                <button class="btn btn-primary" type="submit">
+                                                    <i class="bi bi-search"></i> Buscar Contas a Receber
+                                                </button>
+                                            </div>
+                                        </form>
+                                    @endif
+
                                     @include('extrato.partials.tabela-contas-receber', [
-                                                'contasReceber' => $contasReceber,
-                                                'transacoes' => $transacoes,
-                                                'extrato' => $extrato
-                                            ])
+                                        'contasReceber' => $contasReceber,
+                                        'transacoes' => $transacoes,
+                                        'extrato' => $extrato
+                                    ])
                                 </div>
                             </div>
                         </div>

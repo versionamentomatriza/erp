@@ -131,6 +131,44 @@ class ExtratoController extends Controller
                 $contasPagar = buscarContasPorExtrato(ContaPagar::class, $empresaId, $extrato);
                 $contasReceber = buscarContasPorExtrato(ContaReceber::class, $empresaId, $extrato);
 
+                if (
+                    $request->filled('conta_pagar_fornecedor_id') ||
+                    $request->filled('conta_pagar_descricao') ||
+                    $request->filled('conta_pagar_data_inicio') ||
+                    $request->filled('conta_pagar_data_fim')
+                    ) {
+                        $query = ContaPagar::query();
+                        $query->where('empresa_id', $empresaId);
+
+                        if ($request->filled('conta_pagar_fornecedor_id')) $query->where('fornecedor_id', $request->conta_pagar_fornecedor_id);
+                        if ($request->filled('conta_pagar_descricao')) $query->where('descricao', 'like', '%' . $request->conta_pagar_descricao . '%');
+                        if ($request->filled('conta_pagar_data_inicio')) $query->whereDate('data_vencimento', '>=', $request->conta_pagar_data_inicio);
+                        if ($request->filled('conta_pagar_data_fim')) $query->whereDate('data_vencimento', '<=', $request->conta_pagar_data_fim);
+                        
+                        // Mescla resultados da pesquisa com contas já carregadas
+                        $contasPagarPesquisa = $query->get();
+                        $contasPagar = $contasPagarPesquisa->merge($contasPagar)->unique('id');
+                    }
+
+                if (
+                    $request->filled('conta_receber_cliente_id') ||
+                    $request->filled('conta_receber_descricao') ||
+                    $request->filled('conta_receber_data_inicio') ||
+                    $request->filled('conta_receber_data_fim')
+                    ) {
+                        $query = ContaReceber::query();
+                        $query->where('empresa_id', $empresaId);
+
+                        if ($request->filled('conta_receber_cliente_id')) $query->where('cliente_id', $request->conta_receber_cliente_id);
+                        if ($request->filled('conta_receber_descricao')) $query->where('descricao', 'like', '%' . $request->conta_receber_descricao . '%');
+                        if ($request->filled('conta_receber_data_inicio')) $query->whereDate('data_vencimento', '>=', $request->conta_receber_data_inicio);
+                        if ($request->filled('conta_receber_data_fim')) $query->whereDate('data_vencimento', '<=', $request->conta_receber_data_fim);
+                        
+                        // Mescla resultados da pesquisa com contas já carregadas
+                        $contasReceberPesquisa = $query->get();
+                        $contasReceber = $contasReceberPesquisa->merge($contasReceber)->unique('id');
+                    }
+
                 $contasFinanceirasEnvolvidas = $extrato->conciliacoes->map(function ($conciliacao) {
                     return $conciliacao->contaFinanceira;
                 })->unique('id');
