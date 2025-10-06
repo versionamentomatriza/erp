@@ -137,38 +137,38 @@ class ExtratoController extends Controller
                     $request->filled('conta_pagar_descricao') ||
                     $request->filled('conta_pagar_data_inicio') ||
                     $request->filled('conta_pagar_data_fim')
-                    ) {
-                        $query = ContaPagar::query();
-                        $query->where('empresa_id', $empresaId);
+                ) {
+                    $query = ContaPagar::query();
+                    $query->where('empresa_id', $empresaId);
 
-                        if ($request->filled('conta_pagar_fornecedor_id')) $query->where('fornecedor_id', $request->conta_pagar_fornecedor_id);
-                        if ($request->filled('conta_pagar_descricao')) $query->where('descricao', 'like', '%' . $request->conta_pagar_descricao . '%');
-                        if ($request->filled('conta_pagar_data_inicio')) $query->whereDate('data_vencimento', '>=', $request->conta_pagar_data_inicio);
-                        if ($request->filled('conta_pagar_data_fim')) $query->whereDate('data_vencimento', '<=', $request->conta_pagar_data_fim);
-                        
-                        // Mescla resultados da pesquisa com contas já carregadas
-                        $contasPagarPesquisa = $query->get();
-                        $contasPagar = $contasPagarPesquisa->merge($contasPagar)->unique('id');
-                    }
+                    if ($request->filled('conta_pagar_fornecedor_id')) $query->where('fornecedor_id', $request->conta_pagar_fornecedor_id);
+                    if ($request->filled('conta_pagar_descricao')) $query->where('descricao', 'like', '%' . $request->conta_pagar_descricao . '%');
+                    if ($request->filled('conta_pagar_data_inicio')) $query->whereDate('data_vencimento', '>=', $request->conta_pagar_data_inicio);
+                    if ($request->filled('conta_pagar_data_fim')) $query->whereDate('data_vencimento', '<=', $request->conta_pagar_data_fim);
+
+                    // Mescla resultados da pesquisa com contas já carregadas
+                    $contasPagarPesquisa = $query->get();
+                    $contasPagar = $contasPagarPesquisa->merge($contasPagar)->unique('id');
+                }
 
                 if (
                     $request->filled('conta_receber_cliente_id') ||
                     $request->filled('conta_receber_descricao') ||
                     $request->filled('conta_receber_data_inicio') ||
                     $request->filled('conta_receber_data_fim')
-                    ) {
-                        $query = ContaReceber::query();
-                        $query->where('empresa_id', $empresaId);
+                ) {
+                    $query = ContaReceber::query();
+                    $query->where('empresa_id', $empresaId);
 
-                        if ($request->filled('conta_receber_cliente_id')) $query->where('cliente_id', $request->conta_receber_cliente_id);
-                        if ($request->filled('conta_receber_descricao')) $query->where('descricao', 'like', '%' . $request->conta_receber_descricao . '%');
-                        if ($request->filled('conta_receber_data_inicio')) $query->whereDate('data_vencimento', '>=', $request->conta_receber_data_inicio);
-                        if ($request->filled('conta_receber_data_fim')) $query->whereDate('data_vencimento', '<=', $request->conta_receber_data_fim);
-                        
-                        // Mescla resultados da pesquisa com contas já carregadas
-                        $contasReceberPesquisa = $query->get();
-                        $contasReceber = $contasReceberPesquisa->merge($contasReceber)->unique('id');
-                    }
+                    if ($request->filled('conta_receber_cliente_id')) $query->where('cliente_id', $request->conta_receber_cliente_id);
+                    if ($request->filled('conta_receber_descricao')) $query->where('descricao', 'like', '%' . $request->conta_receber_descricao . '%');
+                    if ($request->filled('conta_receber_data_inicio')) $query->whereDate('data_vencimento', '>=', $request->conta_receber_data_inicio);
+                    if ($request->filled('conta_receber_data_fim')) $query->whereDate('data_vencimento', '<=', $request->conta_receber_data_fim);
+
+                    // Mescla resultados da pesquisa com contas já carregadas
+                    $contasReceberPesquisa = $query->get();
+                    $contasReceber = $contasReceberPesquisa->merge($contasReceber)->unique('id');
+                }
 
                 $contasFinanceirasEnvolvidas = $extrato->conciliacoes->map(function ($conciliacao) {
                     return $conciliacao->contaFinanceira;
@@ -450,7 +450,7 @@ class ExtratoController extends Controller
         });
 
         if ($transacoes->count() > 0 || $temSaldoDivergente) {
-            return view('extrato.finalizar', compact('extrato', 'transacoes', 'centrosCustos', 'categoriasPagar', 'categoriasReceber'));
+            return view('extrato.finalizar', compact('extrato', 'transacoes', 'centrosCustos', 'categoriasPagar', 'categoriasReceber', 'contasFinanceirasEnvolvidas'));
         } else {
             $extrato->finalizar();
 
@@ -464,73 +464,83 @@ class ExtratoController extends Controller
         $request->validate([
             'extrato_id' => 'required|integer|exists:extratos,id',
             'empresa_id' => 'required|integer|exists:empresas,id',
-            'transacoes' => 'required|array',
+            'transacoes' => 'nullable|array',
+            'contas_divergentes' => 'nullable|array',
         ]);
+
+        if (!empty($request->input('contas_divergentes'))) {
+            foreach ($request->input('contas_divergentes') as $cd) {
+                $conta = ContaFinanceira::find($cd['id']);
+                if ($conta) $conta->update(['saldo_atual' => $cd['novo_saldo'] ?? $conta->saldo_atual]);
+            }
+        }
 
         $extrato = Extrato::findOrFail($request->input('extrato_id'));
 
-        foreach ($request->transacoes as $form) {
-            // Se não foi marcada a opção de incluir, pula essa transação
-            if (empty($form['incluir'])) {
-                continue;
-            }
+        if (!empty($request->input('transacoes'))) {
+            foreach ($request->input('transacoes') as $form) {
+                // Se não foi marcada a opção de incluir, pula essa transação
+                if (empty($form['incluir'])) {
+                    continue;
+                }
 
-            // Valida campos obrigatórios SOMENTE se "incluir" for true
-            $validator = Validator::make($form, [
-                'id' => 'required|integer|exists:transacoes,id',
-                'categoria_id' => 'required|integer|exists:categoria_contas,id',
-                'descricao' => 'nullable|string|max:255',
-                'centro_custo_id' => 'nullable|integer|exists:centro_custos,id',
-                'data_receber' => $form['tipo'] === 'receber' ? 'required|date' : 'nullable',
-            ]);
-
-            if ($validator->fails()) {
-                return redirect()->back()->withErrors($validator)->withInput();
-            }
-
-            $transacao = Transacao::findOrFail($form['id']);
-            $diferenca = $transacao->valorConciliado() - $transacao->valor;
-
-            if ($diferenca > 0) {
-                // EXCEDENTE → CONTA A PAGAR
-                $dados = [
-                    'descricao'          => $form['descricao'] ?? 'Excedente de conciliação',
-                    'valor_integral'     => $diferenca,
-                    'valor_pago'         => $diferenca,
-                    'data_vencimento'    => $transacao->data,
-                    'data_pagamento'     => $transacao->data,
-                    'categoria_conta_id' => $form['categoria_id'],
-                    'centro_custo_id'    => $form['centro_custo_id'] ?? null,
-                    'empresa_id'         => $request->empresa_id,
-                    'transacao_id'       => $transacao->id,
-                ];
-
-                $conta = ContaPagar::create($dados);
-
-                Conciliacao::create([
-                    'transacao_id'      => $transacao->id,
-                    'extrato_id'        => $extrato->id,
-                    'conciliavel_id'    => $conta->id,
-                    'conciliavel_tipo'  => get_class($conta),
-                    'valor_conciliado'  => abs($diferenca),
-                    'data_conciliacao'  => Extrato::findOrFail($request->input('extrato_id'))->inicio ?? now(),
+                // Valida campos obrigatórios SOMENTE se "incluir" for true
+                $validator = Validator::make($form, [
+                    'id' => 'required|integer|exists:transacoes,id',
+                    'categoria_id' => 'required|integer|exists:categoria_contas,id',
+                    'descricao' => 'nullable|string|max:255',
+                    'centro_custo_id' => 'nullable|integer|exists:centro_custos,id',
+                    'data_receber' => $form['tipo'] === 'receber' ? 'required|date' : 'nullable',
                 ]);
-            } elseif ($diferenca < 0) {
-                // FALTANTE → CONTA A RECEBER
-                $valorFaltante = abs($diferenca);
 
-                $dados = [
-                    'descricao'          => $form['descricao'] ?? 'Diferença de conciliação',
-                    'valor_integral'     => $valorFaltante,
-                    'valor_recebido'     => 0,
-                    'data_vencimento'    => $form['data_receber'] ?? now()->toDateString(),
-                    'categoria_conta_id' => $form['categoria_id'],
-                    'centro_custo_id'    => $form['centro_custo_id'] ?? null,
-                    'empresa_id'         => $request->empresa_id,
-                    'transacao_id'       => $transacao->id,
-                ];
+                if ($validator->fails()) {
+                    return redirect()->back()->withErrors($validator)->withInput();
+                }
 
-                $conta = ContaReceber::create($dados);
+                $transacao = Transacao::findOrFail($form['id']);
+                $diferenca = $transacao->valorConciliado() - $transacao->valor;
+
+                if ($diferenca > 0) {
+                    // EXCEDENTE → CONTA A PAGAR
+                    $dados = [
+                        'descricao'          => $form['descricao'] ?? 'Excedente de conciliação',
+                        'valor_integral'     => $diferenca,
+                        'valor_pago'         => $diferenca,
+                        'data_vencimento'    => $transacao->data,
+                        'data_pagamento'     => $transacao->data,
+                        'categoria_conta_id' => $form['categoria_id'],
+                        'centro_custo_id'    => $form['centro_custo_id'] ?? null,
+                        'empresa_id'         => $request->empresa_id,
+                        'transacao_id'       => $transacao->id,
+                    ];
+
+                    $conta = ContaPagar::create($dados);
+
+                    Conciliacao::create([
+                        'transacao_id'      => $transacao->id,
+                        'extrato_id'        => $extrato->id,
+                        'conciliavel_id'    => $conta->id,
+                        'conciliavel_tipo'  => get_class($conta),
+                        'valor_conciliado'  => abs($diferenca),
+                        'data_conciliacao'  => Extrato::findOrFail($request->input('extrato_id'))->inicio ?? now(),
+                    ]);
+                } elseif ($diferenca < 0) {
+                    // FALTANTE → CONTA A RECEBER
+                    $valorFaltante = abs($diferenca);
+
+                    $dados = [
+                        'descricao'          => $form['descricao'] ?? 'Diferença de conciliação',
+                        'valor_integral'     => $valorFaltante,
+                        'valor_recebido'     => 0,
+                        'data_vencimento'    => $form['data_receber'] ?? now()->toDateString(),
+                        'categoria_conta_id' => $form['categoria_id'],
+                        'centro_custo_id'    => $form['centro_custo_id'] ?? null,
+                        'empresa_id'         => $request->empresa_id,
+                        'transacao_id'       => $transacao->id,
+                    ];
+
+                    $conta = ContaReceber::create($dados);
+                }
             }
         }
 

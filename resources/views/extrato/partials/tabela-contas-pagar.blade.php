@@ -78,32 +78,34 @@
                         @endif
                     </div>
 
-                    <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2 flex-wrap">
-                        @if ($conta->conciliacoes->isNotEmpty())
-                            <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#modalMovimentar-{{ $conta->id }}">
-                                Movimentar
-                            </button>
-                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#modalDesvincularContas-{{ $conta->id }}">
-                                Desconciliar
-                            </button>
-                        @else
-                            <form action="{{ route('extrato.excluir_conta') }}" method="POST" class="d-inline"
-                                onsubmit="return confirm('Tem certeza que deseja excluir esta conta?')">
-                                @csrf
-                                <input type="hidden" name="id" value="{{ $conta->id }}">
-                                <input type="hidden" name="tipo" value="{{ get_class($conta) }}">
-                                <button type="submit" class="btn btn-danger btn-sm">
-                                    Excluir</button>
-                            </form>
+                    @unless ($extrato->status === 'conciliado')
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2 flex-wrap">
+                            @if ($conta->conciliacoes->isNotEmpty())
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#modalMovimentar-{{ $conta->id }}">
+                                    Movimentar
+                                </button>
+                                <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#modalDesvincularContas-{{ $conta->id }}">
+                                    Desconciliar
+                                </button>
+                            @else
+                                <form action="{{ route('extrato.excluir_conta') }}" method="POST" class="d-inline"
+                                    onsubmit="return confirm('Tem certeza que deseja excluir esta conta?')">
+                                    @csrf
+                                    <input type="hidden" name="id" value="{{ $conta->id }}">
+                                    <input type="hidden" name="tipo" value="{{ get_class($conta) }}">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        Excluir</button>
+                                </form>
 
-                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#modalVincularConta-{{ $conta->id }}">
-                                Conciliar
-                            </button>
-                        @endif
-                    </div>
+                                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#modalVincularConta-{{ $conta->id }}">
+                                    Conciliar
+                                </button>
+                            @endif
+                        </div>
+                    @endunless
                 </div>
             </div>
         </div>

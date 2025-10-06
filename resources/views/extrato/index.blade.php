@@ -33,7 +33,7 @@
                             @else
                                 <div class="row row-cols-1 row-cols-md-2 g-3">
                                     @foreach($extratos as $e)
-                                        @include('extrato.partials.card-extrato', ['e' => $e])
+                                        @include('extrato.partials.card-extrato', ['extrato' => $e])
                                     @endforeach
                                 </div>
                             @endif
@@ -85,7 +85,7 @@
                             <div class="tab-content p-4 bg-white" id="financeTabsContent">
                                 <!-- Contas a Pagar -->
                                 <div class="tab-pane fade {{ $receberActive ? '' : 'show active' }}" id="pagar" role="tabpanel">
-                                    @if ($extrato)
+                                    @if ($extrato && $extrato->status !== 'conciliado')
                                         <form action="{{ url()->current() }}" method="GET" class="row g-3 mb-3">
                                             @csrf
                                             <div class="col-md-12">
@@ -122,7 +122,7 @@
 
                                 <!-- Contas a Receber -->
                                 <div class="tab-pane fade {{ $receberActive ? 'show active' : '' }}" id="receber" role="tabpanel">
-                                    @if ($extrato)
+                                    @if ($extrato && $extrato->status !== 'conciliado')
                                         <form action="{{ url()->current() }}" method="GET" class="row g-3 mb-3">
                                             @csrf
                                             <div class="col-md-12">

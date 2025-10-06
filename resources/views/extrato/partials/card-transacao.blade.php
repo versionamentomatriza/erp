@@ -6,10 +6,12 @@
             <div class="d-flex align-items-center">
                 <!-- Dropdown menu -->
                 <div class="dropdown">
-                    <button class="btn btn-sm dropdown-toggle no-shadow" type="button"
-                        id="menuTransacao{{ $transacao->id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                        ⋮
-                    </button>
+                    @unless ($extrato->status === 'conciliado')
+                        <button class="btn btn-sm dropdown-toggle no-shadow" type="button"
+                            id="menuTransacao{{ $transacao->id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                            ⋮
+                        </button>
+                    @endunless
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuTransacao{{ $transacao->id }}">
                         <li>
                             <!-- Abrir modal Criar Conciliável -->
@@ -27,7 +29,6 @@
                                 onclick="return confirm('Tem certeza que deseja ignorar esta transação?');">
                                 Ignorar Transação
                             </a>
-
                         </li>
                     </ul>
                 </div>

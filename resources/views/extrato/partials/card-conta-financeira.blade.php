@@ -11,10 +11,12 @@
 
                 <!-- Menu de ações -->
                 <div class="dropdown">
-                    <button class="btn btn-sm bg-white dropdown-toggle no-shadow" type="button" id="menuAcoes-{{ $conta->id }}"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        ⋮
-                    </button>
+                    @unless ($extrato->status === 'conciliado')
+                        <button class="btn btn-sm bg-white dropdown-toggle no-shadow" type="button" id="menuAcoes-{{ $conta->id }}"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            ⋮
+                        </button>
+                    @endunless
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuAcoes-{{ $conta->id }}">
                         <li>
                             <a class="dropdown-item" href="#" data-bs-toggle="modal"
