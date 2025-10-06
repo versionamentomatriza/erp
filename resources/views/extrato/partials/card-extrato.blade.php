@@ -10,12 +10,10 @@
 
                 <!-- Dropdown menu -->
                 <div class="dropdown">
-                    @unless ($extrato->status === 'conciliado')
-                        <button class="btn btn-sm bg-white dropdown-toggle" type="button"
-                            id="menuExtrato{{ $extrato->id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                            ⋮
-                        </button>
-                    @endunless
+                    <button class="btn btn-sm bg-white dropdown-toggle" type="button"
+                        id="menuExtrato{{ $extrato->id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                        ⋮
+                    </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuExtrato{{ $extrato->id }}">
                         <li>
                             <a class="dropdown-item"
