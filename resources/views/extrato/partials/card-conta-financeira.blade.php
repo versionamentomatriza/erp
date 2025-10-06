@@ -1,5 +1,5 @@
 <div class="col-md-6">
-    <div class="card shadow-none border-0">
+    <div class="card shadow-none border-1">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -63,8 +63,8 @@
             @csrf
             @method('PUT')
 
-            <div class="modal-header">
-                <h5 class="modal-title" id="editarSaldoModalLabel-{{ $conta->id }}">
+            <div class="modal-header border-bottom py-3">
+                <h5 class="modal-title fw-semibold mb-0" id="editarSaldoModalLabel-{{ $conta->id }}">
                     Editar Saldo - {{ $conta->nome }}
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -79,8 +79,8 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Salvar</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Salvar</button>
             </div>
         </form>
     </div>

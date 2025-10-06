@@ -22,14 +22,16 @@
                                 Criar Conciliável
                             </a>
                         </li>
-                        <li>
-                            <!-- Ignorar transação -->
-                            <a class="dropdown-item text-danger"
-                                href="{{ route('extrato.ignorar_transacao', ['extrato_id' => $extrato->id, 'transacao_id' => $transacao->id]) }}"
-                                onclick="return confirm('Tem certeza que deseja ignorar esta transação?');">
-                                Ignorar Transação
-                            </a>
-                        </li>
+                        @unless ($transacao->conciliada())
+                            <li>
+                                <!-- Ignorar transação -->
+                                <a class="dropdown-item text-danger"
+                                    href="{{ route('extrato.ignorar_transacao', ['extrato_id' => $extrato->id, 'transacao_id' => $transacao->id]) }}"
+                                    onclick="return confirm('Tem certeza que deseja ignorar esta transação?');">
+                                    Ignorar Transação
+                                </a>
+                            </li>
+                        @endunless
                     </ul>
                 </div>
             </div>
@@ -271,10 +273,6 @@
             $('#modalCriarContaLabel').text(
                 tipo === 'DEBIT' ? 'Criar Conta a Pagar' : 'Criar Conta a Receber'
             );
-
-            header.classList.remove('bg-laranja-matriza', 'bg-verde-matriza');
-            tipo === 'DEBIT' ? header.classList.add('bg-laranja-matriza') : header.classList.add('bg-verde-matriza');
-
 
             filtrarCategorias(tipo);
             toggleFornecedorCliente(tipo);

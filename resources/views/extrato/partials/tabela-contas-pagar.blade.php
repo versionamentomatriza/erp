@@ -71,7 +71,7 @@
                         @endif
 
                         @if ($conta->observacao)
-                            <div class="col-12">
+                            <div class="col-12 mt-3">
                                 <p class="mb-1 text-secondary small fw-semibold">Observação</p>
                                 <p class="mb-0">{{ $conta->observacao }}</p>
                             </div>
@@ -121,7 +121,7 @@
                             <input type="hidden" name="id_conta" value="{{ $conta->id }}">
                             <input type="hidden" name="tipo_conta" value="{{ get_class($conta) }}">
 
-                            <div class="modal-header border-bottom py-3 bg-verde-matriza">
+                            <div class="modal-header border-bottom py-3">
                                 <h5 class="modal-title fw-semibold mb-0">Movimentar pagamento entre contas</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
@@ -132,7 +132,7 @@
                                 @endphp
 
                                 @if ($conciliacao)
-                                    <p>Conta origem: {{ $conciliacao->contaFinanceira->nome }}</p>
+                                    <p>Conta origem: <strong>{{ $conciliacao->contaFinanceira->nome }}</strong></p>
                                 @endif
                                 
                                 <label for="id_conta_financeira" class="form-label">Selecione a conta destino</label>
@@ -168,7 +168,7 @@
                             <input type="hidden" name="id_conta" value="{{ $conta->id }}">
                             <input type="hidden" name="tipo_conta" value="{{ get_class($conta) }}">
 
-                            <div class="modal-header border-bottom py-3 bg-laranja-matriza">
+                            <div class="modal-header border-bottom py-3">
                                 <h5 class="modal-title fw-semibold mb-0">Desconciliar transações</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
@@ -214,7 +214,7 @@
                         <input type="hidden" name="id_extrato" value="{{ $extrato->id }}">
                         <input type="hidden" name="tipo_conta" value="{{ get_class($conta) }}">
 
-                        <div class="modal-header border-bottom py-3 bg-verde-matriza">
+                        <div class="modal-header border-bottom py-3">
                             <h5 class="modal-title fw-semibold mb-0">Conciliar conta #{{ $conta->id }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
@@ -270,7 +270,7 @@
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-success">Conciliar Selecionadas</button>
+                            <button type="submit" class="btn btn-success">Conciliar</button>
                         </div>
                     </form>
                 </div>

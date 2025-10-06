@@ -86,7 +86,7 @@
                                 <!-- Contas a Pagar -->
                                 <div class="tab-pane fade {{ $receberActive ? '' : 'show active' }}" id="pagar" role="tabpanel">
                                     @if ($extrato && $extrato->status !== 'conciliado')
-                                        <form action="{{ url()->current() }}" method="GET" class="row g-3 mb-3">
+                                        <form action="{{ url()->current() }}" method="GET" class="row g-3 mb-5">
                                             @csrf
                                             <div class="col-md-12">
                                                 <input type="hidden" name="extrato" value="{{ $extrato->id }}">
@@ -123,7 +123,7 @@
                                 <!-- Contas a Receber -->
                                 <div class="tab-pane fade {{ $receberActive ? 'show active' : '' }}" id="receber" role="tabpanel">
                                     @if ($extrato && $extrato->status !== 'conciliado')
-                                        <form action="{{ url()->current() }}" method="GET" class="row g-3 mb-3">
+                                        <form action="{{ url()->current() }}" method="GET" class="row g-3 mb-5">
                                             @csrf
                                             <div class="col-md-12">
                                                 <input type="hidden" name="extrato" value="{{ $extrato->id }}">
