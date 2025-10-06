@@ -69,6 +69,7 @@ class ExtratoController extends Controller
                 }
 
                 if (empty($dadosExtrato) || empty($todasTransacoes)) {
+                    session()->flash("flash_error", "Nenhum extrato válido foi processado. Tente enviar novamente.");
                     return view('extrato.index', [
                         'fornecedores'      => $fornecedores,
                         'clientes'          => $clientes,
@@ -80,7 +81,7 @@ class ExtratoController extends Controller
                         'extratos'          => $extratos,
                         'extrato'           => null,
                         'transacoes'        => collect(),
-                    ])->with('error', 'Nenhum extrato válido foi processado. Tente enviar novamente.');
+                    ]);
                 }
 
                 // 🔹 Data de referência (dataInicio do OFX ou da 1ª transação)
@@ -265,10 +266,11 @@ class ExtratoController extends Controller
                 ]);
             }
 
-            return redirect()->to(url()->previous())
-                ->with('success', 'Transação vinculada com sucesso.');
+            session()->flash("flash_success", "Transação vinculada com sucesso.");
+            return redirect()->to(url()->previous());
         } catch (\Throwable $e) {
-            dd($e->getMessage());
+            session()->flash("flash_error", "Erro ao vincular transação.");
+            return redirect()->to(url()->previous());
         }
     }
 
@@ -289,8 +291,8 @@ class ExtratoController extends Controller
                 ->delete();
         }
 
-        return redirect()->to(url()->previous())
-            ->with('success', 'Transação desvinculada com sucesso.');
+        session()->flash("flash_success", "Transação desvinculada com sucesso.");
+        return redirect()->to(url()->previous());
     }
 
     public function criar_conta(Request $request)
@@ -350,8 +352,8 @@ class ExtratoController extends Controller
             'data_conciliacao'      => now(),
         ]);
 
-        return redirect()->to(url()->previous())
-            ->with('success', 'Conta criada com sucesso.');
+        session()->flash("flash_success", "Conta criada com sucesso.");
+        return redirect()->to(url()->previous());
     }
 
     public function excluir_conta(Request $request)
@@ -376,7 +378,30 @@ class ExtratoController extends Controller
         // Se não houver vínculos, exclui a conta
         $conta->delete();
 
-        return redirect()->back()->with('success', 'Conta excluída com sucesso.');
+        session()->flash("flash_success", "Conta excluída com sucesso.");
+        return redirect()->back();
+    }
+
+    public function transferir_conta(Request $request)
+    {
+        $request->validate([
+            'id_extrato'            => ['required', 'integer'],
+            'id_conta'              => ['required', 'integer'],
+            'tipo_conta'            => ['required', 'string', 'in:App\Models\ContaPagar,App\Models\ContaReceber'],
+            'id_conta_financeira'   => ['required', 'integer'],
+        ]);
+
+        $concliliacao = Conciliacao::where('conciliavel_id', $request->input('id_conta'))
+            ->where('conciliavel_tipo', $request->input('tipo_conta'))
+            ->where('extrato_id', $request->input('id_extrato'))
+            ->firstOrFail();
+
+        $concliliacao->update([
+            'conta_financeira_id' => $request->input('id_conta_financeira'),
+        ]);
+
+        session()->flash("flash_success", "Movimentação realizada com sucesso!");
+        return redirect()->to(url()->previous());
     }
 
     public function ignorar_transacao(Request $request)
@@ -392,8 +417,8 @@ class ExtratoController extends Controller
 
         $et->delete();
 
-        return redirect()->to(url()->previous())
-            ->with('success', 'Transação ignorada com sucesso.');
+        session()->flash("flash_success", "Transação ignorada com sucesso.");
+        return redirect()->to(url()->previous());
     }
 
     public function finalizar(Request $request)
@@ -411,19 +436,26 @@ class ExtratoController extends Controller
         })
             ->where('tipo', 'receita')
             ->get();
-
         $extrato = Extrato::find($request->get('extrato'));
         $transacoes = $extrato->transacoes->filter(function ($transacao) {
             return $transacao->valor < $transacao->valorConciliado() || $transacao->valor > $transacao->valorConciliado();
         });
+        $contasFinanceirasEnvolvidas = $extrato->conciliacoes->map(function ($conciliacao) {
+            return $conciliacao->contaFinanceira;
+        })->unique('id');
 
-        if ($transacoes->count() > 0) {
+        // Verifica se há transações OU se algum saldo está divergente
+        $temSaldoDivergente = $contasFinanceirasEnvolvidas->contains(function ($conta) use ($extrato) {
+            return $conta->saldo_atual != $conta->calcularSaldoAtual($extrato->id);
+        });
+
+        if ($transacoes->count() > 0 || $temSaldoDivergente) {
             return view('extrato.finalizar', compact('extrato', 'transacoes', 'centrosCustos', 'categoriasPagar', 'categoriasReceber'));
         } else {
             $extrato->finalizar();
 
-            return redirect()->to(url()->previous())
-                ->with('success', 'Conciliação realizada com sucesso.');
+            session()->flash("flash_success", "Conciliação realizada com sucesso.");
+            return redirect()->to(url()->previous());
         }
     }
 
@@ -505,7 +537,7 @@ class ExtratoController extends Controller
         // Finaliza o extrato
         $extrato->finalizar();
 
-        return redirect()->route('extrato.conciliar')
-            ->with('success', 'Conciliação realizada com sucesso.');
+        session()->flash("flash_success", "Conciliação realizada com sucesso.");
+        return redirect()->route('extrato.conciliar');
     }
 }

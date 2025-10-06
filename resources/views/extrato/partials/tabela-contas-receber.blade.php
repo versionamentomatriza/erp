@@ -59,6 +59,10 @@
 
                     <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2 flex-wrap">
                         @if ($conta->conciliacoes->isNotEmpty())
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modalMovimentar-{{ $conta->id }}">
+                                Movimentar
+                            </button>
                             <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
                                 data-bs-target="#modalDesvincularContas-{{ $conta->id }}">
                                 Desconciliar
@@ -82,6 +86,53 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal Movimentar -->
+        @if ($conta->conciliacoes->isNotEmpty())
+            <div class="modal fade" id="modalMovimentar-{{ $conta->id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <form id="formMovimentar-{{ $conta->id }}" method="POST" action="{{ route('extrato.movimentar') }}">
+                            @csrf
+                            <input type="hidden" name="id_extrato" value="{{ $extrato->id ?? null }}">
+                            <input type="hidden" name="id_conta" value="{{ $conta->id }}">
+                            <input type="hidden" name="tipo_conta" value="{{ get_class($conta) }}">
+
+                            <div class="modal-header border-bottom py-3 bg-verde-matriza">
+                                <h5 class="modal-title fw-semibold mb-0">Movimentar recebimento entre contas</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                @php
+                                    $conciliacao = $conta->conciliacoes->firstWhere('extrato_id', $extrato->id);
+                                @endphp
+
+                                @if ($conciliacao)
+                                    <p>Conta origem: {{ $conciliacao->contaFinanceira->nome }}</p>
+                                @endif
+                                
+                                <label for="id_conta_financeira" class="form-label">Selecione a conta destino</label>
+
+                                <select class="form-select" id="id_conta_financeira" name="id_conta_financeira" required>
+                                    <option value="" selected disabled>Selecione uma conta</option>
+                                    @foreach ($contasFinanceiras as $contaFinanceira)
+                                        <option value="{{ $contaFinanceira->id }}">
+                                            {{ $contaFinanceira->nome }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-success">Movimentar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <!-- Modal Desvincular Contas -->
         @if($conta->conciliacoes->isNotEmpty())
