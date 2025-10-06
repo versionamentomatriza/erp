@@ -271,7 +271,7 @@
             $('#valorConta').val(valor || '');
             $('#dataVencimento').val(data || '');
             $('#modalCriarContaLabel').text(
-                tipo === 'DEBIT' ? 'Criar Conta a Pagar' : 'Criar Conta a Receber'
+                tipo === 'DEBIT' ? 'Criar Pagamento' : 'Criar Recebimento'
             );
 
             filtrarCategorias(tipo);

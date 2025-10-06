@@ -7,14 +7,6 @@
                 <h5 class="mb-0">Ajustes de Conciliação</h5>
             </div>
             <div class="card-body">
-                @unless ($transacoes->isEmpty())
-                    <p class="text-muted">
-                        Algumas transações do extrato <strong>{{ $extrato->banco }}</strong> possuem diferenças entre o valor conciliado
-                        e o valor original.
-                        Você pode <strong>escolher quais diferenças deseja ajustar</strong> gerando contas a pagar ou a receber.
-                    </p>
-                @endunless
-
                 <form action="{{ route('extrato.excedente') }}" method="POST">
                     @csrf
                     <input type="hidden" name="extrato_id" value="{{ $extrato->id }}">
@@ -27,8 +19,8 @@
                         @endphp
 
                         @if($conta->saldo_atual !== $saldoCalculado)
-                            <div class="card border-warning mb-3 shadow-sm">
-                                <div class="card-header bg-warning text-dark fw-bold">
+                            <div class="card border-warning mb-3 shadow-none">
+                                <div class="card-header fw-bold">
                                     ⚠️ {{ $conta->nome ?? 'Conta #' . $conta->id }} com saldo divergente
                                 </div>
                                 <div class="card-body">
@@ -65,7 +57,13 @@
                             Todas as transações estão conciliadas corretamente.
                         </div>
                     @else
-                        <div class="d-flex justify-content-end mb-3">
+                        <div class="alert alert-warning">
+                            Algumas transações do extrato <strong>{{ $extrato->banco }}</strong> possuem diferenças entre o valor conciliado
+                            e o valor original.
+                            Você pode <strong>escolher quais diferenças deseja ajustar</strong> gerando contas a pagar ou a receber.
+                        </div>
+                        {{--
+                        <div class="d-flex justify-content-end mb-3 mt-3">
                             <button type="button" id="selectAll" class="btn btn-sm btn-outline-primary">
                                 Selecionar todos
                             </button>
@@ -73,12 +71,13 @@
                                 Desmarcar todos
                             </button>
                         </div>
+                        --}}
 
                         <div class="row row-cols-1 g-3">
                             @foreach($transacoes as $t)
                                 @php
                                     $excedente = $t->valorConciliado() - $t->valor;
-                                    $tipoConta = $excedente > 0 ? 'pagar' : 'receber';
+                                    $tipoConta = $t->tipo === 'DEBIT' ? 'Pagamento' : 'Recebimento';
                                 @endphp
 
                                 <div class="col">
@@ -158,7 +157,7 @@
                         </div>
                     @endif
                     <div class="mt-3 text-end">
-                        <a href="{{ route('extrato.conciliar', ['extrato' => $extrato->id]) }}" class="btn btn-secondary">
+                        <a href="{{ route('extrato.conciliar', ['extrato' => $extrato->id]) }}" class="btn btn-outline-secondary">
                             Cancelar
                         </a>
                         <button type="submit" class="btn btn-success">
