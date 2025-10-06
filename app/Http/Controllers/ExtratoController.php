@@ -300,7 +300,7 @@ class ExtratoController extends Controller
         // Validação dos dados
         $validated = $request->validate([
             'descricao'             => 'required|string|max:255',
-            'observacao'            => 'required|string',
+            'observacao'            => 'nullable|string',
             'valor'                 => 'required|numeric|min:0',
             'data_vencimento'       => 'required|date',
             'centro_custo_id'       => 'nullable|integer',
@@ -317,7 +317,7 @@ class ExtratoController extends Controller
 
         $dados = [
             'descricao'          => $validated['descricao'],
-            'observacao'         => $validated['observacao'],
+            'observacao'         => $validated['observacao'] ?? null,
             'valor_integral'     => (float) $validated['valor'],
             'data_vencimento'    => $validated['data_vencimento'],
             'empresa_id'         => optional($user->empresa)->empresa_id ?? $user->empresa_id ?? null,
