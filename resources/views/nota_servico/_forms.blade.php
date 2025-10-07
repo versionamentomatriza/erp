@@ -26,18 +26,6 @@
                     </div>
                 </a>
             </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" data-bs-toggle="tab" href="#lista_servicos" role="tab" aria-selected="false">
-                    <div class="d-flex align-items-center">
-                        <div class="tab-icon"><i class='fa fa-shopping-cart me-2'></i>
-                        </div>
-                        <div class="tab-title">
-                            <i class="ri-box-2-line"></i>
-                            Serviços de OS
-                        </div>
-                    </div>
-                </a>
-            </li>
         </ul>
 
         <hr>
@@ -53,36 +41,11 @@
                             !!}
                         </div>
                         @else
-						@section('js')
-						<script src="/js/nfse.js"></script>
-
-						<script type="text/javascript">
-							$(function(){
-								// Força disparo do cliente, se já vier selecionado
-								let clienteSelect = $('.cliente_id');
-								if(clienteSelect.val()){
-									clienteSelect.trigger('change');
-								}
-
-								// Força disparo do serviço, se já vier selecionado
-								let servicoSelect = $('.servico_id');
-								if(servicoSelect.val()){
-									servicoSelect.trigger('change');
-								}
-							});
-						</script>
-						@endsection
-
-						<div class="col-md-5">
-							{!! Form::select('cliente_id', 'Cliente')
-								->attrs(['class' => 'select2 cliente_id'])
-								->options(
-									isset($item) 
-										? [$item->cliente_id => $item->cliente->razao_social] 
-										: (isset($cliente) ? [$cliente->id => $cliente->razao_social] : [])
-								)
-							!!}
-						</div>
+                        <div class="col-md-5">
+                            {!!Form::select('cliente_id', 'Cliente')->attrs(['class' => 'select2 cliente_id'])
+                            ->options(isset($item) ? [$item->cliente_id => $item->cliente->razao_social] : [])
+                            !!}
+                        </div>
                         @endif
                         <hr class="mt-3">
                         <div class="row g-2">
@@ -198,12 +161,11 @@
                         </div>
 
                         @isset($descricaoServico)
-						<div class="col-md-12">
-							{!! Form::text('discriminacao', 'Discriminação')->attrs(['class' => ''])
-								->value(isset($descricaoServico) ? strip_tags(html_entity_decode($descricaoServico)) : '')
-								->required()
-							!!}
-						</div>
+                        <div class="col-md-12">
+                            {!!Form::text('discriminacao', 'Discriminação')->attrs(['class' => ''])
+                            ->value($descricaoServico)->required()
+                            !!}
+                        </div>
                         @else
                         <div class="col-md-12">
                             {!!Form::text('discriminacao', 'Discriminação')->attrs(['class' => ''])
@@ -346,78 +308,6 @@
                     </div>
                 </div>
             </div>
-			<?php 
-			//dd($os->servicos); 
-			//dd($os); 
-			?>
-<div class="tab-pane fade show" id="lista_servicos" role="tabpanel">
-		<div class="card">
-			<div class="row m-3 g-2">
-			@if(isset($os) && $os->servicos->count())
-				<h6>Serviços da Ordem de Serviço #{{ $os->codigo_sequencial }}</h6>
-			
-			
-				<?php
-				// Configuração do banco
-				$host = "127.0.0.1";
-				$user = "root";
-				$pass = "M@tr1z@$$2025_BR_DB#3006";
-				$db   = "erp"; // nome do banco
-
-				// Conexão
-				$conn = new mysqli($host, $user, $pass, $db);
-
-				// Checar erro
-				if ($conn->connect_error) {
-					die("Erro de conexão: " . $conn->connect_error);
-				}
-
-				// Defina o ID da OS que você quer consultar
-				$os_id = isset($_GET['os_id']) ? intval($_GET['os_id']) : 0;
-
-				// Query com join para puxar serviços da OS
-				$sql = "
-					SELECT so.id, so.quantidade, so.valor, so.subtotal, 
-						   s.nome, s.descricao, s.valor as valor_padrao
-					FROM servico_os so
-					INNER JOIN servicos s ON s.id = so.servico_id
-					WHERE so.ordem_servico_id = ?
-				";
-
-				$stmt = $conn->prepare($sql);
-				$stmt->bind_param("i", $os_id);
-				$stmt->execute();
-				$result = $stmt->get_result();
-
-				// Exibir os resultados
-				echo "<table cellpadding='4'>";
-				echo "<tr><th>Descrição</th><th>Qtd</th><th>Valor Unit.</th><th>Subtotal</th></tr>";
-
-				while ($row = $result->fetch_assoc()) {
-					echo "<tr>
-
-							<td>{$row['descricao']}</td>
-							<td>{$row['quantidade']}</td>
-							<td>R$ " . number_format($row['valor'], 2, ',', '.') . "</td>
-							<td>R$ " . number_format($row['subtotal'], 2, ',', '.') . "</td>
-						  </tr>";
-				}
-				echo "</table>";
-
-				$stmt->close();
-				$conn->close();
-				?>
-			
-			
-			
-			@else
-				<p class="text-muted">Nenhum serviço associado a Ordem de Serviço.</p>
-			@endif
-			</div>
-		</div>
-</div>
-
-			
         </div>
     </div>
 

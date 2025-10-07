@@ -177,17 +177,9 @@
                     <div class="col-md-12">
                         {!!Form::text('motivo-cancela', 'Motivo')
                         ->required()
-						->value("Cliente desistiu do serviço")
 
                         !!}
                     </div>
-					
-					<div class="col-md-12">
-						{!! Form::text('codigo-cancela', 'Código de Cancelamento')
-							->required()
-							->value(9)
-						!!}
-					</div>
                 </div>
             </div>
             <div class="modal-footer">
