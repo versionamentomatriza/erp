@@ -93,10 +93,12 @@
             <!-- Contas Financeiras -->
             <div class="row g-3 mb-3">
                 @foreach($contasFinanceiras as $conta)
-                    @php
-                        $saldoCalculado = $conta->calcularSaldoAtual($extrato->fim);
-                    @endphp
-                    @include('extrato.partials.card-conta-financeira', ['conta' => $conta, 'extrato' => $extrato]);
+                    <div class="col-xs-12 col-md-6">
+                        @php
+                            $saldoCalculado = $conta->calcularSaldoAtual($extrato->fim)
+                        @endphp
+                        @include('extrato.partials.card-conta-financeira', ['conta' => $conta, 'extrato' => $extrato])
+                    </div>
                 @endforeach
             </div>
 
@@ -114,11 +116,12 @@
                         <!-- Receita -->
                         <tr class="table-group-divider">
                             <td class="fw-semibold">Receita Bruta</td>
-                            <td class="text-end">R$ {{ number_format($movimentacao['receita_bruta'], 2, ',', '.') }}</td>
-                            <td class="text-end">
+                            <td class="text-end fw-semibold">R$ {{ number_format($movimentacao['receita_bruta'], 2, ',', '.') }}</td>
+                            <td class="text-end fw-semibold">
                                 {{ $movimentacao['receita_liquida'] > 0 ? number_format(($movimentacao['receita_bruta'] / $movimentacao['receita_liquida']) * 100, 2, ',', '.') : '0,00' }}%
                             </td>
                         </tr>
+            
                         @foreach(($movimentacao['contas_receber_por_grupo']['receita_bruta'] ?? []) as $conta)
                             <tr>
                                 <td class="ps-4 text-muted">{{ $conta->descricao ?? $conta->nome }}</td>
@@ -129,21 +132,23 @@
                         @endforeach
 
                         <tr>
-                            <td class="text-muted">(-) Deduções</td>
-                            <td class="text-end text-danger">R$
+                            <td class="text-muted fw-semibold">(-) Deduções</td>
+                            <td class="text-end text-danger fw-semibold">R$
                                 {{ number_format($movimentacao['deducao_receita'], 2, ',', '.') }}</td>
-                            <td class="text-end text-danger">
+                            <td class="text-end text-danger fw-semibold">
                                 {{ $movimentacao['receita_liquida'] > 0 ? number_format(($movimentacao['deducao_receita'] / $movimentacao['receita_liquida']) * 100, 2, ',', '.') : '0,00' }}%
                             </td>
                         </tr>
+
                         @foreach(($movimentacao['contas_pagar_por_grupo']['deducao_receita'] ?? []) as $conta)
                             <tr>
                                 <td class="ps-4 text-muted">{{ $conta->descricao ?? $conta->nome }}</td>
-                                <td class="text-end text-danger">R$
+                                <td class="text-end">R$
                                     {{ number_format($conta->valor_pago ?? $conta->valor_integral, 2, ',', '.') }}</td>
                                 <td></td>
                             </tr>
                         @endforeach
+
                         @foreach(($movimentacao['contas_receber_por_grupo']['deducao_receita'] ?? []) as $conta)
                             <tr>
                                 <td class="ps-4 text-muted">{{ $conta->descricao ?? $conta->nome }}</td>
@@ -162,17 +167,18 @@
 
                         <!-- Custos -->
                         <tr class="table-group-divider">
-                            <td class="text-muted">(-) Custos</td>
-                            <td class="text-end text-danger">R$ {{ number_format($movimentacao['custo'], 2, ',', '.') }}
+                            <td class="text-muted fw-semibold">(-) Custos</td>
+                            <td class="text-end text-danger fw-semibold">R$ {{ number_format($movimentacao['custo'], 2, ',', '.') }}
                             </td>
-                            <td class="text-end text-danger">
+                            <td class="text-end text-danger fw-semibold">
                                 {{ $movimentacao['receita_liquida'] > 0 ? number_format(($movimentacao['custo'] / $movimentacao['receita_liquida']) * 100, 2, ',', '.') : '0,00' }}%
                             </td>
                         </tr>
+                    
                         @foreach(($movimentacao['contas_pagar_por_grupo']['custo'] ?? []) as $conta)
                             <tr>
                                 <td class="ps-4 text-muted">{{ $conta->descricao ?? $conta->nome }}</td>
-                                <td class="text-end text-danger">R$
+                                <td class="text-end">R$
                                     {{ number_format($conta->valor_pago ?? $conta->valor_integral, 2, ',', '.') }}</td>
                                 <td></td>
                             </tr>
@@ -189,34 +195,36 @@
 
                         <!-- Despesas -->
                         <tr class="table-group-divider">
-                            <td class="text-muted">(-) Despesas com Vendas</td>
-                            <td class="text-end text-danger">R$
+                            <td class="text-muted fw-semibold">(-) Despesas com Vendas</td>
+                            <td class="text-end text-danger fw-semibold">R$
                                 {{ number_format($movimentacao['despesa_venda'], 2, ',', '.') }}</td>
-                            <td class="text-end text-danger">
+                            <td class="text-end text-danger fw-semibold">
                                 {{ $movimentacao['receita_liquida'] > 0 ? number_format(($movimentacao['despesa_venda'] / $movimentacao['receita_liquida']) * 100, 2, ',', '.') : '0,00' }}%
                             </td>
                         </tr>
+
                         @foreach(($movimentacao['contas_pagar_por_grupo']['despesa_venda'] ?? []) as $conta)
                             <tr>
                                 <td class="ps-4 text-muted">{{ $conta->descricao ?? $conta->nome }}</td>
-                                <td class="text-end text-danger">R$
+                                <td class="text-end">R$
                                     {{ number_format($conta->valor_pago ?? $conta->valor_integral, 2, ',', '.') }}</td>
                                 <td></td>
                             </tr>
                         @endforeach
 
                         <tr>
-                            <td class="text-muted">(-) Despesas Administrativas</td>
-                            <td class="text-end text-danger">R$
+                            <td class="text-muted fw-semibold">(-) Despesas Administrativas</td>
+                            <td class="text-end text-danger fw-semibold">R$
                                 {{ number_format($movimentacao['despesa_adm'], 2, ',', '.') }}</td>
-                            <td class="text-end text-danger">
+                            <td class="text-end text-danger fw-semibold">
                                 {{ $movimentacao['receita_liquida'] > 0 ? number_format(($movimentacao['despesa_adm'] / $movimentacao['receita_liquida']) * 100, 2, ',', '.') : '0,00' }}%
                             </td>
                         </tr>
+
                         @foreach(($movimentacao['contas_pagar_por_grupo']['despesa_adm'] ?? []) as $conta)
                             <tr>
                                 <td class="ps-4 text-muted">{{ $conta->descricao ?? $conta->nome }}</td>
-                                <td class="text-end text-danger">R$
+                                <td class="text-end">R$
                                     {{ number_format($conta->valor_pago ?? $conta->valor_integral, 2, ',', '.') }}</td>
                                 <td></td>
                             </tr>
@@ -233,13 +241,14 @@
 
                         <!-- Financeiro -->
                         <tr class="table-group-divider">
-                            <td>(+) Receitas Financeiras</td>
-                            <td class="text-end">R$ {{ number_format($movimentacao['receita_financeira'], 2, ',', '.') }}
+                            <td class="fw-semibold">(+) Receitas Financeiras</td>
+                            <td class="text-end fw-semibold">R$ {{ number_format($movimentacao['receita_financeira'], 2, ',', '.') }}
                             </td>
-                            <td class="text-end">
+                            <td class="text-end fw-semibold">
                                 {{ $movimentacao['receita_liquida'] > 0 ? number_format(($movimentacao['receita_financeira'] / $movimentacao['receita_liquida']) * 100, 2, ',', '.') : '0,00' }}%
                             </td>
                         </tr>
+
                         @foreach(($movimentacao['contas_receber_por_grupo']['receita_financeira'] ?? []) as $conta)
                             <tr>
                                 <td class="ps-4 text-muted">{{ $conta->descricao ?? $conta->nome }}</td>
@@ -250,17 +259,18 @@
                         @endforeach
 
                         <tr>
-                            <td class="text-muted">(-) Despesas Financeiras</td>
-                            <td class="text-end text-danger">R$
+                            <td class="text-muted fw-semibold">(-) Despesas Financeiras</td>
+                            <td class="text-end text-danger fw-semibold">R$
                                 {{ number_format($movimentacao['despesa_financeira'], 2, ',', '.') }}</td>
-                            <td class="text-end text-danger">
+                            <td class="text-end text-danger fw-semibold">
                                 {{ $movimentacao['receita_liquida'] > 0 ? number_format(($movimentacao['despesa_financeira'] / $movimentacao['receita_liquida']) * 100, 2, ',', '.') : '0,00' }}%
                             </td>
                         </tr>
+
                         @foreach(($movimentacao['contas_pagar_por_grupo']['despesa_financeira'] ?? []) as $conta)
                             <tr>
                                 <td class="ps-4 text-muted">{{ $conta->descricao ?? $conta->nome }}</td>
-                                <td class="text-end text-danger">R$
+                                <td class="text-end">R$
                                     {{ number_format($conta->valor_pago ?? $conta->valor_integral, 2, ',', '.') }}</td>
                                 <td></td>
                             </tr>
@@ -277,17 +287,18 @@
 
                         <!-- Impostos -->
                         <tr class="table-group-divider">
-                            <td class="text-muted">(-) IRPJ e CSLL</td>
-                            <td class="text-end text-danger">R$ {{ number_format($movimentacao['ir_csll'], 2, ',', '.') }}
+                            <td class="text-muted fw-semibold">(-) IRPJ e CSLL</td>
+                            <td class="text-end text-danger fw-semibold">R$ {{ number_format($movimentacao['ir_csll'], 2, ',', '.') }}
                             </td>
-                            <td class="text-end text-danger">
+                            <td class="text-end text-danger fw-semibold">
                                 {{ $movimentacao['receita_liquida'] > 0 ? number_format(($movimentacao['ir_csll'] / $movimentacao['receita_liquida']) * 100, 2, ',', '.') : '0,00' }}%
                             </td>
                         </tr>
+
                         @foreach(($movimentacao['contas_pagar_por_grupo']['imposto_lucro'] ?? []) as $conta)
                             <tr>
                                 <td class="ps-4 text-muted">{{ $conta->descricao ?? $conta->nome }}</td>
-                                <td class="text-end text-danger">R$
+                                <td class="text-end">R$
                                     {{ number_format($conta->valor_pago ?? $conta->valor_integral, 2, ',', '.') }}</td>
                                 <td></td>
                             </tr>

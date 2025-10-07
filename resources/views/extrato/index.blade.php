@@ -49,7 +49,13 @@
                                         @php
                                             $saldoCalculado = $conta->calcularSaldoAtual($extrato->id);
                                         @endphp
-                                        @include('extrato.partials.card-conta-financeira', ['conta' => $conta, 'extrato' => $extrato])
+                                        <div class="col-xs-12 col-md-6">
+                                            @include('extrato.partials.card-conta-financeira', [
+                                                'conta' => $conta,
+                                                'saldoCalculado' => $saldoCalculado,
+                                                'extrato' => $extrato
+                                            ])
+                                        </div>
                                     @endforeach
                                 </div>
                             </div>

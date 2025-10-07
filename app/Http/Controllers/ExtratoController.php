@@ -428,6 +428,8 @@ class ExtratoController extends Controller
         $user = auth()->user();
         $empresaId = optional($user->empresa)->empresa_id ?? $user->empresa_id ?? null;
         $centrosCustos = CentroCusto::where('empresa_id', $empresaId)->get();
+        $contasFinanceiras = ContaFinanceira::where('empresa_id', $empresaId)->get();
+
         $categoriasPagar = CategoriaConta::where(function ($q) use ($empresaId) {
             $q->where('empresa_id', $empresaId)->orWhereNull('empresa_id');
         })
@@ -452,7 +454,7 @@ class ExtratoController extends Controller
         });
 
         if ($transacoes->count() > 0 || $temSaldoDivergente) {
-            return view('extrato.finalizar', compact('extrato', 'transacoes', 'centrosCustos', 'categoriasPagar', 'categoriasReceber', 'contasFinanceirasEnvolvidas'));
+            return view('extrato.finalizar', compact('extrato', 'transacoes', 'centrosCustos', 'categoriasPagar', 'categoriasReceber', 'contasFinanceiras', 'contasFinanceirasEnvolvidas'));
         } else {
             $extrato->finalizar();
 
@@ -482,22 +484,19 @@ class ExtratoController extends Controller
         if (!empty($request->input('transacoes'))) {
             foreach ($request->input('transacoes') as $form) {
                 // Se não foi marcada a opção de incluir, pula essa transação
-                if (empty($form['incluir'])) {
-                    continue;
-                }
+                if (empty($form['incluir'])) continue;
 
                 // Valida campos obrigatórios SOMENTE se "incluir" for true
                 $validator = Validator::make($form, [
                     'id' => 'required|integer|exists:transacoes,id',
                     'categoria_id' => 'required|integer|exists:categoria_contas,id',
-                    'descricao' => 'nullable|string|max:255',
+                    'conta_financeira_id' => 'nullable|integer|exists:contas_financeiras,id',
                     'centro_custo_id' => 'nullable|integer|exists:centro_custos,id',
+                    'descricao' => 'nullable|string|max:255',
                     'data_receber' => $form['tipo'] === 'receber' ? 'required|date' : 'nullable',
                 ]);
 
-                if ($validator->fails()) {
-                    return redirect()->back()->withErrors($validator)->withInput();
-                }
+                if ($validator->fails()) return redirect()->back()->withErrors($validator)->withInput();
 
                 $transacao = Transacao::findOrFail($form['id']);
                 $diferenca = $transacao->valorConciliado() - $transacao->valor;
@@ -519,12 +518,13 @@ class ExtratoController extends Controller
                     $conta = ContaPagar::create($dados);
 
                     Conciliacao::create([
-                        'transacao_id'      => $transacao->id,
-                        'extrato_id'        => $extrato->id,
-                        'conciliavel_id'    => $conta->id,
-                        'conciliavel_tipo'  => get_class($conta),
-                        'valor_conciliado'  => abs($diferenca),
-                        'data_conciliacao'  => Extrato::findOrFail($request->input('extrato_id'))->inicio ?? now(),
+                        'transacao_id'          => $transacao->id,
+                        'extrato_id'            => $extrato->id,
+                        'conta_financeira_id'   => $form['conta_financeira_id'],
+                        'conciliavel_id'        => $conta->id,
+                        'conciliavel_tipo'      => get_class($conta),
+                        'valor_conciliado'      => abs($diferenca),
+                        'data_conciliacao'      => now(),
                     ]);
                 } elseif ($diferenca < 0) {
                     // FALTANTE → CONTA A RECEBER

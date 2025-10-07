@@ -133,9 +133,20 @@
                                             </div>
 
                                             <div class="mb-2">
+                                                <label for="conta_financeira_{{ $t->id }}" class="form-label">Conta Financeira</label>
+                                                <select class="form-select input-field" id="conta_financeira_{{ $t->id }}"
+                                                    name="transacoes[{{ $t->id }}][conta_financeira_id]" disabled required>
+                                                    <option value="" selected>Não informado</option>
+                                                    @foreach($contasFinanceiras as $conta)
+                                                        <option value="{{ $conta->id }}">{{ $conta->nome }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <div class="mb-2">
                                                 <label for="centro_custo_{{ $t->id }}" class="form-label">Centro de Custo (opcional)</label>
                                                 <select class="form-select input-field" id="centro_custo_{{ $t->id }}"
-                                                    name="transacoes[{{ $t->id }}][centro_custo_id]" disabled>
+                                                    name="transacoes[{{ $t->id }}][centro_custo_id]" disabled required>
                                                     <option value="" selected>Não informado</option>
                                                     @foreach($centrosCustos as $centro)
                                                         <option value="{{ $centro->id }}">{{ $centro->descricao }}</option>

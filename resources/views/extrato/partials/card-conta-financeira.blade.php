@@ -1,56 +1,54 @@
-<div class="col-md-6">
-    <div class="card shadow-none border-1">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <h5 class="card-title">{{ $conta->nome }}</h5>
-                    <div class="text-muted small">
-                        Banco: {{ $conta->banco ?? '-' }} | Agência: {{ $conta->agencia ?? '-' }}
-                    </div>
-                </div>
-
-                <!-- Menu de ações -->
-                <div class="dropdown">
-                    @unless ($extrato->status === 'conciliado')
-                        <button class="btn btn-sm bg-white dropdown-toggle no-shadow" type="button" id="menuAcoes-{{ $conta->id }}"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            ⋮
-                        </button>
-                    @endunless
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuAcoes-{{ $conta->id }}">
-                        <li>
-                            <a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                data-bs-target="#editarSaldoModal-{{ $conta->id }}">
-                                Editar saldo atual
-                            </a>
-                        </li>
-                        {{-- Aqui no futuro dá pra adicionar mais opções (ex: Excluir, Detalhes etc.) --}}
-                    </ul>
+<div class="card shadow-none border-1">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h5 class="card-title">{{ $conta->nome }}</h5>
+                <div class="text-muted small">
+                    Banco: {{ $conta->banco ?? '-' }} | Agência: {{ $conta->agencia ?? '-' }}
                 </div>
             </div>
 
-            <hr class="my-2">
-
-            <div class="d-flex justify-content-between">
-                <span>Saldo Inicial:</span>
-                <span>R$ {{ number_format($conta->saldo_inicial, 2, ',', '.') }}</span>
+            <!-- Menu de ações -->
+            <div class="dropdown">
+                @unless ($extrato->status === 'conciliado')
+                    <button class="btn btn-sm bg-white dropdown-toggle no-shadow" type="button" id="menuAcoes-{{ $conta->id }}"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        ⋮
+                    </button>
+                @endunless
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuAcoes-{{ $conta->id }}">
+                    <li>
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal"
+                            data-bs-target="#editarSaldoModal-{{ $conta->id }}">
+                            Editar saldo atual
+                        </a>
+                    </li>
+                    {{-- Aqui no futuro dá pra adicionar mais opções (ex: Excluir, Detalhes etc.) --}}
+                </ul>
             </div>
+        </div>
 
-            <div class="d-flex justify-content-between">
-                <span>Saldo Atual (BD):</span>
-                <span>R$ {{ number_format($conta->saldo_atual, 2, ',', '.') }}</span>
-            </div>
+        <hr class="my-2">
 
-            <div class="d-flex justify-content-between fw-semibold">
-                <span>Saldo Calculado:</span>
-                <span>
-                    @if(abs($saldoCalculado - $conta->saldo_atual) !== 0)
-                        <i class="bi bi-exclamation-triangle-fill text-warning ms-1"
-                            title="Diferença detectada entre o saldo calculado e o saldo atual da conta."></i>
-                    @endif
-                    R$ {{ number_format($saldoCalculado, 2, ',', '.') }}
-                </span>
-            </div>
+        <div class="d-flex justify-content-between">
+            <span>Saldo Inicial:</span>
+            <span>R$ {{ number_format($conta->saldo_inicial, 2, ',', '.') }}</span>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <span>Saldo Atual (BD):</span>
+            <span>R$ {{ number_format($conta->saldo_atual, 2, ',', '.') }}</span>
+        </div>
+
+        <div class="d-flex justify-content-between fw-semibold">
+            <span>Saldo Calculado:</span>
+            <span>
+                @if(abs($saldoCalculado - $conta->saldo_atual) !== 0)
+                    <i class="bi bi-exclamation-triangle-fill text-warning ms-1"
+                        title="Diferença detectada entre o saldo calculado e o saldo atual da conta."></i>
+                @endif
+                R$ {{ number_format($saldoCalculado, 2, ',', '.') }}
+            </span>
         </div>
     </div>
 </div>
