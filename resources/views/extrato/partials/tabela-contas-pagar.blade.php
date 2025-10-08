@@ -174,6 +174,12 @@
                             </div>
 
                             <div class="modal-body">
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" class="form-check-input" id="manterEmAberto-{{ $conta->id }}" name="manter_em_aberto" value="1">
+                                    <label class="form-check-label" for="manterEmAberto-{{ $conta->id }}">
+                                        Deixar conta em aberto após desvincular
+                                    </label>
+                                </div>
                                 <p>Selecione as conciliações que deseja desconciliar:</p>
                                 <div class="list-group">
                                     @foreach($conta->conciliacoes as $conciliacao)

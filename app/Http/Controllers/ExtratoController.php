@@ -268,11 +268,29 @@ class ExtratoController extends Controller
     public function desvincular(Request $request)
     {
         $request->validate([
-            'id_extrato'        => ['required'],
-            'id_conta'          => ['required'],
-            'tipo_conta'        => ['required'],
-            'ids_transacoes'    => ['required'],
+            'id_extrato'        => ['required', 'integer', 'exists:extratos,id'],
+            'id_conta'          => ['required', 'integer',],
+            'tipo_conta'        => ['required', 'string'],
+            'ids_transacoes'    => ['required', 'array', 'min:1'],
+            'manter_em_aberto'  => ['nullable', 'boolean'],
         ]);
+
+        $manterEmAberto = $request->boolean('manter_em_aberto');
+        if ($manterEmAberto) {
+            $model = $request->input('tipo_conta');
+            $conta = $model::findOrFail($request->input('id_conta'));
+            $conta->status = 0;
+
+            if ($conta instanceof ContaPagar) {
+                $conta->valor_pago = null;
+                $conta->data_pagamento = null;
+            } elseif ($conta instanceof ContaReceber) {
+                $conta->valor_recebido = null;
+                $conta->data_recebimento = null;
+            }
+
+            $conta->save();
+        }
 
         foreach ($request->input('ids_transacoes') as $id_transacao) {
             Conciliacao::where('conciliavel_id', $request->input('id_conta'))
@@ -455,7 +473,7 @@ class ExtratoController extends Controller
         })
             ->where('tipo', 'receita')
             ->get();
-        
+
         $transacoes = $extrato->transacoes->filter(function ($transacao) {
             return $transacao->valor < $transacao->valorConciliado() || $transacao->valor > $transacao->valorConciliado();
         });
