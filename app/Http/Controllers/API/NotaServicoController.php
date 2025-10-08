@@ -8,6 +8,8 @@ use CloudDfe\SdkPHP\Nfse;
 use App\Models\Empresa;
 use App\Models\NotaServico;
 
+
+
 class NotaServicoController extends Controller
 {
     public function transmitir(Request $request){
@@ -28,6 +30,8 @@ class NotaServicoController extends Controller
 
         $nfse = new Nfse($params);
         $servico = $item->servico;
+		
+		//dd($servico->aliquota_iss);
 
         $novoNumeroNFse = $empresa->numero_ultima_nfse+1;
 
@@ -50,6 +54,8 @@ class NotaServicoController extends Controller
 				$cod_tributacao_ajustado_segunda_parte = $servico->codigo_tributacao_municipio;
 				$cod_servico_ajustado_segunda_parte = $servico->codigo_tributacao_municipio;
 			}
+			
+			
 
             $payload = [
                 "numero" => $novoNumeroNFse,
@@ -232,12 +238,11 @@ class NotaServicoController extends Controller
             ]
         ];
         try{
-
             $nfse = new Nfse($params);
             $payload = [
                 'chave' => $item->chave,
                 'motivo_cancelamento' => $request->motivo,
-				'codigo_cancelamento' => 9
+				'codigo_cancelamento' => $request->codigo
             ];
 			
             $resp = $nfse->cancela($payload);

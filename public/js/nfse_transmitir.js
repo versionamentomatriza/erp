@@ -81,7 +81,8 @@ $('#btn-cancelar').click(() => {
 
 	$.post(path_url + "api/nfse/cancelar", {
 		id: IDNFSE,
-		motivo: $('#inp-motivo-cancela').val()
+		motivo: $('#inp-motivo-cancela').val(),
+		codigo: $('#inp-codigo-cancela').val()
 	})
 	.done((success) => {
 		swal("Sucesso", success.mensagem, "success");

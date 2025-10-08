@@ -45,8 +45,8 @@ class CaixaController extends Controller
         ->where('orcamento', 0)
         ->get();
 
-        $pagar = ContaPagar::where('empresa_id', request()->empresa_id)->where('caixa_id', $item->id)->get();
-        $receber = ContaReceber::where('empresa_id', request()->empresa_id)->where('caixa_id', $item->id)->get();
+        $pagar = ContaPagar::where('empresa_id', request()->empresa_id)->where('caixa_id', $item->id)->whereNot('descricao', '=', 'Venda PDV')->get();
+        $receber = ContaReceber::where('empresa_id', request()->empresa_id)->where('caixa_id', $item->id)->whereNot('descricao', '=', 'Venda PDV')->get();
 
         $vendas = $this->agrupaVendas($nfce, $nfe, $pagar, $receber);
         $somaTiposPagamento = $this->somaTiposPagamento($vendas);
@@ -230,8 +230,8 @@ class CaixaController extends Controller
         $sangrias = [];
         $contas = [];
 
-        $pagar = ContaPagar::where('empresa_id', request()->empresa_id)->where('caixa_id', $item->id)->get();
-        $receber = ContaReceber::where('empresa_id', request()->empresa_id)->where('caixa_id', $item->id)->get();
+        $pagar = ContaPagar::where('empresa_id', request()->empresa_id)->where('caixa_id', $item->id)->whereNot('descricao', '=', 'Venda PDV')->get();
+        $receber = ContaReceber::where('empresa_id', request()->empresa_id)->where('caixa_id', $item->id)->whereNot('descricao', '=', 'Venda PDV')->get();
 
         $contas = $this->agrupaContas($pagar, $receber);
         $somaTiposContas = $this->somaTiposContas($contas);

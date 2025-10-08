@@ -232,7 +232,7 @@ class MDFeService{
 			$veicReboque->placa = strtoupper($placa);
 			$veicReboque->tara = $mdfe->veiculoReboque->tara;
 			$veicReboque->capKG = $mdfe->veiculoReboque->capacidade;
-			$veicReboque->tpCar = $mdfe->veiculoReboque->tipo_carroceira;
+			$veicReboque->tpCar = $mdfe->veiculoReboque->tipo_carroceria;
 			$veicReboque->UF = $mdfe->veiculoReboque->uf;
 
 			$prop = new \stdClass();
@@ -265,7 +265,7 @@ class MDFeService{
 			$veicReboque->placa = strtoupper($placa);
 			$veicReboque->tara = $mdfe->veiculoReboque2->tara;
 			$veicReboque->capKG = $mdfe->veiculoReboque2->capacidade;
-			$veicReboque->tpCar = $mdfe->veiculoReboque2->tipo_carroceira;
+			$veicReboque->tpCar = $mdfe->veiculoReboque2->tipo_carroceria;
 			$veicReboque->UF = $mdfe->veiculoReboque2->uf;
 
 			$prop = new \stdClass();
@@ -298,7 +298,7 @@ class MDFeService{
 			$veicReboque->placa = strtoupper($placa);
 			$veicReboque->tara = $mdfe->veiculoReboque3->tara;
 			$veicReboque->capKG = $mdfe->veiculoReboque3->capacidade;
-			$veicReboque->tpCar = $mdfe->veiculoReboque3->tipo_carroceira;
+			$veicReboque->tpCar = $mdfe->veiculoReboque3->tipo_carroceria;
 			$veicReboque->UF = $mdfe->veiculoReboque3->uf;
 
 			$prop = new \stdClass();

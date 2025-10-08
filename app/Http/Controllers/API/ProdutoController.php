@@ -43,18 +43,17 @@ class ProdutoController extends Controller
         $data = Produto::orderBy('nome', 'desc')
             ->select('produtos.*')
             ->where('empresa_id', $request->empresa_id)
-            ->when(!is_numeric($request->pesquisa), function ($q) use ($request) {
-                return $q->where(function ($query) use ($request) {
-                    $query->where('nome', 'LIKE', "%{$request->pesquisa}%")
+            ->where(function ($q) use ($request) {
+                if (!is_numeric($request->pesquisa)) {
+                    $q->where('nome', 'LIKE', "%{$request->pesquisa}%")
                         ->orWhere('codigo_barras', 'LIKE', "%{$request->pesquisa}%")
                         ->orWhere('placa', 'LIKE', "%{$request->pesquisa}%");
-                });
-            })
-            ->when(is_numeric($request->pesquisa), function ($q) use ($request) {
-                return $q->where('codigo_barras', 'LIKE', "%{$request->pesquisa}%")
-                    ->orWhere('codigo_barras2', 'LIKE', "%{$request->pesquisa}%")
-                    ->orWhere('codigo_barras3', 'LIKE', "%{$request->pesquisa}%")
-                    ->orwhere('produtos.referencia','LIKE',"%{$request->pesquisa}%");
+                } else {
+                    $q->where('codigo_barras', 'LIKE', "%{$request->pesquisa}%")
+                        ->orWhere('codigo_barras2', 'LIKE', "%{$request->pesquisa}%")
+                        ->orWhere('codigo_barras3', 'LIKE', "%{$request->pesquisa}%")
+                        ->orWhere('produtos.referencia', 'LIKE', "%{$request->pesquisa}%");
+                }
             })
             ->when($local_id != null, function ($query) use ($local_id) {
                 return $query->join('produto_localizacaos', 'produto_localizacaos.produto_id', '=', 'produtos.id')
@@ -131,6 +130,14 @@ class ProdutoController extends Controller
             ->where('estoques.local_id', $request->local_saida_id)
             ->distinct('produtos.id')
             ->get();
+
+        return response()->json($data, 200);
+    }
+
+    public function pesquisaEstoque(Request $request)
+    {
+        $data = Estoque::where('produto_id', $request->produto_id)
+            ->first();
 
         return response()->json($data, 200);
     }
