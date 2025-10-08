@@ -202,12 +202,12 @@ class ExtratoController extends Controller
 
     public function movimentacao_bancaria(Request $request)
     {
-        $user = auth()->user();
-        $empresa = Empresa::find($user->empresa->empresa_id);
-        $extrato = Extrato::find($request->query('extrato'));
-        $movimentacao = ExtratoService::gerarDRE($extrato);
-        $saldoConciliado = $extrato->calcularSaldoConciliado();
-        $contasFinanceiras = $extrato->conciliacoes->map(function ($conciliacao) {
+        $user               = auth()->user();
+        $empresa            = Empresa::find($user->empresa->empresa_id);
+        $extrato            = Extrato::find($request->query('extrato'));
+        $movimentacao       = ExtratoService::gerarDRE($extrato);
+        $saldoConciliado    = $extrato->calcularSaldoConciliado();
+        $contasFinanceiras  = $extrato->conciliacoes->map(function ($conciliacao) {
             return $conciliacao->contaFinanceira;
         })->unique('id');
 
@@ -401,8 +401,8 @@ class ExtratoController extends Controller
     public function ignorar_transacao(Request $request)
     {
         $request->validate([
-            'extrato_id' => 'required|integer|exists:extratos,id',
-            'transacao_id' => 'required|integer|exists:transacoes,id',
+            'extrato_id'    => 'required|integer|exists:extratos,id',
+            'transacao_id'  => 'required|integer|exists:transacoes,id',
         ]);
 
         $et = ExtratoTransacao::where('extrato_id', $request->input('extrato_id'))
@@ -417,25 +417,28 @@ class ExtratoController extends Controller
 
     public function finalizar(Request $request)
     {
-        $user = auth()->user();
-        $empresaId = optional($user->empresa)->empresa_id ?? $user->empresa_id ?? null;
-        $centrosCustos = CentroCusto::where('empresa_id', $empresaId)->get();
-        $contasFinanceiras = ContaFinanceira::where('empresa_id', $empresaId)->get();
+        $user               = auth()->user();
+        $empresaId          = optional($user->empresa)->empresa_id ?? $user->empresa_id ?? null;
+        $centrosCustos      = CentroCusto::where('empresa_id', $empresaId)->get();
+        $contasFinanceiras  = ContaFinanceira::where('empresa_id', $empresaId)->get();
+        $extrato            = Extrato::find($request->get('extrato'));
 
         $categoriasPagar = CategoriaConta::where(function ($q) use ($empresaId) {
             $q->where('empresa_id', $empresaId)->orWhereNull('empresa_id');
         })
             ->whereIn('tipo', ['despesa', 'custo'])
             ->get();
+
         $categoriasReceber = CategoriaConta::where(function ($q) use ($empresaId) {
             $q->where('empresa_id', $empresaId)->orWhereNull('empresa_id');
         })
             ->where('tipo', 'receita')
             ->get();
-        $extrato = Extrato::find($request->get('extrato'));
+        
         $transacoes = $extrato->transacoes->filter(function ($transacao) {
             return $transacao->valor < $transacao->valorConciliado() || $transacao->valor > $transacao->valorConciliado();
         });
+
         $contasFinanceirasEnvolvidas = $extrato->conciliacoes->map(function ($conciliacao) {
             return $conciliacao->contaFinanceira;
         })->unique('id');
@@ -449,7 +452,6 @@ class ExtratoController extends Controller
             return view('extrato.finalizar', compact('extrato', 'transacoes', 'centrosCustos', 'categoriasPagar', 'categoriasReceber', 'contasFinanceiras', 'contasFinanceirasEnvolvidas'));
         } else {
             $extrato->finalizar();
-
             session()->flash("flash_success", "Conciliação realizada com sucesso.");
             return redirect()->to(url()->previous());
         }
@@ -458,10 +460,10 @@ class ExtratoController extends Controller
     public function excedente(Request $request)
     {
         $request->validate([
-            'extrato_id' => 'required|integer|exists:extratos,id',
-            'empresa_id' => 'required|integer|exists:empresas,id',
-            'transacoes' => 'nullable|array',
-            'contas_divergentes' => 'nullable|array',
+            'extrato_id'            => 'required|integer|exists:extratos,id',
+            'empresa_id'            => 'required|integer|exists:empresas,id',
+            'transacoes'            => 'nullable|array',
+            'contas_divergentes'    => 'nullable|array',
         ]);
 
         if (!empty($request->input('contas_divergentes'))) {
@@ -480,12 +482,12 @@ class ExtratoController extends Controller
 
                 // Valida campos obrigatórios SOMENTE se "incluir" for true
                 $validator = Validator::make($form, [
-                    'id' => 'required|integer|exists:transacoes,id',
-                    'categoria_id' => 'required|integer|exists:categoria_contas,id',
-                    'conta_financeira_id' => 'nullable|integer|exists:contas_financeiras,id',
-                    'centro_custo_id' => 'nullable|integer|exists:centro_custos,id',
-                    'descricao' => 'nullable|string|max:255',
-                    'data_receber' => $form['tipo'] === 'receber' ? 'required|date' : 'nullable',
+                    'id'                    => 'required|integer|exists:transacoes,id',
+                    'categoria_id'          => 'required|integer|exists:categoria_contas,id',
+                    'conta_financeira_id'   => 'nullable|integer|exists:contas_financeiras,id',
+                    'centro_custo_id'       => 'nullable|integer|exists:centro_custos,id',
+                    'descricao'             => 'nullable|string|max:255',
+                    'data_receber'          => $form['tipo'] === 'receber' ? 'required|date' : 'nullable',
                 ]);
 
                 if ($validator->fails()) return redirect()->back()->withErrors($validator)->withInput();
