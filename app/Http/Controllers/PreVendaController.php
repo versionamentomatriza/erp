@@ -98,7 +98,7 @@ class PreVendaController extends Controller
         $config = Empresa::findOrFail(request()->empresa_id);
         
         if($config != null){
-            $config->tipos_pagamento_pdv = $config != null && $config->tipos_pagamento_pdv ? json_decode($config->gamento_pdv) : [];
+            $config->tipos_pagamento_pdv = $config != null && $config->tipos_pagamento_pdv ? json_decode($config->tipos_pagamento_pdv) : [];
             $temp = [];
             if(sizeof($config->tipos_pagamento_pdv) > 0){
                 foreach($tiposPagamento as $key => $t){
