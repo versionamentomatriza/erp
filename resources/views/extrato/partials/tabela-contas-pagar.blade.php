@@ -115,7 +115,7 @@
             <div class="modal fade" id="modalMovimentar-{{ $conta->id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
-                        <form id="formMovimentar-{{ $conta->id }}" method="POST" action="{{ route('extrato.movimentar') }}">
+                        <form id="formMovimentar-{{ $conta->id }}" method="POST" action="{{ route('extrato.transferir_conta') }}">
                             @csrf
                             <input type="hidden" name="id_extrato" value="{{ $extrato->id ?? null }}">
                             <input type="hidden" name="id_conta" value="{{ $conta->id }}">

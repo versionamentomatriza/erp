@@ -22,6 +22,15 @@
                                 Criar Conciliável
                             </a>
                         </li>
+                        <li>
+                            <!-- Abrir modal de Tranferência entre contas -->
+                            <a class="dropdown-item" href="javascript:void(0)" data-bs-toggle="modal"
+                                data-bs-target="#modalTransferirTransacao" data-id="{{ $transacao->id }}"
+                                data-tipo="{{ $transacao->tipo }}" data-valor="{{ $transacao->valor }}"
+                                data-descricao="{{ $transacao->descricao }}" data-data="{{ $transacao->data }}">
+                                Movimentar entre Contas
+                            </a>
+                        </li>
                         @unless ($transacao->conciliada())
                             <li>
                                 <!-- Ignorar transação -->
@@ -181,6 +190,61 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalTransferirTransacao" tabindex="-1" aria-labelledby="modalTransferirTransacaoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content border-0 rounded-2 shadow-sm">
+            <form id="formCriarConta" method="POST" action="{{ route('extrato.transferir_transacao') }}">
+                @csrf
+
+                <!-- Cabeçalho -->
+                <div id="modalCriarHeader" class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-semibold mb-0" id="modalCriarContaLabel">
+                        Movimentação entre contas
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <!-- Corpo -->
+                <div class="modal-body">
+                    <input type="hidden" name="transacao_id" id="transferenciaTransacaoId">
+
+                    <div class="row mb-2">
+                        <div class="col">
+                            <label for="contaOrigem" class="form-label">Conta Origem</label>
+                            <select name="conta_origem_id" id="contaOrigem" class="form-select" required>
+                                <option value="">Selecione</option>
+                                @foreach ($contasFinanceiras as $conta)
+                                    <option value="{{ $conta->id }}">{{ $conta->nome }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col">
+                            <label for="contaDestino" class="form-label">Conta Destino</label>
+                            <select name="conta_destino_id" id="contaDestino" class="form-select" required>
+                                <option value="">Selecione</option>
+                                @foreach ($contasFinanceiras as $conta)
+                                    <option value="{{ $conta->id }}">{{ $conta->nome }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rodapé -->
+                <div class="modal-footer d-flex justify-content-end">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -276,6 +340,13 @@
 
             filtrarCategorias(tipo);
             toggleFornecedorCliente(tipo);
+        });
+
+        $('#modalTransferirTransacao').on('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const id = button.getAttribute('data-id');
+
+            $('#transferenciaTransacaoId').val(id);
         });
 
     });

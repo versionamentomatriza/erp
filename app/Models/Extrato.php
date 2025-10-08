@@ -74,4 +74,27 @@ class Extrato extends Model
 
         return $saldos; // array: [conta_empresa_id => saldo_conciliado]
     }
+
+    public function contasFinanceirasEnvolvidas()
+    {
+        // 1. Contas ligadas diretamente via conciliação
+        $contas = $this->conciliacoes
+            ->map(fn($conciliacao) => $conciliacao->contaFinanceira)
+            ->filter()
+            ->unique('id');
+
+        // 2. Contas envolvidas em transferências das transações movimentadas
+        $this->transacoes
+            ->filter(fn($t) => $t->movimentada())
+            ->each(function ($transacao) use (&$contas) {
+                $transferencia = $transacao->transferencia;
+                if ($transferencia) {
+                    $contas->push($transferencia->contaOrigem);
+                    $contas->push($transferencia->contaDestino);
+                }
+            });
+
+        // 3. Retorna a coleção final, sem nulos e sem duplicatas
+        return $contas->filter()->unique('id')->values();
+    }
 }

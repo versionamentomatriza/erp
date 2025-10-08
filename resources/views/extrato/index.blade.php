@@ -39,7 +39,7 @@
                             @endif
                         </div>
 
-                        @if ($extrato)
+                        @if ($extrato && !$contasFinanceirasEnvolvidas->isEmpty())
                             <div class="mb-4">
                                 <h6 class="mb-3"><i class="bi bi-list-ul"></i> Contas financeiras envolvidas nesta conciliação</h6>
 

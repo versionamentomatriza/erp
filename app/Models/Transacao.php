@@ -37,8 +37,13 @@ class Transacao extends Model
         return $this->conciliacoes->sum('valor_conciliado');
     }
 
+    public function movimentada()
+    {
+        return $this->transferencia()->exists();
+    }
+
     public function conciliada()
     {
-        return $this->conciliacoes->count() > 0;
+        return $this->conciliacoes->count() > 0 || $this->movimentada();
     }
 }

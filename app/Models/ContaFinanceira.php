@@ -35,26 +35,31 @@ class ContaFinanceira extends Model
      */
     public function calcularSaldoAtual($extratoId = null)
     {
-        // Define os tipos de conciliáveis usando o morph map
-        $tipos = [
-            'conta_pagar'   => \App\Models\ContaPagar::class,
-            'conta_receber' => \App\Models\ContaReceber::class,
-        ];
+        $saldo          = $this->saldo_inicial;
+        $conciliacoes   = $this->conciliacoes();
+        $extrato        = Extrato::find($extratoId);
 
-        $queryPagar = $this->conciliacoes()->where('conciliavel_tipo', $tipos['conta_pagar']);
-        $queryReceber = $this->conciliacoes()->where('conciliavel_tipo', $tipos['conta_receber']);
+        if ($extrato) $conciliacoes->where('extrato_id', '<=', $extrato->id);
 
-        // Se foi passado um extratoId, filtra até ele
-        if ($extratoId) {
-            $queryPagar->where('extrato_id', '<=', $extratoId);
-            $queryReceber->where('extrato_id', '<=', $extratoId);
-        }
+        // Soma entradas e saídas
+        $saldo += $conciliacoes->where('conciliavel_tipo', \App\Models\ContaReceber::class)->sum('valor_conciliado');
+        $saldo -= $conciliacoes->where('conciliavel_tipo', \App\Models\ContaPagar::class)->sum('valor_conciliado');
 
-        $totalPagar = $queryPagar->sum('valor_conciliado');
-        $totalReceber = $queryReceber->sum('valor_conciliado');
+        // Transferências de saída
+        $saldo -= $this->transferenciasOrigem()
+            ->join('transacoes', 'transferencias_contas.transacao_id', '=', 'transacoes.id')
+            ->when($extrato, fn($q) => $q->whereDate('transacoes.data', '<=', $extrato->fim))
+            ->sum('transacoes.valor');
 
-        return $this->saldo_inicial + $totalReceber - $totalPagar;
+        // Transferências de entrada
+        $saldo += $this->transferenciasDestino()
+            ->join('transacoes', 'transferencias_contas.transacao_id', '=', 'transacoes.id')
+            ->when($extrato, fn($q) => $q->whereDate('transacoes.data', '<=', $extrato->fim))
+            ->sum('transacoes.valor');
+
+        return $saldo;
     }
+
 
     public function transferenciasOrigem()
     {

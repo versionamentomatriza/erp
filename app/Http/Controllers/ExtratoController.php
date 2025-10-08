@@ -14,6 +14,7 @@ use App\Models\Extrato;
 use App\Models\ExtratoTransacao;
 use App\Models\Fornecedor;
 use App\Models\Transacao;
+use App\Models\TransferenciaConta;
 use App\Services\ExtratoService;
 use App\Services\OfxService;
 use Illuminate\Http\Request;
@@ -162,9 +163,7 @@ class ExtratoController extends Controller
                     $contasReceber = $contasReceberPesquisa->merge($contasReceber)->unique('id');
                 }
 
-                $contasFinanceirasEnvolvidas = $extrato->conciliacoes->map(function ($conciliacao) {
-                    return $conciliacao->contaFinanceira;
-                })->unique('id');
+                $contasFinanceirasEnvolvidas = $extrato->contasFinanceirasEnvolvidas();
 
                 return view('extrato.index', [
                     'fornecedores'                  => $fornecedores,
@@ -393,6 +392,28 @@ class ExtratoController extends Controller
         $concliliacao->update([
             'conta_financeira_id' => $request->input('id_conta_financeira'),
         ]);
+
+        session()->flash("flash_success", "Movimentação realizada com sucesso!");
+        return redirect()->to(url()->previous());
+    }
+
+    public function transferir_transacao(Request $request)
+    {
+        $validated = $request->validate([
+            'empresa_id'        => 'required|integer|exists:empresas,id',
+            'transacao_id'      => 'required|integer|exists:transacoes,id',
+            'conta_origem_id'   => 'required|integer|exists:contas_financeiras,id|different:conta_destino_id',
+            'conta_destino_id'  => 'required|integer|exists:contas_financeiras,id|different:conta_origem_id',
+        ], [
+            'empresa_id.required'           => 'A empresa é obrigatória.',
+            'transacao_id.required'         => 'A transação é obrigatória.',
+            'conta_origem_id.required'      => 'Selecione a conta de origem.',
+            'conta_destino_id.required'     => 'Selecione a conta de destino.',
+            'conta_origem_id.different'     => 'As contas de origem e destino devem ser diferentes.',
+            'conta_destino_id.different'    => 'As contas de origem e destino devem ser diferentes.',
+        ]);
+
+        TransferenciaConta::create($validated);
 
         session()->flash("flash_success", "Movimentação realizada com sucesso!");
         return redirect()->to(url()->previous());
