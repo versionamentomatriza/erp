@@ -23,16 +23,14 @@ class ExtratoController extends Controller
 {
     public function conciliar(Request $request)
     {
-        $user = auth()->user();
-        $empresaId = optional($user->empresa)->empresa_id ?? $user->empresa_id ?? null;
-
-        // Dados fixos do usuário
-        $fornecedores = Fornecedor::where('empresa_id', $empresaId)->get();
-        $clientes = Cliente::where('empresa_id', $empresaId)->get();
-        $extratos = Extrato::where('empresa_id', $empresaId)->get();
-        $centrosCustos = CentroCusto::where('empresa_id', $empresaId)->get();
-        $contasFinanceiras = ContaFinanceira::where('empresa_id', $empresaId)->get();
-        $categoriasContas = CategoriaConta::where('empresa_id', $empresaId)
+        $user               = auth()->user();
+        $empresaId          = optional($user->empresa)->empresa_id ?? $user->empresa_id ?? null;
+        $fornecedores       = Fornecedor::where('empresa_id', $empresaId)->get();
+        $clientes           = Cliente::where('empresa_id', $empresaId)->get();
+        $extratos           = Extrato::where('empresa_id', $empresaId)->get();
+        $centrosCustos      = CentroCusto::where('empresa_id', $empresaId)->get();
+        $contasFinanceiras  = ContaFinanceira::where('empresa_id', $empresaId)->get();
+        $categoriasContas   = CategoriaConta::where('empresa_id', $empresaId)
             ->orWhereNull('empresa_id')
             ->get();
 
@@ -41,14 +39,10 @@ class ExtratoController extends Controller
             if ($request->hasFile('arquivo_ofx')) {
                 $destino = storage_path('app/ofx_salvos');
 
-                if (!file_exists($destino)) {
-                    mkdir($destino, 0777, true);
-                }
+                if (!file_exists($destino)) mkdir($destino, 0777, true);
 
                 $arquivo = $request->file('arquivo_ofx');
-
-                $todasTransacoes = [];
-                $dadosExtrato = [];
+                $todasTransacoes = $dadosExtrato = [];
 
                 if ($arquivo && $arquivo->isValid()) {
                     $nome = uniqid() . '_' . $arquivo->getClientOriginalName();
@@ -100,9 +94,7 @@ class ExtratoController extends Controller
 
                 if ($extrato) {
                     // 🔹 Atualiza saldo final com o último saldo do OFX importado
-                    $extrato->update([
-                        'saldo_final' => $dadosExtrato['saldoFinal'] ?? $extrato->saldo_final,
-                    ]);
+                    $extrato->update(['saldo_final' => $dadosExtrato['saldoFinal'] ?? $extrato->saldo_final]);
                 } else {
                     $extrato = Extrato::create([
                         'banco'         => $dadosExtrato['transacoes'][0]['banco'] ?? null,

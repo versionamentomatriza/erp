@@ -55,4 +55,14 @@ class ContaFinanceira extends Model
 
         return $this->saldo_inicial + $totalReceber - $totalPagar;
     }
+
+    public function transferenciasOrigem()
+    {
+        return $this->hasMany(TransferenciaConta::class, 'conta_origem_id');
+    }
+
+    public function transferenciasDestino()
+    {
+        return $this->hasMany(TransferenciaConta::class, 'conta_destino_id');
+    }
 }
