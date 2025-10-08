@@ -1,0 +1,68 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
+
+class ContaFinanceira extends Model
+{
+    use HasFactory;
+
+    public $fillable = [
+        'empresa_id',
+        'nome',
+        'banco',
+        'agencia',
+        'conta',
+        'saldo_inicial',
+        'saldo_atual',
+    ];
+
+    protected $table = 'contas_financeiras';
+
+    public function conciliacoes()
+    {
+        return $this->hasMany(Conciliacao::class, 'conta_financeira_id');
+    }
+
+    /**
+     * Calcula o saldo atual da conta financeira até uma data limite.
+     *
+     * @param string|\DateTime $dataLimite
+     * @return float
+     */
+    public function calcularSaldoAtual($extratoId = null)
+    {
+        // Define os tipos de conciliáveis usando o morph map
+        $tipos = [
+            'conta_pagar'   => \App\Models\ContaPagar::class,
+            'conta_receber' => \App\Models\ContaReceber::class,
+        ];
+
+        $queryPagar = $this->conciliacoes()->where('conciliavel_tipo', $tipos['conta_pagar']);
+        $queryReceber = $this->conciliacoes()->where('conciliavel_tipo', $tipos['conta_receber']);
+
+        // Se foi passado um extratoId, filtra até ele
+        if ($extratoId) {
+            $queryPagar->where('extrato_id', '<=', $extratoId);
+            $queryReceber->where('extrato_id', '<=', $extratoId);
+        }
+
+        $totalPagar = $queryPagar->sum('valor_conciliado');
+        $totalReceber = $queryReceber->sum('valor_conciliado');
+
+        return $this->saldo_inicial + $totalReceber - $totalPagar;
+    }
+
+    public function transferenciasOrigem()
+    {
+        return $this->hasMany(TransferenciaConta::class, 'conta_origem_id');
+    }
+
+    public function transferenciasDestino()
+    {
+        return $this->hasMany(TransferenciaConta::class, 'conta_destino_id');
+    }
+}

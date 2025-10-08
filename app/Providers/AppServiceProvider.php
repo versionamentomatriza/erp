@@ -26,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrap();
 
+        require_once app_path('Helpers/ExtratoHelper.php');
+
         // Macro para adicionar dias úteis considerando feriados
         Carbon::macro('addDiasUteisComFeriados', function (int $dias): Carbon {
             $carbon = $this->copy();
