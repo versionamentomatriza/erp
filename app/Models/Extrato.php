@@ -87,8 +87,7 @@ class Extrato extends Model
         $this->transacoes
             ->filter(fn($t) => $t->movimentada())
             ->each(function ($transacao) use (&$contas) {
-                $transferencia = $transacao->transferencia;
-                if ($transferencia) {
+                foreach ($transacao->transferencias as $transferencia) {
                     $contas->push($transferencia->contaOrigem);
                     $contas->push($transferencia->contaDestino);
                 }

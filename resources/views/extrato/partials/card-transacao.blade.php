@@ -13,24 +13,38 @@
                         </button>
                     @endunless
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuTransacao{{ $transacao->id }}">
-                        <li>
-                            <!-- Abrir modal Criar Conciliável -->
-                            <a class="dropdown-item" href="javascript:void(0)" data-bs-toggle="modal"
-                                data-bs-target="#modalCriarConta" data-id="{{ $transacao->id }}"
-                                data-tipo="{{ $transacao->tipo }}" data-valor="{{ $transacao->valor }}"
-                                data-descricao="{{ $transacao->descricao }}" data-data="{{ $transacao->data }}">
-                                Criar Conciliável
-                            </a>
-                        </li>
-                        <li>
-                            <!-- Abrir modal de Tranferência entre contas -->
-                            <a class="dropdown-item" href="javascript:void(0)" data-bs-toggle="modal"
-                                data-bs-target="#modalTransferirTransacao" data-id="{{ $transacao->id }}"
-                                data-tipo="{{ $transacao->tipo }}" data-valor="{{ $transacao->valor }}"
-                                data-descricao="{{ $transacao->descricao }}" data-data="{{ $transacao->data }}">
-                                Movimentar entre Contas
-                            </a>
-                        </li>
+                        @unless ($transacao->movimentada())
+                            <li>
+                                <!-- Abrir modal Criar Conciliável -->
+                                <a class="dropdown-item" href="javascript:void(0)" data-bs-toggle="modal"
+                                    data-bs-target="#modalCriarConta" data-id="{{ $transacao->id }}"
+                                    data-tipo="{{ $transacao->tipo }}" data-valor="{{ $transacao->valor }}"
+                                    data-descricao="{{ $transacao->descricao }}" data-data="{{ $transacao->data }}">
+                                    Criar Conciliável
+                                </a>
+                            </li>
+                        @endunless
+                        @unless ($transacao->conciliada())
+                            <li>
+                                <!-- Abrir modal de Tranferência entre contas -->
+                                <a class="dropdown-item" href="javascript:void(0)" data-bs-toggle="modal"
+                                    data-bs-target="#modalTransferirTransacao" data-id="{{ $transacao->id }}"
+                                    data-tipo="{{ $transacao->tipo }}" data-valor="{{ $transacao->valor }}"
+                                    data-descricao="{{ $transacao->descricao }}" data-data="{{ $transacao->data }}">
+                                    Movimentar entre Contas
+                                </a>
+                            </li>
+                        @endunless
+                        @if ($transacao->movimentada())
+                            <li>
+                                <!-- Ignorar transação -->
+                                <a class="dropdown-item text-danger"
+                                    href="{{ route('extrato.desfazer_transferencia_transacao', ['transacao_id' => $transacao->id]) }}"
+                                    onclick="return confirm('Tem certeza que deseja desfazer esta movimentação?');">
+                                    Desfazer Movimentação
+                                </a>
+                            </li>
+                        @endif
                         @unless ($transacao->conciliada())
                             <li>
                                 <!-- Ignorar transação -->

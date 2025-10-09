@@ -27,9 +27,9 @@ class Transacao extends Model
         return $this->hasMany(Conciliacao::class, 'transacao_id');
     }
 
-    public function transferencia()
+    public function transferencias()
     {
-        return $this->hasOne(TransferenciaConta::class, 'transacao_id');
+        return $this->hasMany(TransferenciaConta::class, 'transacao_id');
     }
 
     public function valorConciliado()
@@ -39,7 +39,7 @@ class Transacao extends Model
 
     public function movimentada()
     {
-        return $this->transferencia()->exists();
+        return $this->transferencias()->exists();
     }
 
     public function conciliada()

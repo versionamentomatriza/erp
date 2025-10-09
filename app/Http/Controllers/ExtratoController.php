@@ -437,6 +437,25 @@ class ExtratoController extends Controller
         return redirect()->to(url()->previous());
     }
 
+    public function desfazer_transferencia_transacao(Request $request)
+    {
+        $request->validate(['transacao_id' => 'required|integer|exists:transacoes,id'], ['transacao_id.required' => 'A transação é obrigatória.']);
+
+        $transacao = Transacao::findOrFail($request->input('transacao_id'));
+        $ultimaTransferencia = $transacao->transferencias()->latest('created_at')->first();
+
+        if (!$ultimaTransferencia) return redirect()->back()->with('flash_warning', 'Nenhuma movimentação encontrada para esta transação.');
+
+        try {
+            $ultimaTransferencia->delete();
+            session()->flash('flash_success', 'Movimentação desfeita com sucesso.');
+        } catch (\Exception $e) {
+            session()->flash('flash_error', 'Erro ao desfazer movimentação: ' . $e->getMessage());
+        }
+
+        return redirect()->back();
+    }
+
     public function ignorar_transacao(Request $request)
     {
         $request->validate([
@@ -478,9 +497,7 @@ class ExtratoController extends Controller
             return $transacao->valor < $transacao->valorConciliado() || $transacao->valor > $transacao->valorConciliado();
         });
 
-        $contasFinanceirasEnvolvidas = $extrato->conciliacoes->map(function ($conciliacao) {
-            return $conciliacao->contaFinanceira;
-        })->unique('id');
+        $contasFinanceirasEnvolvidas = $extrato->contasFinanceirasEnvolvidas();
 
         // Verifica se há transações OU se algum saldo está divergente
         $temSaldoDivergente = $contasFinanceirasEnvolvidas->contains(function ($conta) use ($extrato) {
