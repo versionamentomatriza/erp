@@ -39,15 +39,15 @@
 
                     <div class="row m-3">
                         @isset($reserva)
-                        <div class="col-md-5">
-                            {!!Form::select('cliente_id', 'Cliente')->attrs(['class' => 'select2 cliente_id'])
+                                            <div class="col-md-5">
+                                                {!!Form::select('cliente_id', 'Cliente')->attrs(['class' => 'select2 cliente_id'])
                             ->options([$reserva->cliente_id => $reserva->cliente->razao_social])
-                            !!}
-                        </div>
+                                                                    !!}
+                                            </div>
                         @else
                         <div class="col-md-5">
                             {!!Form::select('cliente_id', 'Cliente')->attrs(['class' => 'select2 cliente_id'])
-                            ->options(isset($item) ? [$item->cliente_id ?? $item->id => $item->cliente->razao_social ?? $item->razao_social] : [])
+        ->options(isset($item) ? [$item->cliente_id ?? $item->id => $item->cliente->razao_social ?? $item->razao_social] : [])
                             !!}
                         </div>
                         @endif
@@ -55,75 +55,75 @@
                         <div class="row g-2">
                             <div class="col-md-3">
                                 {!!Form::text('razao_social', 'Razão social')->attrs(['class' => ''])->required()
-                                ->value(isset($item) ? $item->razao_social : '')
+    ->value(isset($item) ? $item->razao_social : '')
                                 !!}
                             </div>
 
                             <div class="col-md-2">
                                 {!!Form::text('documento', 'Documento')->attrs(['class' => 'cpf_cnpj'])->required()
-                                ->value(isset($item) ? $item->documento ?? $item->cpf_cnpj : '')
+    ->value(isset($item) ? $item->documento ?? $item->cpf_cnpj : '')
                                 !!}
                             </div>
 
                             <div class="col-md-2">
                                 {!!Form::text('ie', 'Ins. Estadual')->attrs(['class' => ''])
-                                ->value(isset($item) ? $item->ie : '')
+    ->value(isset($item) ? $item->ie : '')
                                 !!}
                             </div>
 
                             <div class="col-md-2">
                                 {!!Form::text('im', 'Ins. Municipal')->attrs(['class' => ''])
-                                ->value(isset($item) ? $item->im : '')
+    ->value(isset($item) ? $item->im : '')
                                 !!}
                             </div>
 
                             <div class="col-md-2">
                                 {!!Form::text('cep', 'CEP')->attrs(['class' => 'cep'])
-                                ->value(isset($item) ? $item->cep : '')->required()
+    ->value(isset($item) ? $item->cep : '')->required()
                                 !!}
                             </div>
 
                             <div class="col-md-4">
                                 {!!Form::text('rua', 'Rua')->attrs(['class' => ''])
-                                ->value(isset($item) ? $item->rua : '')->required()
+    ->value(isset($item) ? $item->rua : '')->required()
                                 !!}
                             </div>
 
                             <div class="col-md-2">
                                 {!!Form::text('numero', 'Número')->attrs(['class' => ''])
-                                ->value(isset($item) ? $item->numero : '')->required()
+    ->value(isset($item) ? $item->numero : '')->required()
                                 !!}
                             </div>
 
                             <div class="col-md-2">
                                 {!!Form::text('bairro', 'Bairro')->attrs(['class' => ''])
-                                ->value(isset($item) ? $item->bairro : '')->required()
+    ->value(isset($item) ? $item->bairro : '')->required()
                                 !!}
                             </div>
 
                             <div class="col-md-4">
                                 {!!Form::select('cidade_id', 'Cidade')
-                                ->attrs(['class' => 'select2'])->options(isset($item) ? [$item->cidade_id => $item->cidade->info] : [])
-                                ->required()
+    ->attrs(['class' => 'select2'])->options(isset($item) ? [$item->cidade_id => $item->cidade->info] : [])
+    ->required()
                                 !!}
                             </div>
 
                             <div class="col-md-3">
                                 {!!Form::text('complemento', 'Complemento')->attrs(['class' => ''])
-                                ->value(isset($item) ? $item->complemento : '')
+    ->value(isset($item) ? $item->complemento : '')
                                 !!}
                             </div>
 
                             <div class="col-md-3">
                                 {!!Form::text('email', 'Email')->attrs(['class' => ''])
-                                ->value(isset($item) ? $item->email : '')
-                                ->type('email')
+    ->value(isset($item) ? $item->email : '')
+    ->type('email')
                                 !!}
                             </div>
 
                             <div class="col-md-2">
                                 {!!Form::tel('telefone', 'Telefone')->attrs(['class' => 'fone'])
-                                ->value(isset($item) ? $item->telefone : '')
+    ->value(isset($item) ? $item->telefone : '')
                                 !!}
                             </div>
                         </div>
@@ -135,11 +135,11 @@
                 <div class="card">
                     <div class="row m-3 g-2">
                         @isset($servicoPadrao)
-                        <div class="col-md-5">
-                            {!!Form::select('servico_id', 'Serviço')->attrs(['class' => 'select2 servico_id'])
+                                            <div class="col-md-5">
+                                                {!!Form::select('servico_id', 'Serviço')->attrs(['class' => 'select2 servico_id'])
                             ->options([$servicoPadrao->id => $servicoPadrao->nome])->required()
-                            !!}
-                        </div>
+                                                                    !!}
+                                            </div>
                         @else
                         <div class="col-md-5">
                             {!!Form::select('servico_id', 'Serviço')->attrs(['class' => 'select2 servico_id'])->options(isset($item) ? [$item->servico->servico_id => $item->servico->servico->nome] : [])->required()
@@ -148,14 +148,21 @@
                         @endif
 
                         <div class="col-md-3">
-                            {!!Form::text('natureza_operacao', 'Natureza de Operação')->attrs(['class' => ''])
-                            ->value(isset($item) ? $item->natureza_operacao : '')
-                            !!}
+                            {!! Form::select(
+    'natureza_operacao',
+    'Natureza de Operação',
+    ($naturezasOperacao && $naturezasOperacao->count() > 0)
+    ? ['' => 'Selecione'] + $naturezasOperacao->pluck('descricao', 'descricao')->toArray()
+    : ['' => '']
+)
+    ->attrs(['class' => 'form-select'])
+    ->value($item?->natureza_operacao ?? '')
+    !!}
                         </div>
 
                         <div class="col-md-2">
                             {!!Form::select('gerar_conta_receber', 'Gerar conta a receber', [0 => 'Não', 1 => 'Sim'])
-                            ->attrs(['class' => 'form-select'])
+    ->attrs(['class' => 'form-select'])
                             !!}
                         </div>
 
@@ -165,148 +172,148 @@
                         </div>
 
                         @isset($descricaoServico)
-                        <div class="col-md-12">
-                            {!!Form::text('discriminacao', 'Discriminação')->attrs(['class' => ''])
+                                            <div class="col-md-12">
+                                                {!!Form::text('discriminacao', 'Discriminação')->attrs(['class' => ''])
                             ->value($descricaoServico)->required()
-                            !!}
-                        </div>
+                                                                    !!}
+                                            </div>
                         @else
                         <div class="col-md-12">
                             {!!Form::text('discriminacao', 'Discriminação')->attrs(['class' => ''])
-                            ->value(isset($item) ? $item->servico->discriminacao : '')->required()
+        ->value(isset($item) ? $item->servico->discriminacao : '')->required()
                             !!}
                         </div>
                         @endif
 
                         @isset($total)
-                        <div class="col-md-2">
-                            {!!Form::tel('valor_servico', 'Valor do serviço')->attrs(['class' => 'moeda'])
+                                            <div class="col-md-2">
+                                                {!!Form::tel('valor_servico', 'Valor do serviço')->attrs(['class' => 'moeda'])
                             ->value(__moeda($total))->required()
-                            !!}
-                        </div>
+                                                                    !!}
+                                            </div>
                         @else
                         <div class="col-md-2">
                             {!!Form::tel('valor_servico', 'Valor do serviço')->attrs(['class' => 'moeda'])
-                            ->value(isset($item) ? __moedaInput($item->servico->valor_servico) : '')->required()
+        ->value(isset($item) ? __moedaInput($item->servico->valor_servico) : '')->required()
                             !!}
                         </div>
                         @endif
 
                         <div class="col-md-2">
                             {!!Form::text('codigo_cnae', 'Cód. CNAE')->attrs(['class' => ''])
-                            ->value(isset($item) && isset($item->servico->codigo_cnae) ? $item->servico->codigo_cnae : '')
+    ->value(isset($item) && isset($item->servico->codigo_cnae) ? $item->servico->codigo_cnae : '')
                             !!}
                         </div>
 
                         @isset($servicoPadrao)
-                        <div class="col-md-2">
-                            {!!Form::text('codigo_servico', 'Código do serviço')->attrs(['class' => ''])
+                                            <div class="col-md-2">
+                                                {!!Form::text('codigo_servico', 'Código do serviço')->attrs(['class' => ''])
                             ->value($servicoPadrao->codigo_servico)
-                            !!}
-                        </div>
+                                                                    !!}
+                                            </div>
                         @else
                         <div class="col-md-2">
                             {!!Form::text('codigo_servico', 'Código do serviço')->attrs(['class' => ''])
-                            ->value(isset($item) ? $item->servico->codigo_servico : '')
+        ->value(isset($item) ? $item->servico->codigo_servico : '')
                             !!}
                         </div>
                         @endif
 
                         <div class="col-md-3">
                             {!!Form::text('codigo_tributacao_municipio', 'Cód. de tributação do município')->attrs(['class' => ''])
-                            ->value(isset($item) && isset($item->servico->codigo_tributacao_municipio) ? $item->servico->codigo_tributacao_municipio : '')
+    ->value(isset($item) && isset($item->servico->codigo_tributacao_municipio) ? $item->servico->codigo_tributacao_municipio : '')
                             !!}
                         </div>
                         <div class="col-md-3">
                             {!!Form::text('regime_tributacao', 'Regime de tributação')->attrs(['class' => ''])
-                            ->value(isset($item) && isset($item->servico->regime_tributacao) ? $item->servico->regime_tributacao : '') 
+    ->value(isset($item) && isset($item->servico->regime_tributacao) ? $item->servico->regime_tributacao : '') 
                             !!}
                         </div>
                         <div class="col-md-2">
                             {!!Form::select('exigibilidade_iss', 'Exigibilidade ISS', \App\Models\NotaServico::exigibilidades())->attrs(['class' => 'form-select'])
-                            ->value(isset($item) && isset($item->servico->exigibilidade_iss) ? $item->servico->exigibilidade_iss : '')->required()
+    ->value(isset($item) && isset($item->servico->exigibilidade_iss) ? $item->servico->exigibilidade_iss : '')->required()
                             !!}
                         </div>
 
                         <div class="col-md-2">
                             {!!Form::select('iss_retido', 'ISS retido', [2 => 'Não', 1 => 'Sim'])->attrs(['class' => 'form-select'])
-                            ->value(isset($item) && isset($item->servico->iss_retido) ? $item->servico->iss_retido : '')->required()
+    ->value(isset($item) && isset($item->servico->iss_retido) ? $item->servico->iss_retido : '')->required()
                             !!}
                         </div>
 
                         <div class="col-md-2">
                             {!!Form::select('responsavel_retencao_iss', 'Resp. pela retenção', [1 => 'Tomador', 2 => 'Sim'])->attrs(['class' => 'form-select'])
-                            ->value(isset($item) && isset($item->servico->responsavel_retencao_iss) ? $item->servico->responsavel_retencao_iss : '')->required()
+    ->value(isset($item) && isset($item->servico->responsavel_retencao_iss) ? $item->servico->responsavel_retencao_iss : '')->required()
                             !!}
                         </div>
 
                         <div class="col-md-2">
                             {!!Form::date('data_competencia', 'Data da competência')->attrs(['class' => ''])
-                            ->value(isset($item) && isset($item->servico->data_competencia) ? $item->servico->data_competencia : '')
+    ->value(isset($item) && isset($item->servico->data_competencia) ? $item->servico->data_competencia : '')
                             !!}
                         </div>
 
                         <div class="col-md-2">
                             {!!Form::select('estado_local_prestacao_servico', 'UF do local de prestação', \App\Models\Cidade::estados())->attrs(['class' => 'form-select'])
-                            ->value(isset($item) && isset($item->servico->estado_local_prestacao_servico) ? $item->servico->estado_local_prestacao_servico : '')
+    ->value(isset($item) && isset($item->servico->estado_local_prestacao_servico) ? $item->servico->estado_local_prestacao_servico : '')
                             !!}
                         </div>
 
                         <div class="col-md-3">
                             {!!Form::text('cidade_local_prestacao_servico', 'Cidade do local de prestação')->attrs(['class' => ''])
-                            ->value(isset($item) && isset($item->servico->cidade_local_prestacao_servico) ? $item->servico->cidade_local_prestacao_servico : '')
+    ->value(isset($item) && isset($item->servico->cidade_local_prestacao_servico) ? $item->servico->cidade_local_prestacao_servico : '')
                             !!}
                         </div>
 
                         <hr>
                         <div class="col-md-2">
                             {!!Form::text('valor_deducoes', 'Valor deduções')->attrs(['class' => 'moeda'])
-                            ->value(isset($item) && isset($item->servico->valor_deducoes) ? $item->servico->valor_deducoes : '')
+    ->value(isset($item) && isset($item->servico->valor_deducoes) ? $item->servico->valor_deducoes : '')
                             !!}
                         </div>
                         <div class="col-md-2">
                             {!!Form::text('desconto_incondicional', 'Desconto incondicional')->attrs(['class' => 'moeda'])
-                            ->value(isset($item) && isset($item->servico->desconto_incondicional) ? $item->servico->desconto_incondicional : '')
+    ->value(isset($item) && isset($item->servico->desconto_incondicional) ? $item->servico->desconto_incondicional : '')
                             !!}
                         </div>
                         <div class="col-md-2">
                             {!!Form::text('desconto_condicional', 'Desconto condicional')->attrs(['class' => 'moeda'])
-                            ->value(isset($item) && isset($item->servico->desconto_condicional) ? $item->servico->desconto_condicional : '')
+    ->value(isset($item) && isset($item->servico->desconto_condicional) ? $item->servico->desconto_condicional : '')
                             !!}
                         </div>
                         <div class="col-md-2">
                             {!!Form::text('outras_retencoes', 'Outras retencoes')->attrs(['class' => 'moeda'])
-                            ->value(isset($item) && isset($item->servico->outras_retencoes) ? $item->servico->outras_retencoes : '')
+    ->value(isset($item) && isset($item->servico->outras_retencoes) ? $item->servico->outras_retencoes : '')
                             !!}
                         </div>
                         <div class="col-md-2">
                             {!!Form::text('aliquota_iss', 'Aliquota ISS')->attrs(['class' => 'percentual'])
-                            ->value(isset($item) && isset($item->servico->aliquota_iss) ? $item->servico->aliquota_iss : '')
+    ->value(isset($item) && isset($item->servico->aliquota_iss) ? $item->servico->aliquota_iss : '')
                             !!}
                         </div>
                         <div class="col-md-2">
                             {!!Form::text('aliquota_pis', 'Aliquota PIS')->attrs(['class' => 'percentual'])
-                            ->value(isset($item) && isset($item->servico->aliquota_pis) ? $item->servico->aliquota_pis : '')
+    ->value(isset($item) && isset($item->servico->aliquota_pis) ? $item->servico->aliquota_pis : '')
                             !!}
                         </div>
                         <div class="col-md-2">
                             {!!Form::text('aliquota_cofins', 'Aliquota COFINS')->attrs(['class' => 'percentual'])
-                            ->value(isset($item) && isset($item->servico->aliquota_cofins) ? $item->servico->aliquota_cofins : '')
+    ->value(isset($item) && isset($item->servico->aliquota_cofins) ? $item->servico->aliquota_cofins : '')
                             !!}
                         </div>
                         <div class="col-md-2">
                             {!!Form::text('aliquota_inss', 'Aliquota INSS')->attrs(['class' => 'percentual'])
-                            ->value(isset($item) && isset($item->servico->aliquota_inss) ? $item->servico->aliquota_inss : '')
+    ->value(isset($item) && isset($item->servico->aliquota_inss) ? $item->servico->aliquota_inss : '')
                             !!}
                         </div>
                         <div class="col-md-2">
                             {!!Form::text('aliquota_ir', 'Aliquota IR')->attrs(['class' => 'percentual'])
-                            ->value(isset($item) && isset($item->servico->aliquota_ir) ? $item->servico->aliquota_ir : '')
+    ->value(isset($item) && isset($item->servico->aliquota_ir) ? $item->servico->aliquota_ir : '')
                             !!}
                         </div>
                         <div class="col-md-2">
                             {!!Form::text('aliquota_csll', 'Aliquota CSLL')->attrs(['class' => 'percentual'])
-                            ->value(isset($item) && isset($item->servico->aliquota_csll) ? $item->servico->aliquota_csll : '')
+    ->value(isset($item) && isset($item->servico->aliquota_csll) ? $item->servico->aliquota_csll : '')
                             !!}
                         </div>
                     </div>
