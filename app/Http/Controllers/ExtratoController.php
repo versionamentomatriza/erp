@@ -206,9 +206,7 @@ class ExtratoController extends Controller
         $extrato            = Extrato::find($request->query('extrato'));
         $movimentacao       = ExtratoService::gerarDRE($extrato);
         $saldoConciliado    = $extrato->calcularSaldoConciliado();
-        $contasFinanceiras  = $extrato->conciliacoes->map(function ($conciliacao) {
-            return $conciliacao->contaFinanceira;
-        })->unique('id');
+        $contasFinanceiras  = $extrato->contasFinanceirasEnvolvidas();
 
         return view('extrato.movimentacao-bancaria', compact('empresa', 'extrato', 'movimentacao', 'saldoConciliado', 'contasFinanceiras'));
     }

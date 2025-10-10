@@ -29,47 +29,59 @@ class ExtratoService
         $rec = self::somarGrupo($contasReceber, 'valor_recebido', 'valor_integral');
         $pag = self::somarGrupo($contasPagar,   'valor_pago',     'valor_integral');
 
-        $get = fn($map, $k) => (float)($map[$k] ?? 0);
+        $get = fn($map, $k) => isset($map[$k]) ? (float)$map[$k] : 0.0;
 
-        // Blocos DRE
-        $receita_bruta       = $get($rec, 'receita_bruta');
-        $deducao_receita     = $get($pag, 'deducao_receita') + $get($rec, 'deducao_receita'); // pode estar em pagar (impostos sobre vendas)
+        // ==========================================================
+        // BLOCO DRE
+        // ==========================================================
+        $receita_bruta       = $get($rec, 'receita_bruta') + $get($rec, 'outras_receitas');
+        $deducao_receita     = $get($pag, 'deducao_receita') + $get($rec, 'deducao_receita');
         $custo               = $get($pag, 'custo');
         $despesa_venda       = $get($pag, 'despesa_venda');
         $despesa_adm         = $get($pag, 'despesa_adm');
         $receita_financeira  = $get($rec, 'receita_financeira');
         $despesa_financeira  = $get($pag, 'despesa_financeira');
+        $ir_csll             = $get($pag, 'imposto_lucro');
 
-        // Resultados
+        // ==========================================================
+        // RESULTADOS
+        // ==========================================================
         $receita_liquida         = $receita_bruta - $deducao_receita;
         $lucro_bruto             = $receita_liquida - $custo;
         $resultado_operacional   = $lucro_bruto - $despesa_venda - $despesa_adm;
         $resultado_financeiro    = $receita_financeira - $despesa_financeira;
         $resultado_antes_ir      = $resultado_operacional + $resultado_financeiro;
+        $lucro_liquido           = $resultado_antes_ir - $ir_csll;
 
-        $ir_csll = $get($pag, 'imposto_lucro');
+        // ==========================================================
+        // MARGENS (%)
+        // ==========================================================
+        $margem_bruta  = $receita_liquida != 0 ? ($lucro_bruto / $receita_liquida) * 100 : 0;
+        $margem_liquida = $receita_liquida != 0 ? ($lucro_liquido / $receita_liquida) * 100 : 0;
 
-        $lucro_liquido = $resultado_antes_ir - $ir_csll;
-
+        // ==========================================================
+        // RETORNO
+        // ==========================================================
         return [
-            'receita_bruta'         => $receita_bruta,
-            'deducao_receita'       => $deducao_receita,
-            'receita_liquida'       => $receita_liquida,
-            'custo'                 => $custo,
-            'lucro_bruto'           => $lucro_bruto,
-            'despesa_venda'         => $despesa_venda,
-            'despesa_adm'           => $despesa_adm,
-            'resultado_operacional' => $resultado_operacional,
-            'receita_financeira'    => $receita_financeira,
-            'despesa_financeira'    => $despesa_financeira,
-            'resultado_antes_ir'    => $resultado_antes_ir,
-            'ir_csll'               => $ir_csll,
-            'lucro_liquido'         => $lucro_liquido,
-            'contas_receber_por_grupo' => self::agruparContasPorGrupo($contasReceber),
-            'contas_pagar_por_grupo'   => self::agruparContasPorGrupo($contasPagar),
-            // úteis para detalhamento por grupo na tela:
-            'sum_receber_por_grupo' => $rec,
-            'sum_pagar_por_grupo'   => $pag,
+            'receita_bruta'             => $receita_bruta,
+            'deducao_receita'           => $deducao_receita,
+            'receita_liquida'           => $receita_liquida,
+            'custo'                     => $custo,
+            'lucro_bruto'               => $lucro_bruto,
+            'despesa_venda'             => $despesa_venda,
+            'despesa_adm'               => $despesa_adm,
+            'resultado_operacional'     => $resultado_operacional,
+            'receita_financeira'        => $receita_financeira,
+            'despesa_financeira'        => $despesa_financeira,
+            'resultado_antes_ir'        => $resultado_antes_ir,
+            'ir_csll'                   => $ir_csll,
+            'lucro_liquido'             => $lucro_liquido,
+            'margem_bruta'              => round($margem_bruta, 2),
+            'margem_liquida'            => round($margem_liquida, 2),
+            'contas_receber_por_grupo'  => self::agruparContasPorGrupo($contasReceber),
+            'contas_pagar_por_grupo'    => self::agruparContasPorGrupo($contasPagar),
+            'sum_receber_por_grupo'     => $rec,
+            'sum_pagar_por_grupo'       => $pag,
         ];
     }
 
@@ -89,17 +101,16 @@ class ExtratoService
                 'valor'     => abs($transacao['valor']),
             ];
 
-            // 🔹 firstOrCreate evita 2 queries por transação
             $t = Transacao::firstOrCreate($dados, $dados);
+
             ExtratoTransacao::firstOrCreate([
-                'extrato_id' => $extratoId,
+                'extrato_id'   => $extratoId,
                 'transacao_id' => $t->id,
             ]);
 
             $arr->push($t);
         }
 
-        // 🔹 Ordena por 'data' decrescente antes de retornar
         return $arr->sortByDesc('data')->values();
     }
 

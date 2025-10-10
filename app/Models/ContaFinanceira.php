@@ -35,15 +35,27 @@ class ContaFinanceira extends Model
      */
     public function calcularSaldoAtual($extratoId = null)
     {
-        $saldo          = $this->saldo_inicial;
-        $conciliacoes   = $this->conciliacoes();
-        $extrato        = Extrato::find($extratoId);
+        $saldo   = $this->saldo_inicial;
+        $extrato = Extrato::find($extratoId);
 
-        if ($extrato) $conciliacoes->where('extrato_id', '<=', $extrato->id);
+        // Base da query de conciliações
+        $conciliacoes = $this->conciliacoes();
 
-        // Soma entradas e saídas
-        $saldo += $conciliacoes->where('conciliavel_tipo', \App\Models\ContaReceber::class)->sum('valor_conciliado');
-        $saldo -= $conciliacoes->where('conciliavel_tipo', \App\Models\ContaPagar::class)->sum('valor_conciliado');
+        if ($extrato) {
+            $conciliacoes->where('extrato_id', '<=', $extrato->id);
+        }
+
+        // Faz duas queries independentes (sem acumular o where anterior)
+        $totalReceber = (clone $conciliacoes)
+            ->where('conciliavel_tipo', \App\Models\ContaReceber::class)
+            ->sum('valor_conciliado');
+
+        $totalPagar = (clone $conciliacoes)
+            ->where('conciliavel_tipo', \App\Models\ContaPagar::class)
+            ->sum('valor_conciliado');
+
+        $saldo += $totalReceber;
+        $saldo -= $totalPagar;
 
         // Transferências de saída
         $saldo -= $this->transferenciasOrigem()
@@ -59,7 +71,6 @@ class ContaFinanceira extends Model
 
         return $saldo;
     }
-
 
     public function transferenciasOrigem()
     {

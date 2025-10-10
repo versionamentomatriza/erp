@@ -132,6 +132,28 @@
                         @endforeach
 
                         <tr>
+                            <td class="fw-semibold">(+ Outras Receitas)</td>
+                            <td class="text-end fw-semibold">
+                                R$ {{ number_format($movimentacao['sum_receber_por_grupo']['outras_receitas'] ?? 0, 2, ',', '.') }}
+                            </td>
+                            <td class="text-end fw-semibold">
+                                {{ $movimentacao['receita_liquida'] > 0 
+                                    ? number_format((($movimentacao['sum_receber_por_grupo']['outras_receitas'] ?? 0) / $movimentacao['receita_liquida']) * 100, 2, ',', '.') 
+                                    : '0,00' }}%
+                            </td>
+                        </tr>
+
+                        @foreach(($movimentacao['contas_receber_por_grupo']['outras_receitas'] ?? []) as $conta)
+                            <tr>
+                                <td class="ps-4 text-muted">{{ $conta->descricao ?? $conta->nome }}</td>
+                                <td class="text-end">R$
+                                    {{ number_format($conta->valor_recebido ?? $conta->valor_integral, 2, ',', '.') }}
+                                </td>
+                                <td></td>
+                            </tr>
+                        @endforeach
+
+                        <tr>
                             <td class="text-muted fw-semibold">(-) Deduções</td>
                             <td class="text-end text-danger fw-semibold">R$
                                 {{ number_format($movimentacao['deducao_receita'], 2, ',', '.') }}</td>
