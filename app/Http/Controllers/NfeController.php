@@ -951,7 +951,6 @@ class NfeController extends Controller
             session()->flash("flash_success", "NFe alterada com sucesso!");
         } catch (\Exception $e) {
             echo $e->getMessage() . '<br>' . $e->getLine();
-            die;
             session()->flash("flash_error", 'Algo deu errado: ' . $e->getMessage());
         }
 
