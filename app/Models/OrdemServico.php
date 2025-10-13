@@ -43,4 +43,9 @@ class OrdemServico extends Model
 		return $this->hasMany(ImagemOs::class, 'ordem_servico_id');
 	}
 
+     // 🔗 Adiciona a relação com a nota de serviço
+    public function notaServico()
+    {
+        return $this->belongsTo(NotaServico::class, 'nfe_id');
+    }
 }

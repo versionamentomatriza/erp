@@ -78,18 +78,20 @@ public function create(Request $request)
         $os = OrdemServico::with('cliente', 'servicos')->find($request->os_id);
 
         if ($os) {
-            $descricaoServico = $os->descricao ?? 'Serviço referente à OS #' . $os->codigo_sequencial;
-            $total = $os->valor;
-            $servicoPadrao = Servico::find($os->servicos->first()->servico_id);
-            $cliente = $os->cliente;
-            $naturezasOperacao = NaturezaOperacao::where('empresa_id', '=', $os->empresa_id)->get();
+            $descricaoServico   = $os->descricao ?? 'Serviço referente à OS #' . $os->codigo_sequencial;
+            $total              = $os->valor;
+            $servicoPadrao      = Servico::find($os->servicos->first()->servico_id);
+            $cliente            = $os->cliente;
+            $nota               = $os->notaServico;
+            $item               = $nota->servico ?? $cliente;
+            $naturezasOperacao  = NaturezaOperacao::where('empresa_id', '=', $os->empresa_id)->get();
 
             // Aqui entra o aviso
             session()->flash("flash_success", "Dados da Ordem de Serviço #{$os->codigo_sequencial} importados com sucesso!");
         }
     }
 
-    return view('nota_servico.create', compact('os', 'descricaoServico', 'total', 'servicoPadrao', 'cliente', 'naturezasOperacao'));
+    return view('nota_servico.create', compact('os', 'descricaoServico', 'total', 'servicoPadrao', 'item', 'naturezasOperacao'));
 }
 
 

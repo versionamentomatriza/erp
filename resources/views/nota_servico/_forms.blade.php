@@ -1,6 +1,3 @@
-@php
-    $item = isset($item) ? $item : $cliente ?? null;
-@endphp
 
 <div class="row">
     <div class="col-md-12">
@@ -167,7 +164,7 @@
                         </div>
 
                         <div class="col-md-2 div-data_vencimento d-none">
-                            {!!Form::date('data_vencimento', 'Data de vencimento')->required()
+                            {!!Form::date('data_vencimento', 'Data de vencimento')->attrs(['class' => ''])->value($item?->data_vencimento ?? '')->required()
                             !!}
                         </div>
 
