@@ -205,10 +205,9 @@ class ExtratoController extends Controller
         $empresa            = Empresa::find($user->empresa->empresa_id);
         $extrato            = Extrato::find($request->query('extrato_id'));
         $movimentacao       = ExtratoService::gerarDRE($extrato);
-        $saldoConciliado    = $extrato->calcularSaldoConciliado();
         $contasFinanceiras  = $extrato->contasFinanceirasEnvolvidas();
 
-        return view('extrato.movimentacao-bancaria', compact('empresa', 'extrato', 'movimentacao', 'saldoConciliado', 'contasFinanceiras'));
+        return view('extrato.movimentacao-bancaria', compact('empresa', 'extrato', 'movimentacao', 'contasFinanceiras'));
     }
 
     public function vincular(Request $request)
