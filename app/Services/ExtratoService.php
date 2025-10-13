@@ -10,22 +10,34 @@ use Illuminate\Support\Collection;
 
 class ExtratoService
 {
-    public static function gerarDRE($extrato)
+    public static function gerarDRE($extratos)
     {
-        $extratoId = $extrato->id;
+        // Aceita um único extrato ou vários
+        $extratos = $extratos instanceof Collection
+            ? $extratos
+            : collect([$extratos]);
 
-        $contasReceber = ContaReceber::where('empresa_id', $extrato->empresa_id)
-            ->whereHas('conciliacoes.transacao.extratos', function ($q) use ($extratoId) {
-                $q->where('extratos.id', $extratoId);
+        $extratoIds = $extratos->pluck('id');
+        $empresaId  = $extratos->first()->empresa_id;
+
+        // ==========================================================
+        // BUSCA DE CONTAS RELACIONADAS
+        // ==========================================================
+        $contasReceber = ContaReceber::where('empresa_id', $empresaId)
+            ->whereHas('conciliacoes.transacao.extratos', function ($q) use ($extratoIds) {
+                $q->whereIn('extratos.id', $extratoIds);
             })
             ->get();
 
-        $contasPagar = ContaPagar::where('empresa_id', $extrato->empresa_id)
-            ->whereHas('conciliacoes.transacao.extratos', function ($q) use ($extratoId) {
-                $q->where('extratos.id', $extratoId);
+        $contasPagar = ContaPagar::where('empresa_id', $empresaId)
+            ->whereHas('conciliacoes.transacao.extratos', function ($q) use ($extratoIds) {
+                $q->whereIn('extratos.id', $extratoIds);
             })
             ->get();
 
+        // ==========================================================
+        // AGRUPAMENTO E SOMA
+        // ==========================================================
         $rec = self::somarGrupo($contasReceber, 'valor_recebido', 'valor_integral');
         $pag = self::somarGrupo($contasPagar,   'valor_pago',     'valor_integral');
 
@@ -56,7 +68,7 @@ class ExtratoService
         // ==========================================================
         // MARGENS (%)
         // ==========================================================
-        $margem_bruta  = $receita_liquida != 0 ? ($lucro_bruto / $receita_liquida) * 100 : 0;
+        $margem_bruta   = $receita_liquida != 0 ? ($lucro_bruto / $receita_liquida) * 100 : 0;
         $margem_liquida = $receita_liquida != 0 ? ($lucro_liquido / $receita_liquida) * 100 : 0;
 
         // ==========================================================

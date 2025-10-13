@@ -203,11 +203,15 @@ class ExtratoController extends Controller
     {
         $user               = auth()->user();
         $empresa            = Empresa::find($user->empresa->empresa_id);
-        $extrato            = Extrato::find($request->query('extrato_id'));
-        $movimentacao       = ExtratoService::gerarDRE($extrato);
-        $contasFinanceiras  = $extrato->contasFinanceirasEnvolvidas();
+        $extratoIds         = (array) $request->query('extrato_id');
+        $extratos           = Extrato::whereIn('id', $extratoIds)->get();
+        $movimentacao       = ExtratoService::gerarDRE($extratos);
+        $contasFinanceiras  = $extratos
+            ->flatMap(fn($e) => $e->contasFinanceirasEnvolvidas())
+            ->unique('id')
+            ->values();
 
-        return view('extrato.movimentacao-bancaria', compact('empresa', 'extrato', 'movimentacao', 'contasFinanceiras'));
+        return view('extrato.movimentacao-bancaria', compact('empresa', 'movimentacao', 'contasFinanceiras'));
     }
 
     public function vincular(Request $request)
