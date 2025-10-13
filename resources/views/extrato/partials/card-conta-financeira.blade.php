@@ -36,14 +36,14 @@
         </div>
 
         <div class="d-flex justify-content-between">
-            <span>Saldo Atual (BD):</span>
+            <span>Saldo Atual:</span>
             <span>R$ {{ number_format($conta->saldo_atual, 2, ',', '.') }}</span>
         </div>
 
         <div class="d-flex justify-content-between fw-semibold">
             <span>Saldo Calculado:</span>
             <span>
-                @if(abs($saldoCalculado - $conta->saldo_atual) !== 0)
+                @if(abs($saldoCalculado - $conta->saldo_atual) > 0.01)
                     <i class="bi bi-exclamation-triangle-fill text-warning ms-1"
                         title="Diferença detectada entre o saldo calculado e o saldo atual da conta."></i>
                 @endif

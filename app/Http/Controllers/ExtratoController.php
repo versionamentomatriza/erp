@@ -203,7 +203,7 @@ class ExtratoController extends Controller
     {
         $user               = auth()->user();
         $empresa            = Empresa::find($user->empresa->empresa_id);
-        $extrato            = Extrato::find($request->query('extrato'));
+        $extrato            = Extrato::find($request->query('extrato_id'));
         $movimentacao       = ExtratoService::gerarDRE($extrato);
         $saldoConciliado    = $extrato->calcularSaldoConciliado();
         $contasFinanceiras  = $extrato->contasFinanceirasEnvolvidas();
@@ -473,11 +473,12 @@ class ExtratoController extends Controller
 
     public function finalizar(Request $request)
     {
-        $user               = auth()->user();
-        $empresaId          = optional($user->empresa)->empresa_id ?? $user->empresa_id ?? null;
-        $centrosCustos      = CentroCusto::where('empresa_id', $empresaId)->get();
-        $contasFinanceiras  = ContaFinanceira::where('empresa_id', $empresaId)->get();
-        $extrato            = Extrato::find($request->get('extrato'));
+        $user                           = auth()->user();
+        $empresaId                      = optional($user->empresa)->empresa_id ?? $user->empresa_id ?? null;
+        $centrosCustos                  = CentroCusto::where('empresa_id', $empresaId)->get();
+        $contasFinanceiras              = ContaFinanceira::where('empresa_id', $empresaId)->get();
+        $extrato                        = Extrato::find($request->get('extrato'));
+        $contasFinanceirasEnvolvidas    = $extrato->contasFinanceirasEnvolvidas();
 
         $categoriasPagar = CategoriaConta::where(function ($q) use ($empresaId) {
             $q->where('empresa_id', $empresaId)->orWhereNull('empresa_id');
@@ -492,17 +493,16 @@ class ExtratoController extends Controller
             ->get();
 
         $transacoes = $extrato->transacoes->filter(function ($transacao) {
+            if ($transacao->movimentada()) return false;
             return $transacao->valor < $transacao->valorConciliado() || $transacao->valor > $transacao->valorConciliado();
         });
 
-        $contasFinanceirasEnvolvidas = $extrato->contasFinanceirasEnvolvidas();
+        foreach ($contasFinanceirasEnvolvidas as $conta) {
+            $conta->saldo_atual = $conta->calcularSaldoAtual();
+            $conta->save();
+        }
 
-        // Verifica se há transações OU se algum saldo está divergente
-        $temSaldoDivergente = $contasFinanceirasEnvolvidas->contains(function ($conta) use ($extrato) {
-            return $conta->saldo_atual != $conta->calcularSaldoAtual($extrato->id);
-        });
-
-        if ($transacoes->count() > 0 || $temSaldoDivergente) {
+        if ($transacoes->count() > 0) {
             return view('extrato.finalizar', compact('extrato', 'transacoes', 'centrosCustos', 'categoriasPagar', 'categoriasReceber', 'contasFinanceiras', 'contasFinanceirasEnvolvidas'));
         } else {
             $extrato->finalizar();

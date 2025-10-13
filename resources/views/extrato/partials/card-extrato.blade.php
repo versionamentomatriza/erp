@@ -17,7 +17,7 @@
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuExtrato{{ $extrato->id }}">
                         <li>
                             <a class="dropdown-item"
-                                href="{{ route('extrato.movimentacao_bancaria', ['extrato' => $extrato->id]) }}">
+                                href="{{ route('extrato.movimentacao_bancaria', ['extrato_id' => $extrato->id]) }}">
                                 Relatório de movimentação bancária
                             </a>
                         </li>

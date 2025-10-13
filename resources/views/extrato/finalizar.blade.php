@@ -13,6 +13,7 @@
                     <input type="hidden" name="empresa_id" value="{{ $extrato->empresa_id }}">
 
                     {{-- Atualizações de contas financeiras com saldo divergente --}}
+                    {{--
                     @foreach($contasFinanceirasEnvolvidas as $conta)
                         @php
                             $saldoCalculado = $conta->calcularSaldoAtual($extrato->id);
@@ -51,6 +52,7 @@
                             </div>
                         @endif
                     @endforeach
+                    --}}
 
                     @if($transacoes->isEmpty())
                         <div class="alert alert-success">
