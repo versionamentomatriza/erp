@@ -102,7 +102,7 @@
 
                 <!-- Conteúdo das abas de cada conta -->
                 @foreach ($contasFinanceiras as $index => $conta)
-                    <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="tab-{{ $index }}" role="tabpanel">
+                    <div class="tab-pane fade" id="tab-{{ $index }}" role="tabpanel">
                         <div class="card">
                             <div class="card-header bg-light fw-bold">
                                 {{ $conta->nome ?? 'Conta ' . ($index + 1) }}
