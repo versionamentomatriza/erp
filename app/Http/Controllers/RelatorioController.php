@@ -627,6 +627,7 @@ public function nfe(Request $request)
     {
         $empresaId      = $request->empresa_id;
         $centroCustoId  = $request->centro_custo_id;
+        $funcionarioId  = $request->funcionario_id;
         $estado         = $request->estado;
         $cidade         = $request->cidade_id;
         $start          = $request->filled('start_date') ? Carbon::parse($request->start_date)->startOfDay() : null;
@@ -644,6 +645,9 @@ public function nfe(Request $request)
             ->when(!$start && $end, function ($query) use ($end,) {
                 return $query->whereDate('created_at', '<=', $end);
             })
+            ->when($funcionarioId, function ($query) use ($funcionarioId) {
+                return $query->where('funcionario_id', $funcionarioId);
+            }) // Filtro de Funcionário
             ->when($centroCustoId, function ($query) use ($centroCustoId) {
                 return $query->where('centro_custo_id', $centroCustoId);
             }) // Filtro de Centro de Custo
