@@ -13,8 +13,8 @@ class OfxService
         $ofxContent = str_replace(["\r\n", "\r"], "\n", $ofxContent);
 
         // Extrai código/nome do banco
-        preg_match('/<BANKID>(.*?)\n/i', $ofxContent, $mBankId);
-        preg_match('/<FID>(.*?)\n/i', $ofxContent, $mFid);
+        preg_match('/<BANKID>([^\r\n<]+)/i', $ofxContent, $mBankId);   // linha alterada
+        preg_match('/<FID>([^\r\n<]+)/i', $ofxContent, $mFid);         // linha alterada
 
         $codigoBanco = $mBankId[1] ?? ($mFid[1] ?? null);
 
@@ -28,11 +28,11 @@ class OfxService
         $dataFim    = end($transactions)['data'] ?? null;
 
         // Saldo final (<LEDGERBAL>)
-        preg_match('/<LEDGERBAL>.*?<BALAMT>(.*?)\n/is', $ofxContent, $mSaldoFinal);
+        preg_match('/<LEDGERBAL>.*?<BALAMT>([^\r\n<]+)/is', $ofxContent, $mSaldoFinal);  // linha alterada
         $saldoFinal = isset($mSaldoFinal[1]) ? (float) str_replace(',', '.', $mSaldoFinal[1]) : null;
 
         // Saldo inicial (<AVAILBAL> ou calculado)
-        preg_match('/<AVAILBAL>.*?<BALAMT>(.*?)\n/is', $ofxContent, $mSaldoInicial);
+        preg_match('/<AVAILBAL>.*?<BALAMT>([^\r\n<]+)/is', $ofxContent, $mSaldoInicial); // linha alterada
         $saldoInicial = isset($mSaldoInicial[1]) ? (float) str_replace(',', '.', $mSaldoInicial[1]) : null;
 
         // Estratégia híbrida

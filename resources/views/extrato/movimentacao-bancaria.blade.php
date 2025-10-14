@@ -105,7 +105,10 @@
                     <div class="tab-pane fade" id="tab-{{ $index }}" role="tabpanel">
                         <div class="card">
                             <div class="card-header bg-light fw-bold">
-                                {{ $conta->nome ?? 'Conta ' . ($index + 1) }}
+                                <div class="d-flex justify-content-between">
+                                    {{ $conta->nome ?? 'Conta ' . ($index + 1) }}
+                                    <span>Saldo atual: R$ {{ number_format($conta->saldo_atual, 2, ',', '.') }}</span>
+                                </div>
                             </div>
                             <div class="card-body">
 

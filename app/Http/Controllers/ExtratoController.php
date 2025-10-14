@@ -95,7 +95,7 @@ class ExtratoController extends Controller
 
                 if ($extrato) {
                     // 🔹 Atualiza saldo final com o último saldo do OFX importado
-                    $extrato->update(['saldo_final' => $dadosExtrato['saldoFinal'] ?? $extrato->saldo_final]);
+                    $extrato->update(['status' => 'pendente', 'saldo_final' => $dadosExtrato['saldoFinal'] ?? $extrato->saldo_final]);
                 } else {
                     $extrato = Extrato::create([
                         'banco'         => $dadosExtrato['transacoes'][0]['banco'] ?? null,
@@ -194,7 +194,8 @@ class ExtratoController extends Controller
                 'transacoes'        => collect(),
             ]);
         } catch (\Throwable $e) {
-            dd($e->getMessage());
+            session()->flash("flash_error", "Ocorreu um erro ao processar sua solicitação: " . $e->getMessage());
+            return back();
         }
     }
 
