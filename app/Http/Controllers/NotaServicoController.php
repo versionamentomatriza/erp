@@ -8,9 +8,11 @@ use App\Models\NotaServico;
 use App\Models\ContaReceber;
 use App\Models\Reserva;
 use App\Models\ItemNotaServico;
+use App\Models\NaturezaOperacao;
 use Illuminate\Support\Facades\DB;
 use CloudDfe\SdkPHP\Nfse;
 use App\Models\OrdemServico;
+use App\Models\Servico;
 
 class NotaServicoController extends Controller
 {
@@ -70,23 +72,26 @@ public function create(Request $request)
     $total = null;
     $servicoPadrao = null;
     $cliente = null;
+    $naturezasOperacao = null;
 
     if ($request->has('os_id')) {
         $os = OrdemServico::with('cliente', 'servicos')->find($request->os_id);
 
         if ($os) {
-            $descricaoServico = $os->descricao ?? 'Serviço referente à OS #' . $os->codigo_sequencial;
-            $total = $os->valor;
-            //$servicoPadrao = $os->servicos->first();
-            $cliente = $os->cliente;
+            $descricaoServico   = $os->descricao ?? 'Serviço referente à OS #' . $os->codigo_sequencial;
+            $total              = $os->valor;
+            $servicoPadrao      = Servico::find($os->servicos->first()->servico_id);
+            $cliente            = $os->cliente;
+            $nota               = $os->notaServico;
+            $item               = $nota->servico ?? $cliente;
+            $naturezasOperacao  = NaturezaOperacao::where('empresa_id', '=', $os->empresa_id)->get();
 
             // Aqui entra o aviso
             session()->flash("flash_success", "Dados da Ordem de Serviço #{$os->codigo_sequencial} importados com sucesso!");
         }
-		//dd($os);
     }
 
-    return view('nota_servico.create', compact('os', 'descricaoServico', 'total', 'servicoPadrao', 'cliente'));
+    return view('nota_servico.create', compact('os', 'descricaoServico', 'total', 'servicoPadrao', 'item', 'naturezasOperacao'));
 }
 
 
