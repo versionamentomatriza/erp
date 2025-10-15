@@ -107,6 +107,14 @@ class ExtratoService
         $extratoIds = $extratos->pluck('id');
         $empresaId  = $extratos->first()->empresa_id;
 
+        $inicio = $extratos->min(fn($e) => strtotime($e->inicio));
+        $fim    = $extratos->max(fn($e) => strtotime($e->fim));
+
+        $periodo = [
+            'inicio' => $inicio ? date('d/m/Y', $inicio) : null,
+            'fim'    => $fim    ? date('d/m/Y', $fim) : null,
+        ];
+
         // ==========================================================
         // BUSCA DE CONTAS RELACIONADAS
         // ==========================================================
@@ -213,6 +221,7 @@ class ExtratoService
             'total_entradas' => $totalEntradas,
             'total_saidas' => $totalSaidas,
             'saldo_final' => $saldoFinal,
+            'periodo' => $periodo
         ];
     }
 

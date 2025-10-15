@@ -11,6 +11,7 @@
                     <h1 class="h3 mb-1">Fluxo de caixa</h1>
                     <div class="text-muted small">
                         <i class="bi bi-building"></i> {{ $empresa->nome_fantasia ?? $empresa->nome }} <br>
+                        <i class="bi bi-calendar"></i> {{ $movimentacao['periodo']['inicio'] }} - {{ $movimentacao['periodo']['fim'] }}
                     </div>
                 </div>
             </div>
@@ -19,15 +20,15 @@
             <div class="card shadow-none mb-4 p-3">
                 <div class="row text-center">
                     <div class="col">
-                        <h6 class="text-success mb-1">Entradas</h6>
+                        <h6 class="fw-bold mb-1">Entradas</h6>
                         <h4 class="fw-bold text-success">R$ {{ number_format($movimentacao['total_entradas'], 2, ',', '.') }}</h4>
                     </div>
                     <div class="col">
-                        <h6 class="text-danger mb-1">Saídas</h6>
+                        <h6 class="fw-bold mb-1">Saídas</h6>
                         <h4 class="fw-bold text-danger">R$ {{ number_format($movimentacao['total_saidas'], 2, ',', '.') }}</h4>
                     </div>
                     <div class="col">
-                        <h6 class="text-muted mb-1">Balanço do período</h6>
+                        <h6 class="fw-bold mb-1">Balanço do período</h6>
                         <h4 class="fw-bold {{ $movimentacao['saldo_final'] >= 0 ? 'text-success' : 'text-danger' }}">R$ {{ number_format($movimentacao['saldo_final'], 2, ',', '.') }}</h4>
                     </div>
                 </div>
