@@ -190,7 +190,7 @@
     @if(!isset($item))
         <div class="col-12">
             <p class="text-danger small mt-4">
-                * Campo abaixo deve ser preenchido se houver recorrência para este registro
+                * Campo abaixo deve ser preenchido se caso seja um pagamento recorrente (ex: assinatura, aluguel, etc).
             </p>
         </div>
 

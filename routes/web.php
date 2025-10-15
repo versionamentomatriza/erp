@@ -125,6 +125,8 @@ Route::middleware(['authh', 'validaEmpresa'])->group(function () {
     Route::post('/conciliacao/transferir_conta', [ExtratoController::class, 'transferir_conta'])->name('extrato.transferir_conta');
     Route::post('/conciliacao/transferir_transacao', [ExtratoController::class, 'transferir_transacao'])->name('extrato.transferir_transacao');
     Route::get('/conciliacao/desfazer_transferencia_transacao', [ExtratoController::class, 'desfazer_transferencia_transacao'])->name('extrato.desfazer_transferencia_transacao');
+    Route::get('/dre', [ExtratoController::class, 'dre'])->name('extrato.dre');
+    Route::post('/dre', [ExtratoController::class, 'dre'])->name('extrato.dre.post');
 
     Route::get('/empresaPorCnpj/{cnpj}', [EmpresaController::class, 'findByCnpj']);
         Route::get('/confirm-email/{token}', [\App\Http\Controllers\EmailConfirmationController::class, 'confirm'])

@@ -206,13 +206,25 @@ class ExtratoController extends Controller
         $empresa            = Empresa::find($user->empresa->empresa_id);
         $extratoIds         = (array) $request->query('extrato_id');
         $extratos           = Extrato::whereIn('id', $extratoIds)->get();
-        $movimentacao       = ExtratoService::gerarDRE($extratos);
+        $movimentacao       = ExtratoService::gerarFluxoCaixa($extratos);
         $contasFinanceiras  = $extratos
             ->flatMap(fn($e) => $e->contasFinanceirasEnvolvidas())
             ->unique('id')
             ->values();
 
         return view('extrato.movimentacao-bancaria', compact('empresa', 'movimentacao', 'contasFinanceiras'));
+    }
+
+    public function dre(Request $request)
+    {
+        $user       = auth()->user();
+        $empresa    = Empresa::find($user->empresa->empresa_id);
+        $inicio     = $request->input('inicio');
+        $fim        = $request->input('fim');
+        $extratos   = null; // Pegar extratos do período selecionado
+        $dre        = ExtratoService::gerarDRE($extratos);
+
+        return view('extrato.movimentacao-bancaria', compact('empresa', 'dre'));
     }
 
     public function vincular(Request $request)

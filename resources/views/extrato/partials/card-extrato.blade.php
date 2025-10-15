@@ -18,7 +18,7 @@
                         <li>
                             <a class="dropdown-item"
                                 href="{{ route('extrato.movimentacao_bancaria', ['extrato_id' => $extrato->id]) }}">
-                                Relatório de movimentação bancária
+                                Relatório de fluxo de caixa
                             </a>
                         </li>
                         <!-- Se quiser pode adicionar mais opções -->

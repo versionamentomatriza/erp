@@ -97,6 +97,125 @@ class ExtratoService
         ];
     }
 
+    public static function gerarFluxoCaixa($extratos)
+    {
+        // Aceita um único extrato ou vários
+        $extratos = $extratos instanceof Collection
+            ? $extratos
+            : collect([$extratos]);
+
+        $extratoIds = $extratos->pluck('id');
+        $empresaId  = $extratos->first()->empresa_id;
+
+        // ==========================================================
+        // BUSCA DE CONTAS RELACIONADAS
+        // ==========================================================
+        $contasReceber = ContaReceber::where('empresa_id', $empresaId)
+            ->whereHas('conciliacoes.transacao.extratos', function ($q) use ($extratoIds) {
+                $q->whereIn('extratos.id', $extratoIds);
+            })
+            ->get();
+
+        $contasPagar = ContaPagar::where('empresa_id', $empresaId)
+            ->whereHas('conciliacoes.transacao.extratos', function ($q) use ($extratoIds) {
+                $q->whereIn('extratos.id', $extratoIds);
+            })
+            ->get();
+
+        // ==========================================================
+        // DEFINIÇÃO DE CATEGORIAS
+        // ==========================================================
+        $categorias = [
+            'Receitas' => [
+                'tipo' => 'entrada',
+                'grupos' => ['receita_bruta', 'receita_financeira', 'outras_receitas'],
+                'contas' => $contasReceber->sortBy(fn($c) => $c->data_recebimento ?? now())
+            ],
+            'Custos' => [
+                'tipo' => 'saida',
+                'grupos' => ['custo'],
+                'contas' => $contasPagar->filter(
+                    fn($c) =>
+                    $c->categoriaConta?->grupo_dre === 'custo'
+                )->sortBy(fn($c) => $c->data_pagamento ?? now())
+            ],
+            'Despesas Operacionais' => [
+                'tipo' => 'saida',
+                'grupos' => ['despesa_venda', 'despesa_adm'],
+                'contas' => $contasPagar->filter(
+                    fn($c) =>
+                    in_array($c->categoriaConta?->grupo_dre, ['despesa_venda', 'despesa_adm'])
+                )->sortBy(fn($c) => $c->data_pagamento ?? now())
+            ],
+            'Despesas Financeiras' => [
+                'tipo' => 'saida',
+                'grupos' => ['despesa_financeira'],
+                'contas' => $contasPagar->filter(
+                    fn($c) =>
+                    $c->categoriaConta?->grupo_dre === 'despesa_financeira'
+                )->sortBy(fn($c) => $c->data_pagamento ?? now())
+            ],
+            'Impostos' => [
+                'tipo' => 'saida',
+                'grupos' => ['imposto_lucro', 'deducao_receita'],
+                'contas' => $contasPagar->filter(
+                    fn($c) =>
+                    in_array($c->categoriaConta?->grupo_dre, ['imposto_lucro', 'deducao_receita'])
+                )->sortBy(fn($c) => $c->data_pagamento ?? now())
+            ],
+            'Outras Despesas' => [
+                'tipo' => 'saida',
+                'grupos' => [],
+                'contas' => $contasPagar->filter(
+                    fn($c) =>
+                    !in_array($c->categoriaConta?->grupo_dre, [
+                        'receita_bruta',
+                        'outras_receitas',
+                        'receita_financeira',
+                        'deducao_receita',
+                        'custo',
+                        'despesa_venda',
+                        'despesa_adm',
+                        'despesa_financeira',
+                        'imposto_lucro'
+                    ])
+                )->sortBy(fn($c) => $c->data_pagamento ?? now())
+            ],
+        ];
+
+        // ==========================================================
+        // SOMA DOS VALORES
+        // ==========================================================
+        foreach ($categorias as $nome => &$cat) {
+            $cat['total'] = $cat['contas']->sum(function ($c) {
+                return $c instanceof ContaReceber
+                    ? $c->valor_recebido ?? $c->valor_integral
+                    : ($c->valor_pago ?? $c->valor_integral);
+            });
+        }
+        unset($cat);
+
+        $totalEntradas = collect($categorias)
+            ->where('tipo', 'entrada')
+            ->sum('total');
+
+        $totalSaidas = collect($categorias)
+            ->where('tipo', 'saida')
+            ->sum('total');
+
+        $saldoFinal = $totalEntradas - $totalSaidas;
+
+        // ==========================================================
+        // RETORNO
+        // ==========================================================
+        return [
+            'categorias' => $categorias,
+            'total_entradas' => $totalEntradas,
+            'total_saidas' => $totalSaidas,
+            'saldo_final' => $saldoFinal,
+        ];
+    }
+
     public static function criarTransacoes(array $transacoes, $extratoId): Collection
     {
         $arr = collect();
