@@ -221,10 +221,20 @@ class ExtratoController extends Controller
         $empresa    = Empresa::find($user->empresa->empresa_id);
         $inicio     = $request->input('inicio');
         $fim        = $request->input('fim');
-        $extratos   = null; // Pegar extratos do período selecionado
-        $dre        = ExtratoService::gerarDRE($extratos);
+        $extratos   = null;
+        $dre        = null;
 
-        return view('extrato.movimentacao-bancaria', compact('empresa', 'dre'));
+        if ($inicio && $fim) {
+            $inicio = now()->startOfMonth()->toDateString();
+            $fim    = now()->endOfMonth()->toDateString();
+            $extratos = Extrato::where('empresa_id', $empresa->id)
+                ->whereDate('inicio', '>=', $inicio)
+                ->whereDate('fim', '<=', $fim)
+                ->get();
+            $dre = ExtratoService::gerarDRE($extratos);
+        }
+
+        return view('extrato.dre', compact('empresa', 'dre'));
     }
 
     public function vincular(Request $request)
