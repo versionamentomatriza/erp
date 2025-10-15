@@ -73,6 +73,8 @@ public function create(Request $request)
     $servicoPadrao = null;
     $cliente = null;
     $naturezasOperacao = null;
+    $item = null;
+
 
     if ($request->has('os_id')) {
         $os = OrdemServico::with('cliente', 'servicos')->find($request->os_id);
