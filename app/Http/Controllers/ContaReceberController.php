@@ -13,6 +13,7 @@ use App\Models\ItemContaEmpresa;
 use App\Utils\UploadUtil;
 use Illuminate\Database\QueryException;
 use App\Models\CentroCusto;
+use Illuminate\Support\Facades\DB;
 
 
 class ContaReceberController extends Controller
@@ -98,39 +99,93 @@ class ContaReceberController extends Controller
     public function store(Request $request)
     {
         $this->__validate($request);
+
         try {
-            $file_name = '';
-            if ($request->hasFile('file')) $file_name = $this->uploadUtil->uploadFile($request->file, '/financeiro');
+            DB::transaction(function () use ($request) {
+                // Upload do arquivo (se houver)
+                $file_name = $request->hasFile('file')
+                    ? $this->uploadUtil->uploadFile($request->file, '/financeiro')
+                    : '';
 
-            $request->merge([
-                'categoria_conta_id' => $request->categoria_conta_id,
-                'valor_integral' => __convert_value_bd($request->valor_integral),
-                'valor_recebido' => $request->status ? __convert_value_bd($request->valor_recebido) : 0,
-                'arquivo' => $file_name
-            ]);
+                // Prepara dados base
+                $request->merge([
+                    'data_competencia'   => $request->data_competencia ?: $request->data_vencimento,
+                    'categoria_conta_id' => $request->categoria_conta_id,
+                    'valor_integral'     => __convert_value_bd($request->valor_integral),
+                    'valor_recebido'     => $request->status ? __convert_value_bd($request->valor_recebido) : 0,
+                    'arquivo'            => $file_name,
+                ]);
 
-            $conta = ContaReceber::create($request->all());
-            if ($request->dt_recorrencia) {
-                for ($i = 0; $i < sizeof($request->dt_recorrencia); $i++) {
-                    $data = $request->dt_recorrencia[$i];
-                    $valor = __convert_value_bd($request->valor_recorrencia[$i]);
-                    $data = [
-                        'descricao' => $request->descricao,
-                        'data_vencimento' => $data,
-                        'valor_integral' => $valor,
-                        'status' => 0,
-                        'empresa_id' => $request->empresa_id,
-                        'cliente_id' => $request->cliente_id,
-                        'centro_custo_id' => $request->centro_custo_id,
-                        'local_id' => $conta->local_id,
-                    ];
-                    ContaReceber::create($data);
+                // Cria conta principal
+                $conta = ContaReceber::create($request->all());
+
+                // ======================================
+                // RECORRÊNCIA
+                // ======================================
+                if (!empty($request->dt_recorrencia)) {
+                    foreach ($request->dt_recorrencia as $i => $data) {
+                        ContaReceber::create([
+                            'descricao'          => $request->descricao,
+                            'data_vencimento'    => $data,
+                            'data_competencia'   => $data,
+                            'valor_integral'     => __convert_value_bd($request->valor_recorrencia[$i]),
+                            'status'             => 0,
+                            'empresa_id'         => $request->empresa_id,
+                            'cliente_id'         => $request->cliente_id,
+                            'centro_custo_id'    => $request->centro_custo_id,
+                            'local_id'           => $conta->local_id,
+                            'categoria_conta_id' => $request->categoria_conta_id,
+                        ]);
+                    }
                 }
-            }
-            session()->flash("flash_success", "Conta a receber cadastrada!");
+
+                // ======================================
+                // PARCELAMENTO
+                // ======================================
+                if (!empty($request->parcelas) && $request->parcelas > 1) {
+                    $parcelas     = (int) $request->parcelas;
+                    $valorTotal   = __convert_value_bd($request->valor_integral);
+                    $valorParcela = round($valorTotal / $parcelas, 2);
+                    $ultimoValor  = $valorTotal - ($valorParcela * ($parcelas - 1));
+
+                    $dataBase = \Carbon\Carbon::parse($request->data_vencimento);
+
+                    for ($i = 1; $i <= $parcelas; $i++) {
+                        $statusRecebido = ($i === 1 && $request->status) ? $request->status : 0;
+                        $dataRecebimento = ($i === 1 && $request->status) ? $request->data_recebimento : null;
+                        $valorRecebido = ($i === 1 && $request->status) ? $request->valor_recebido : null;
+
+                        $valor = ($i === $parcelas) ? $ultimoValor : $valorParcela;
+                        $dataVenc = $dataBase->copy()->addMonths($i - 1);
+
+                        ContaReceber::create([
+                            'descricao'          => "{$request->descricao} ({$i}/{$parcelas})",
+                            'data_vencimento'    => $dataVenc,
+                            'data_competencia'   => $request->data_competencia,
+                            'valor_integral'     => $valor,
+                            'status'             => $statusRecebido,
+                            'empresa_id'         => $request->empresa_id,
+                            'cliente_id'         => $request->cliente_id,
+                            'centro_custo_id'    => $request->centro_custo_id,
+                            'local_id'           => $conta->local_id,
+                            'categoria_conta_id' => $request->categoria_conta_id,
+                            'tipo_pagamento'     => $request->tipo_pagamento,
+                            'observacao'         => $request->observacao,
+                            'data_recebimento'   => $dataRecebimento,
+                            'valor_recebido'     => $valorRecebido,
+                        ]);
+                    }
+
+                    // Exclui a conta original (já foi substituída pelas parcelas)
+                    $conta->delete();
+                }
+
+                session()->flash("flash_success", "Conta a receber cadastrada com sucesso!");
+            });
         } catch (\Exception $e) {
             session()->flash("flash_error", "Algo deu errado: " . $e->getMessage());
         }
+
         return redirect()->route('conta-receber.index');
     }
 
@@ -183,14 +238,18 @@ class ContaReceberController extends Controller
             'valor_integral' => 'required',
             'data_vencimento' => 'required',
             'status' => 'required',
-            'tipo_pagamento' => 'required'
+            'tipo_pagamento' => 'required',
+            'categoria_conta_id' => 'required',
+            'data_competencia' => 'required'
         ];
         $messages = [
             'cliente_id.required' => 'Campo obrigatório',
             'valor_integral.required' => 'Campo obrigatório',
             'data_vencimento.required' => 'Campo obrigatório',
             'status.required' => 'Campo obrigatório',
-            'tipo_pagamento.required' => 'Campo obrigatório'
+            'tipo_pagamento.required' => 'Campo obrigatório',
+            'categoria_conta_id.required' => 'Campo obrigatório',
+            'data_competencia.required' => 'Campo obrigatório'
         ];
         $this->validate($request, $rules, $messages);
     }

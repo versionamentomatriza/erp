@@ -26,7 +26,8 @@ class ContaReceber extends Model
         'local_id',
         'arquivo',
         'centro_custo_id',
-        'categoria_conta_id'
+        'categoria_conta_id',
+        'data_competencia',
     ];
 
     protected $appends = ['info'];

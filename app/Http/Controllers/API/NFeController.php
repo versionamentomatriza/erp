@@ -791,6 +791,7 @@ class NFeController extends Controller
                         'valor_integral' => __convert_value_bd($objeto->valor),
                         'tipo_pagamento' => $objeto->tipo,
                         'data_vencimento' => $objeto->vencimento,
+                        'data_competencia' => $objeto->vencimento,
                         'local_id' => $caixa->local_id
                     ]);
                 }

@@ -589,6 +589,7 @@ class NfeController extends Controller
                                         'valor_integral' => __convert_value_bd($request->valor_fatura[$i]),
                                         'tipo_pagamento' => $tipoPagamento[$i],
                                         'data_vencimento' => $request->data_vencimento[$i],
+                                        'data_competencia' => $request->data_vencimento[$i],
                                         'local_id' => $caixa->local_id,
                                     ]);
                                 }
@@ -910,6 +911,7 @@ class NfeController extends Controller
                                 'valor_integral' => __convert_value_bd($request->valor_fatura[$i]),
                                 'tipo_pagamento' => $request->tipo_pagamento[$i],
                                 'data_vencimento' => $request->data_vencimento[$i],
+                                'data_competencia' => $request->data_vencimento[$i],
                                 'local_id' => $item->local_id
                             ]);
                         }
@@ -1511,6 +1513,7 @@ class NfeController extends Controller
                     'valor_integral' => __convert_value_bd($f->valor_parcela),
                     'tipo_pagamento' => $venda->tipo_pagamento,
                     'data_vencimento' => $f->vencimento,
+                    'data_competencia' => $f->vencimento,
                     'local_id' => $local_id,
                 ]);
             }

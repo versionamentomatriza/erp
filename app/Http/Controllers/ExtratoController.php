@@ -336,6 +336,7 @@ class ExtratoController extends Controller
             'observacao'            => 'nullable|string',
             'valor'                 => 'required|numeric|min:0',
             'data_vencimento'       => 'required|date',
+            'data_competencia'      => 'required|date',
             'centro_custo_id'       => 'nullable|integer',
             'fornecedor_id'         => 'nullable|integer',
             'cliente_id'            => 'nullable|integer',
@@ -353,6 +354,7 @@ class ExtratoController extends Controller
             'observacao'         => $validated['observacao'] ?? null,
             'valor_integral'     => (float) $validated['valor'],
             'data_vencimento'    => $validated['data_vencimento'],
+            'data_competencia'   => $validated['data_competencia'],
             'empresa_id'         => optional($user->empresa)->empresa_id ?? $user->empresa_id ?? null,
             'centro_custo_id'    => $validated['centro_custo_id'] ?? null,
             'categoria_conta_id' => $validated['categoria_conta_id'],
@@ -567,6 +569,7 @@ class ExtratoController extends Controller
                     'conta_financeira_id'   => 'nullable|integer|exists:contas_financeiras,id',
                     'centro_custo_id'       => 'nullable|integer|exists:centro_custos,id',
                     'descricao'             => 'nullable|string|max:255',
+                    'data_competencia'      => 'required|date',
                     'data_receber'          => $form['tipo'] === 'receber' ? 'required|date' : 'nullable',
                 ]);
 
@@ -607,12 +610,13 @@ class ExtratoController extends Controller
                     $dados = [
                         'descricao'          => $form['descricao'] ?? 'Diferença de conciliação',
                         'valor_integral'     => $valorFaltante,
-                        'valor_recebido'     => 0,
+                        'valor_recebido'     => null,
                         'data_vencimento'    => $form['data_receber'] ?? now()->toDateString(),
+                        'data_competencia'   => $form['data_competencia'] ?? now()->toDateString(),
                         'categoria_conta_id' => $form['categoria_id'],
                         'centro_custo_id'    => $form['centro_custo_id'] ?? null,
                         'empresa_id'         => $request->empresa_id,
-                        'transacao_id'       => $transacao->id,
+                        'status'             => 0,
                     ];
 
                     $conta = ContaReceber::create($dados);

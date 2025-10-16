@@ -130,7 +130,7 @@
                     </div>
 
                     <div class="row mb-2">
-                        <div class="col-6">
+                        <div class="col-xs-12 col-md-4">
                             <label for="valorConta" class="form-label">Valor</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light">R$</span>
@@ -138,10 +138,13 @@
                                     required>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-xs-12 col-md-4">
                             <label for="dataVencimento" class="form-label">Data de Vencimento</label>
-                            <input type="date" name="data_vencimento" id="dataVencimento" class="form-control" required
-                                readonly>
+                            <input type="date" name="data_vencimento" id="dataVencimento" class="form-control" required>
+                        </div>
+                        <div class="col-xs-12 col-md-4">
+                            <label for="dataCompetencia" class="form-label">Data de Competência</label>
+                            <input type="date" name="data_competencia" id="dataCompetencia" class="form-control" required>
                         </div>
                     </div>
 

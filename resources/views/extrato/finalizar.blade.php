@@ -134,35 +134,42 @@
                                                 </select>
                                             </div>
 
-                                            <div class="mb-2">
-                                                <label for="conta_financeira_{{ $t->id }}" class="form-label">Conta Financeira</label>
-                                                <select class="form-select input-field" id="conta_financeira_{{ $t->id }}"
-                                                    name="transacoes[{{ $t->id }}][conta_financeira_id]" disabled required>
-                                                    <option value="" selected>Não informado</option>
-                                                    @foreach($contasFinanceiras as $conta)
-                                                        <option value="{{ $conta->id }}">{{ $conta->nome }}</option>
-                                                    @endforeach
-                                                </select>
+                                            <div class="row mb-2">
+                                                <div class="col-6">
+                                                    <label for="data_vencimento_{{ $t->id }}" class="form-label">Data de vencimento</label>
+                                                    <input type="date" class="form-control input-field" id="data_vencimento_{{ $t->id }}"
+                                                        name="transacoes[{{ $t->id }}][data_receber]" required>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label for="data_competencia_{{ $t->id }}" class="form-label">Data de competência</label>
+                                                    <input type="date" class="form-control input-field" id="data_competencia_{{ $t->id }}"
+                                                        name="transacoes[{{ $t->id }}][data_competencia]" required>
+                                                </div>
                                             </div>
 
+                                            @unless ($tipoConta === 'Recebimento')
+                                                <div class="mb-2">
+                                                    <label for="conta_financeira_{{ $t->id }}" class="form-label">Conta Financeira</label>
+                                                    <select class="form-select input-field" id="conta_financeira_{{ $t->id }}"
+                                                        name="transacoes[{{ $t->id }}][conta_financeira_id]" disabled required>
+                                                        <option value="" selected>Não informado</option>
+                                                        @foreach($contasFinanceiras as $conta)
+                                                            <option value="{{ $conta->id }}">{{ $conta->nome }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            @endunless
+
                                             <div class="mb-2">
-                                                <label for="centro_custo_{{ $t->id }}" class="form-label">Centro de Custo (opcional)</label>
+                                                <label for="centro_custo_{{ $t->id }}" class="form-label">Centro de Custo</label>
                                                 <select class="form-select input-field" id="centro_custo_{{ $t->id }}"
-                                                    name="transacoes[{{ $t->id }}][centro_custo_id]" disabled required>
+                                                    name="transacoes[{{ $t->id }}][centro_custo_id]" disabled>
                                                     <option value="" selected>Não informado</option>
                                                     @foreach($centrosCustos as $centro)
                                                         <option value="{{ $centro->id }}">{{ $centro->descricao }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
-
-                                            @if($tipoConta === 'receber')
-                                                <div class="mb-2">
-                                                    <label for="data_vencimento_{{ $t->id }}" class="form-label">Data de vencimento</label>
-                                                    <input type="date" class="form-control input-field" id="data_vencimento_{{ $t->id }}"
-                                                        name="transacoes[{{ $t->id }}][data_receber]" disabled required>
-                                                </div>
-                                            @endif
                                         </div>
                                     </div>
                                 </div>
