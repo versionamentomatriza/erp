@@ -4,14 +4,21 @@ namespace App\Services;
 
 use App\Models\ContaPagar;
 use App\Models\ContaReceber;
+use App\Models\Empresa;
+use App\Models\Extrato;
 use App\Models\ExtratoTransacao;
 use App\Models\Transacao;
 use Illuminate\Support\Collection;
 
 class ExtratoService
 {
-    public static function gerarDRE($extratos)
+    public static function gerarDRE($empresa, $inicio, $fim)
     {
+        $extratos = Extrato::where('empresa_id', $empresa->id)
+            ->whereDate('inicio', '>=', $inicio)
+            ->whereDate('fim', '<=', $fim)
+            ->get();
+
         // Aceita um único extrato ou vários
         $extratos = $extratos instanceof Collection
             ? $extratos
@@ -24,15 +31,11 @@ class ExtratoService
         // BUSCA DE CONTAS RELACIONADAS
         // ==========================================================
         $contasReceber = ContaReceber::where('empresa_id', $empresaId)
-            ->whereHas('conciliacoes.transacao.extratos', function ($q) use ($extratoIds) {
-                $q->whereIn('extratos.id', $extratoIds);
-            })
+            ->whereBetween('data_competencia', [$inicio, $fim])
             ->get();
 
         $contasPagar = ContaPagar::where('empresa_id', $empresaId)
-            ->whereHas('conciliacoes.transacao.extratos', function ($q) use ($extratoIds) {
-                $q->whereIn('extratos.id', $extratoIds);
-            })
+            ->whereBetween('data_competencia', [$inicio, $fim])
             ->get();
 
         // ==========================================================
