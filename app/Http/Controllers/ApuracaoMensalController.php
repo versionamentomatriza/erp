@@ -128,6 +128,7 @@ class ApuracaoMensalController extends Controller
             $conta = [
                 'compra_id' => null,
                 'data_vencimento' => $request->data_vencimento,
+                'data_competencia' => $request->data_vencimento,
                 'valor_integral' => str_replace(",", ".", $request->valor_integral),
                 'valor_pago' => $request->status ? __convert_value_bd($request->valor_pago) : 0,
                 'status' => $request->status,

@@ -110,13 +110,12 @@ class ContaReceberController extends Controller
                 // Prepara dados base
                 $request->merge([
                     'data_competencia'   => $request->data_competencia ?: $request->data_vencimento,
-                    'categoria_conta_id' => $request->categoria_conta_id,
                     'valor_integral'     => __convert_value_bd($request->valor_integral),
                     'valor_recebido'     => $request->status ? __convert_value_bd($request->valor_recebido) : 0,
                     'arquivo'            => $file_name,
                 ]);
 
-                // Cria conta principal
+                // Cria conta principal (será a 1ª parcela se houver parcelamento)
                 $conta = ContaReceber::create($request->all());
 
                 // ======================================
@@ -150,11 +149,15 @@ class ContaReceberController extends Controller
 
                     $dataBase = \Carbon\Carbon::parse($request->data_vencimento);
 
-                    for ($i = 1; $i <= $parcelas; $i++) {
-                        $statusRecebido = ($i === 1 && $request->status) ? $request->status : 0;
-                        $dataRecebimento = ($i === 1 && $request->status) ? $request->data_recebimento : null;
-                        $valorRecebido = ($i === 1 && $request->status) ? $request->valor_recebido : null;
+                    // Atualiza a primeira conta como parcela 1
+                    $conta->update([
+                        'descricao'       => "{$request->descricao} (1/{$parcelas})",
+                        'valor_integral'  => ($parcelas == 1) ? $valorTotal : $valorParcela,
+                        'data_vencimento' => $dataBase,
+                    ]);
 
+                    // Cria as demais parcelas
+                    for ($i = 2; $i <= $parcelas; $i++) {
                         $valor = ($i === $parcelas) ? $ultimoValor : $valorParcela;
                         $dataVenc = $dataBase->copy()->addMonths($i - 1);
 
@@ -163,7 +166,7 @@ class ContaReceberController extends Controller
                             'data_vencimento'    => $dataVenc,
                             'data_competencia'   => $request->data_competencia,
                             'valor_integral'     => $valor,
-                            'status'             => $statusRecebido,
+                            'status'             => 0,
                             'empresa_id'         => $request->empresa_id,
                             'cliente_id'         => $request->cliente_id,
                             'centro_custo_id'    => $request->centro_custo_id,
@@ -171,17 +174,12 @@ class ContaReceberController extends Controller
                             'categoria_conta_id' => $request->categoria_conta_id,
                             'tipo_pagamento'     => $request->tipo_pagamento,
                             'observacao'         => $request->observacao,
-                            'data_recebimento'   => $dataRecebimento,
-                            'valor_recebido'     => $valorRecebido,
                         ]);
                     }
-
-                    // Exclui a conta original (já foi substituída pelas parcelas)
-                    $conta->delete();
                 }
-
-                session()->flash("flash_success", "Conta a receber cadastrada com sucesso!");
             });
+
+            session()->flash("flash_success", "Conta a receber cadastrada!");
         } catch (\Exception $e) {
             session()->flash("flash_error", "Algo deu errado: " . $e->getMessage());
         }

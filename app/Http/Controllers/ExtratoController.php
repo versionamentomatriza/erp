@@ -581,6 +581,7 @@ class ExtratoController extends Controller
                         'valor_integral'     => $diferenca,
                         'valor_pago'         => $diferenca,
                         'data_vencimento'    => $transacao->data,
+                        'data_competencia'   => $form['data_competencia'] ?? now()->toDateString(),
                         'data_pagamento'     => $transacao->data,
                         'categoria_conta_id' => $form['categoria_id'],
                         'centro_custo_id'    => $form['centro_custo_id'] ?? null,
