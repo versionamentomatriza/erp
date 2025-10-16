@@ -12,13 +12,15 @@ use Illuminate\Support\Facades\Auth;
 use App\Utils\ContaEmpresaUtil;
 use App\Utils\UploadUtil;
 use App\Models\CentroCusto;
+use Illuminate\Support\Facades\DB;
 
 class ContaPagarController extends Controller
 {
 
     protected $util;
     protected $uploadUtil;
-    public function __construct(ContaEmpresaUtil $util, UploadUtil $uploadUtil){
+    public function __construct(ContaEmpresaUtil $util, UploadUtil $uploadUtil)
+    {
         $this->util = $util;
         $this->uploadUtil = $uploadUtil;
         $this->middleware('permission:conta_pagar_create', ['only' => ['create', 'store']]);
@@ -32,13 +34,13 @@ class ContaPagarController extends Controller
         $query = ContaPagar::query();
         $locais = __getLocaisAtivoUsuario();
         $locais = $locais->pluck(['id']);
-    
+
         $fornecedor_id = $request->fornecedor_id;
         $start_date = $request->start_date;
         $end_date = $request->end_date;
         $local_id = $request->get('local_id');
         $ordenar_por = $request->get('ordenar_por'); // Novo campo para ordenação
-    
+
         // Query para buscar as contas a pagar com os filtros aplicados
         $data = ContaPagar::where('empresa_id', request()->empresa_id)
             ->when(!empty($fornecedor_id), function ($query) use ($fornecedor_id) {
@@ -64,24 +66,24 @@ class ContaPagarController extends Controller
                     return $query->orderBy('data_vencimento', 'desc');
                 }
             })
-			->when($request->estado == 'pago', function ($query) {
+            ->when($request->estado == 'pago', function ($query) {
                 return $query->where('status', true);
             })
             ->when($request->estado == 'pendente', function ($query) {
                 return $query->where('status', false);
             })
             ->paginate(env("PAGINACAO"));
-    
+
         // Retorna a view com os dados filtrados e ordenados
         return view('conta-pagar.index', compact('data'));
     }
-    
+
 
     public function create()
     {
         $centrosCusto = CentroCusto::where('empresa_id', request()->empresa_id)->get();
         $fornecedores = Fornecedor::where('empresa_id', request()->empresa_id)->get();
-        return view('conta-pagar.create', compact('fornecedores','centrosCusto'));
+        return view('conta-pagar.create', compact('fornecedores', 'centrosCusto'));
     }
 
     public function store(Request $request)
@@ -89,47 +91,100 @@ class ContaPagarController extends Controller
         $this->__validate($request);
 
         try {
-            $file_name = '';
-            if ($request->hasFile('file')) $file_name = $this->uploadUtil->uploadFile($request->file, '/financeiro');
+            DB::transaction(function () use ($request) {
+                // Upload do arquivo (se houver)
+                $file_name = $request->hasFile('file')
+                    ? $this->uploadUtil->uploadFile($request->file, '/financeiro')
+                    : '';
 
-            $request->merge([
-                'valor_integral' => __convert_value_bd($request->valor_integral),
-                'valor_pago' => $request->status ? __convert_value_bd($request->valor_pago) : 0,
-                'arquivo' => $file_name
-            ]);
+                // Prepara dados base
+                $request->merge([
+                    'data_competencia'   => $request->data_competencia ?: $request->data_vencimento,
+                    'valor_integral'     => __convert_value_bd($request->valor_integral),
+                    'valor_pago'         => $request->status ? __convert_value_bd($request->valor_pago) : 0,
+                    'arquivo'            => $file_name,
+                ]);
 
-            $conta = ContaPagar::create($request->all());
-            if ($request->dt_recorrencia) {
-                for ($i = 0; $i < sizeof($request->dt_recorrencia); $i++) {
-                    $data = $request->dt_recorrencia[$i];
-                    $valor = __convert_value_bd($request->valor_recorrencia[$i]);
-                    $data = [
-                        'descricao' => $request->descricao,
-                        'data_vencimento' => $data,
-                        'valor_integral' => $valor,
-                        'status' => 0,
-                        'empresa_id' => $request->empresa_id,
-                        'fornecedor_id' => $request->fornecedor_id,
-                        'centro_custo_id' => $request->centro_custo_id,
-                        'local_id' => $conta->local_id,
-                    ];
-                    ContaPagar::create($data);
+                // Cria conta principal (pode virar a 1ª parcela)
+                $conta = ContaPagar::create($request->all());
+
+                // ======================================
+                // RECORRÊNCIA
+                // ======================================
+                if (!empty($request->dt_recorrencia)) {
+                    foreach ($request->dt_recorrencia as $i => $data) {
+                        ContaPagar::create([
+                            'descricao'        => $request->descricao,
+                            'data_vencimento'  => $data,
+                            'data_competencia' => $data,
+                            'valor_integral'   => __convert_value_bd($request->valor_recorrencia[$i]),
+                            'status'           => 0,
+                            'empresa_id'       => $request->empresa_id,
+                            'fornecedor_id'    => $request->fornecedor_id,
+                            'centro_custo_id'  => $request->centro_custo_id,
+                            'local_id'         => $conta->local_id,
+                            'categoria_conta_id' => $request->categoria_conta_id,
+                        ]);
+                    }
                 }
-            }
+
+                // ======================================
+                // PARCELAMENTO
+                // ======================================
+                if (!empty($request->parcelas) && $request->parcelas > 1) {
+                    $parcelas     = (int) $request->parcelas;
+                    $valorTotal   = __convert_value_bd($request->valor_integral);
+                    $valorParcela = round($valorTotal / $parcelas, 2);
+                    $ultimoValor  = $valorTotal - ($valorParcela * ($parcelas - 1));
+
+                    $dataBase = \Carbon\Carbon::parse($request->data_vencimento);
+
+                    // Atualiza a primeira conta como 1ª parcela
+                    $conta->update([
+                        'descricao'       => "{$request->descricao} (1/{$parcelas})",
+                        'valor_integral'  => ($parcelas == 1) ? $valorTotal : $valorParcela,
+                        'data_vencimento' => $dataBase,
+                    ]);
+
+                    // Cria as demais parcelas
+                    for ($i = 2; $i <= $parcelas; $i++) {
+                        $valor = ($i === $parcelas) ? $ultimoValor : $valorParcela;
+                        $dataVenc = $dataBase->copy()->addMonths($i - 1);
+
+                        ContaPagar::create([
+                            'descricao'          => "{$request->descricao} ({$i}/{$parcelas})",
+                            'data_vencimento'    => $dataVenc,
+                            'data_competencia'   => $request->data_competencia,
+                            'valor_integral'     => $valor,
+                            'status'             => 0,
+                            'empresa_id'         => $request->empresa_id,
+                            'fornecedor_id'      => $request->fornecedor_id,
+                            'centro_custo_id'    => $request->centro_custo_id,
+                            'local_id'           => $conta->local_id,
+                            'categoria_conta_id' => $request->categoria_conta_id,
+                            'tipo_pagamento'     => $request->tipo_pagamento,
+                            'observacao'         => $request->observacao,
+                        ]);
+                    }
+                }
+            });
+
             session()->flash("flash_success", "Conta a pagar cadastrada!");
         } catch (\Exception $e) {
             session()->flash("flash_error", "Algo deu errado: " . $e->getMessage());
         }
+
         return redirect()->route('conta-pagar.index');
     }
 
-   public function edit($id)
+
+    public function edit($id)
     {
         $centrosCusto = CentroCusto::where('empresa_id', request()->empresa_id)->get();
         $item = ContaPagar::findOrFail($id);
         $fornecedores = Fornecedor::where('empresa_id', request()->empresa_id)->get();
 
-        return view('conta-pagar.edit', compact('item', 'fornecedores','centrosCusto'));
+        return view('conta-pagar.edit', compact('item', 'fornecedores', 'centrosCusto'));
     }
 
     public function update(Request $request, $id)
@@ -156,7 +211,8 @@ class ContaPagarController extends Controller
         return redirect()->route('conta-pagar.index');
     }
 
-    public function downloadFile($id){
+    public function downloadFile($id)
+    {
         $item = ContaPagar::findOrFail($id);
         if (file_exists(public_path('uploads/financeiro/') . $item->arquivo)) {
             return response()->download(public_path('uploads/financeiro/') . $item->arquivo);
@@ -173,14 +229,16 @@ class ContaPagarController extends Controller
             'valor_integral' => 'required',
             'data_vencimento' => 'required',
             'status' => 'required',
-            'tipo_pagamento' => 'required'
+            'tipo_pagamento' => 'required',
+            'data_competencia' => 'required'
         ];
         $messages = [
             'fornecedor_id.required' => 'Campo obrigatório',
             'valor_integral.required' => 'Campo obrigatório',
             'data_vencimento.required' => 'Campo obrigatório',
             'status.required' => 'Campo obrigatório',
-            'tipo_pagamento.required' => 'Campo obrigatório'
+            'tipo_pagamento.required' => 'Campo obrigatório',
+            'data_competencia.required' => 'Campo obrigatório'
         ];
         $this->validate($request, $rules, $messages);
     }
@@ -200,13 +258,13 @@ class ContaPagarController extends Controller
     public function destroySelecet(Request $request)
     {
         $removidos = 0;
-        for($i=0; $i<sizeof($request->item_delete); $i++){
+        for ($i = 0; $i < sizeof($request->item_delete); $i++) {
             $item = ContaPagar::findOrFail($request->item_delete[$i]);
             try {
                 $item->delete();
                 $removidos++;
             } catch (\Exception $e) {
-                session()->flash("flash_error", 'Algo deu errado: '. $e->getMessage());
+                session()->flash("flash_error", 'Algo deu errado: ' . $e->getMessage());
                 return redirect()->back();
             }
         }
@@ -223,7 +281,7 @@ class ContaPagarController extends Controller
         }
         $item = ContaPagar::findOrFail($id);
 
-        if($item->status){
+        if ($item->status) {
             session()->flash("flash_warning", "Esta conta já esta paga!");
             return redirect()->route('conta-pagar.index');
         }
@@ -244,7 +302,7 @@ class ContaPagarController extends Controller
             $item->caixa_id = $caixa->id;
             $item->save();
 
-            if(isset($request->conta_empresa_id)){
+            if (isset($request->conta_empresa_id)) {
 
                 $data = [
                     'conta_id' => $request->conta_empresa_id,

@@ -24,6 +24,7 @@ use App\Models\ProdutoVariacao;
 use App\Models\Produto;
 use App\Models\UsuarioAcesso;
 use App\Models\CashBackConfig;
+use App\Models\CategoriaConta;
 use App\Models\Funcionario;
 use App\Utils\EstoqueUtil;
 use Dflydev\DotAccessData\Util;
@@ -256,6 +257,7 @@ class FrontBoxController extends Controller
                 $caixa = Caixa::where('usuario_id', $request->usuario_id)
                     ->where('status', 1)
                     ->first();
+                $categoriaContaDefault = CategoriaConta::where('nome', 'Receita de Mercadorias')->first();
 
                 // Número sequencial conforme ambiente
                 $numero_nfce = $config->numero_ultima_nfce_producao;
@@ -363,6 +365,9 @@ class FrontBoxController extends Controller
                     $agendamento->save();
                 }
 
+                // ------- Categoria receita (corrigido) -------
+                $categoriaConta = CategoriaConta::where('nome', 'LIKE', 'Receita de Mercadorias')->first();
+
                 // ------- Regras de datas / pagamentos -------
                 // Helper interno para calcular dias (tratamento PIX maquininha)
                 // DÚVIDA AQUI
@@ -414,6 +419,7 @@ class FrontBoxController extends Controller
                             'nfce_id' => $nfce->id,
                             'cliente_id' => $request->cliente_id,
                             'data_vencimento' => $request->data_vencimento_row[$i],
+                            'data_competencia' => $request->data_vencimento_row[$i],
                             'data_recebimento' => $dataRecebimento,
                             'valor_integral' => $valorParcela,
                             'valor_recebido' => $valorRecebido,
@@ -423,7 +429,7 @@ class FrontBoxController extends Controller
                             'tipo_pagamento' => $tipoRow,
                             'observacao' => $request->obs_row[$i] ?? '',
                             'local_id' => $caixa->local_id,
-                            'caixa_id' => $caixa->id
+                            'categoria_conta_id' => $categoriaConta->id ?? null
                         ]);
 
                         // cria fatura correspondente
@@ -450,6 +456,7 @@ class FrontBoxController extends Controller
                         'nfe_id' => null,
                         'nfce_id' => $nfce->id,
                         'data_vencimento' => $request->data_vencimento,
+                        'data_competencia' => $request->data_vencimento,
                         'data_recebimento' => $dataRecebimento,
                         'valor_integral' => __convert_value_bd($request->valor_total),
                         'valor_recebido' => $valorRecebido,
@@ -460,7 +467,7 @@ class FrontBoxController extends Controller
                         'tipo_pagamento' => $tipo,
                         'observacao' => $request->observacao,
                         'local_id' => $caixa->local_id,
-                        'caixa_id' => $caixa->id
+                        'categoria_conta_id' => $categoriaConta->id ?? null
                     ]);
 
                     FaturaNfce::create([
@@ -648,6 +655,7 @@ class FrontBoxController extends Controller
                             'nfce_id' => $item->id,
                             'cliente_id' => $request->cliente_id,
                             'data_vencimento' => $request->data_vencimento_row[$i],
+                            'data_competencia' => $request->data_vencimento_row[$i],
                             'data_recebimento' => $request->data_vencimento_row[$i],
                             'valor_integral' => __convert_value_bd($request->valor_integral_row[$i]),
                             'valor_recebido' => 0,

@@ -84,6 +84,7 @@ class ComissaoController extends Controller
                 'empresa_id' => $request->empresa_id,
                 'valor_integral' => __convert_value_bd($request->valor_integral),
                 'data_vencimento' => $request->data_vencimento,
+                'data_competencia' => $request->data_vencimento,
                 'observacao' => $request->observacao,
                 'tipo_pagamento' => $request->tipo_pagamento,
                 'descricao' => $request->descricao,

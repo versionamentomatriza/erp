@@ -182,6 +182,7 @@ public function create(Request $request)
                         'cliente_id' => $request->cliente_id,
                         'valor_integral' => $totalServico,
                         'data_vencimento' => $request->data_vencimento,
+                        'data_competencia' => $request->data_vencimento,
                         'local_id' => $caixa->local_id,
                     ]);
 
@@ -284,6 +285,7 @@ public function update(Request $request, $id){
                     'cliente_id' => $request->cliente_id,
                     'valor_integral' => $totalServico,
                     'data_vencimento' => $request->data_vencimento,
+                    'data_competencia' => $request->data_vencimento,
                     'local_id' => $caixa->local_id,
                 ]);
 
