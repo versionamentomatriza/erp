@@ -550,17 +550,21 @@
             </div>
             <div class="card-body">
                 <div class="row">
+                    <div class="col-12">
+                        {!! Form::select('funcionario_id', 'Vendedor',  
+						['' => 'Selecione'] + $funcionarios->pluck('nome', 'id')->toArray())
+						->attrs(['class' => 'form-select']) !!}
+                    </div>
                     <div class="col-md-4 col-12">
                         {!! Form::date('start_date', 'Dt. inicial') !!}
                     </div>
                     <div class="col-md-4 col-12">
                         {!! Form::date('end_date', 'Dt. final') !!}
                     </div>
-                     <div class="col-md-4 col-12">
+                    <div class="col-md-4 col-12">
                         {!! Form::select('cidade_id', 'Cidade',  
 						['' => 'Selecione'] + $cidades->pluck('nome', 'id')->toArray())
 						->attrs(['class' => 'form-select']) !!}
-
                     </div>
                     <div class="col-md-4 col-12">
                         {!! Form::select('estado', 'Estado', 
