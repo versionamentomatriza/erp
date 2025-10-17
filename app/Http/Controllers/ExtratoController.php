@@ -28,12 +28,19 @@ class ExtratoController extends Controller
         $empresaId          = optional($user->empresa)->empresa_id ?? $user->empresa_id ?? null;
         $fornecedores       = Fornecedor::where('empresa_id', $empresaId)->get();
         $clientes           = Cliente::where('empresa_id', $empresaId)->get();
-        $extratos           = Extrato::where('empresa_id', $empresaId)->get();
         $centrosCustos      = CentroCusto::where('empresa_id', $empresaId)->get();
         $contasFinanceiras  = ContaFinanceira::where('empresa_id', $empresaId)->get();
         $categoriasContas   = CategoriaConta::where('empresa_id', $empresaId)
             ->orWhereNull('empresa_id')
             ->get();
+        $extratos           = Extrato::where('empresa_id', $empresaId)->when(
+            $request->has('inicio'),
+            function ($q) use ($request) {
+                $dataInicio = \Carbon\Carbon::parse($request->input('inicio'))->startOfMonth()->toDateString();
+                $dataFim = \Carbon\Carbon::parse($request->input('inicio'))->endOfMonth()->toDateString();
+                return $q->whereBetween('inicio', [$dataInicio, $dataFim]);
+            }
+        )->orderByDesc('id')->take(6)->get();
 
         try {
             // Processamento de arquivos OFX

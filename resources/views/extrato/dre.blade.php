@@ -13,9 +13,11 @@
                         <i class="bi bi-building"></i> {{ $empresa->nome_fantasia ?? $empresa->nome }} <br>
                     </div>
                 </div>
+                <!--
                 <div class="d-flex gap-2">
                     <a href="#" class="btn btn-primary"><i class="bi bi-file-earmark-pdf"></i> Exportar PDF</a>
                 </div>
+                -->
             </div>
 
             @if ($dre)

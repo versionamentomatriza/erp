@@ -24,7 +24,33 @@
 
                         <!-- Lista de Extratos -->
                         <div class="mb-4">
-                            <h6 class="mb-3"><i class="bi bi-list-ul"></i> Conciliações Disponíveis</h6>
+                            <div class="row pb-2">
+                                <h6><i class="bi bi-list-ul"></i> Conciliações Disponíveis</h6>
+                            </div>
+
+                            <div class="row mt-3">
+                                    <div class="col-12">
+                                    <form method="GET" action="{{ route('extrato.conciliar') }}" class="row g-3 mb-3">
+                                        <div class="row">
+                                            <div class="col-5">
+                                                <label for="inicio" class="form-label">Início</label>
+                                                <input type="month" class="form-control" name="inicio" id="inicio"
+                                                    value="{{ request('inicio', now()->format('Y-m')) }}" required>
+                                            </div>
+
+                                            <div class="col-5">
+                                                <label for="fim" class="form-label">Fim</label>
+                                                <input type="month" class="form-control" name="fim" id="fim"
+                                                    value="{{ request('fim', now()->format('Y-m')) }}" required>
+                                            </div>
+
+                                            <div class="col-2 align-self-end">
+                                                <button type="submit" class="btn btn-success w-100 w-sm-auto">Filtrar</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
 
                             @if(!$extratos || $extratos->isEmpty())
                                 <div class="alert alert-info text-center">
@@ -112,8 +138,8 @@
                                             </div>
 
                                             <div class="col-12 text-end">
-                                                <button class="btn btn-primary" type="submit">
-                                                    <i class="bi bi-search"></i> Buscar Contas a Pagar
+                                                <button class="btn btn-sm btn-success" type="submit">
+                                                    <i class="bi bi-search"></i> Buscar
                                                 </button>
                                             </div>
                                         </form>
@@ -149,8 +175,8 @@
                                             </div>
 
                                             <div class="col-12 text-end">
-                                                <button class="btn btn-primary" type="submit">
-                                                    <i class="bi bi-search"></i> Buscar Contas a Receber
+                                                <button class="btn btn-sm btn-success" type="submit">
+                                                    <i class="bi bi-search"></i> Buscar
                                                 </button>
                                             </div>
                                         </form>

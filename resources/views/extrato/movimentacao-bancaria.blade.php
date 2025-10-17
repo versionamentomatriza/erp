@@ -14,6 +14,9 @@
                         <i class="bi bi-calendar"></i> {{ $movimentacao['periodo']['inicio'] }} - {{ $movimentacao['periodo']['fim'] }}
                     </div>
                 </div>
+                <a class="btn btn-outline-secondary mb-2" href="{{ url()->previous() }}">
+                    Voltar
+                </a>
             </div>
 
             <!-- Card de Resumo -->
