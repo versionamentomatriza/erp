@@ -30,10 +30,6 @@
                         <h6 class="fw-bold mb-1">Saídas</h6>
                         <h4 class="fw-bold text-danger">R$ {{ number_format($movimentacao['total_saidas'], 2, ',', '.') }}</h4>
                     </div>
-                    <div class="col">
-                        <h6 class="fw-bold mb-1">Balanço do período</h6>
-                        <h4 class="fw-bold {{ $movimentacao['saldo_final'] >= 0 ? 'text-success' : 'text-danger' }}">R$ {{ number_format($movimentacao['saldo_final'], 2, ',', '.') }}</h4>
-                    </div>
                 </div>
             </div>
 
