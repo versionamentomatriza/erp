@@ -33,8 +33,8 @@
                             {!!Form::date('start_date', 'Data de início')
                             !!}
                         </div>
-                        <div class="col-md-2">
-                            {!!Form::tel('codigo', 'Código')
+                        <div class="col-md-3">
+                            {!!Form::tel('codigo', 'Número ou Descrição da OS')
                             !!}
                         </div>
                         <div class="col-md-3 text-left">
@@ -59,6 +59,7 @@
                                     @endcan
                                     <th>Código</th>
                                     <th>Nome</th>
+									<th>Descrição</th>
                                     <th>Data de início</th>
                                     <th>Previsão de entrega</th>
                                     <th>Valor</th>
@@ -78,6 +79,7 @@
                                     @endcan
                                     <td>{{ $item->codigo_sequencial }}</td>
                                     <td>{{ $item->cliente->razao_social }}</td>
+									<td>{!! $item->descricao !!}</td>
                                     <td>{{ __data_pt($item->data_inicio, 1) }}</td>
                                     <td>{{ __data_pt($item->data_entrega, 1) }}</td>
                                     <td>{{ __moeda($item->valor) }}</td>
