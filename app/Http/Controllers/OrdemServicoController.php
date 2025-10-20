@@ -35,27 +35,31 @@ class OrdemServicoController extends Controller
         $this->middleware('permission:ordem_servico_delete', ['only' => ['destroy']]);
     }
 
-    public function index(Request $request)
-    {
-        $cliente_id = $request->get('cliente_id');
-        $start_date = $request->get('start_date');
-        $codigo = $request->get('codigo');
+	public function index(Request $request)
+	{
+		$cliente_id = $request->get('cliente_id');
+		$start_date = $request->get('start_date');
+		$codigo = $request->get('codigo');
 
-        $data = OrdemServico::where('empresa_id', request()->empresa_id)
-        ->when(!empty($cliente_id), function ($query) use ($cliente_id) {
-            return $query->where('cliente_id', $cliente_id);
-        })
-        ->when(!empty($start_date), function ($query) use ($start_date) {
-            return $query->whereDate('created_at', $start_date);
-        })
-        ->when(!empty($codigo), function ($query) use ($codigo) {
-            return $query->where('codigo_sequencial', $codigo);
-        })
-        ->orderBy('id', 'desc')
-        ->paginate(env("PAGINACAO"));
+		$data = OrdemServico::where('empresa_id', request()->empresa_id)
+			->when(!empty($cliente_id), function ($query) use ($cliente_id) {
+				return $query->where('cliente_id', $cliente_id);
+			})
+			->when(!empty($start_date), function ($query) use ($start_date) {
+				return $query->whereDate('created_at', $start_date);
+			})
+			->when(!empty($codigo), function ($query) use ($codigo) {
+				return $query->where(function ($q) use ($codigo) {
+					$q->where('codigo_sequencial', 'like', "%{$codigo}%")
+					  ->orWhere('descricao', 'like', "%{$codigo}%");
+				});
+			})
+			->orderBy('id', 'desc')
+			->paginate(env("PAGINACAO"));
 
-        return view('ordem_servico.index', compact('data'));
-    }
+		return view('ordem_servico.index', compact('data'));
+	}
+
 
     public function create()
     {
