@@ -88,6 +88,11 @@ class Empresa extends Model
         return $this->hasMany(FinanceiroContador::class, 'contador_id');
     }
 
+    public function transferencias()
+    {
+        return $this->hasMany(TransferenciaConta::class);
+    }
+
     public static function estados(){
         return [
             '11' => 'RO',
