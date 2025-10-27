@@ -341,21 +341,22 @@ class OrdemServicoController extends Controller
 
         __validaObjetoEmpresa($ordem);
         $config = Empresa::where('id', request()->empresa_id)->first();
+
         if ($config == null) {
             session()->flash("flash_warning", "Configure o emitente");
             return redirect()->route('config.index');
         }
 
-        $p = view('ordem_servico.imprimir', compact('config', 'ordem'));
+        // Renderiza o HTML da view corretamente
+        $p = view('ordem_servico.imprimir', compact('config', 'ordem'))->render();
 
         $domPdf = new Dompdf(["enable_remote" => true]);
         $domPdf->loadHtml($p);
-        $pdf = ob_get_clean();
         $domPdf->setPaper("A4");
         $domPdf->render();
-        $domPdf->stream("Ordem de Serviço #$id.pdf", array("Attachment" => false));
-        // return view('ordem_servico.print', compact('ordem', 'config'));
+        $domPdf->stream("Ordem de Serviço #$id.pdf", ["Attachment" => false]);
     }
+
 
     public function editRelatorio($id)
     {
