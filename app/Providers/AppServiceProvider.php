@@ -26,6 +26,15 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrap();
 
+        // Aumenta o tempo máximo de execução para 300 segundos
+        ini_set('max_execution_time', 300); // 300 segundos
+        set_time_limit(300);
+
+        // Configurações de memória e tamanho de upload
+        ini_set('memory_limit', '512M'); // memória máxima
+        ini_set('post_max_size', '64M');  // tamanho máximo POST
+        ini_set('upload_max_filesize', '64M'); // tamanho máximo de upload
+
         // Macro para adicionar dias úteis considerando feriados
         Carbon::macro('addDiasUteisComFeriados', function (int $dias): Carbon {
             $carbon = $this->copy();
