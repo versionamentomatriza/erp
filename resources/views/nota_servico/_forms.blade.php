@@ -146,15 +146,15 @@
 
                         <div class="col-md-3">
                             {!! Form::select(
-    'natureza_operacao',
-    'Natureza de Operação',
+    'natureza_operacao',                    // name
+    'Natureza de Operação',                 // label
     ($naturezasOperacao && $naturezasOperacao->count() > 0)
-    ? ['' => 'Selecione'] + $naturezasOperacao->pluck('descricao', 'descricao')->toArray()
-    : ['' => '']
-)
-    ->attrs(['class' => 'form-select'])
-    ->value($item?->natureza_operacao ?? '')
-    !!}
+        ? ['' => 'Selecione'] + $naturezasOperacao->pluck('descricao', 'descricao')->toArray()
+        : [],                               // options
+    $item?->natureza_operacao ?? '',        // selected
+    ['class' => 'form-select']              // attributes
+) !!}
+
                         </div>
 
                         <div class="col-md-2">
