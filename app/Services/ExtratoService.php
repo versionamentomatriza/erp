@@ -23,9 +23,8 @@ class ExtratoService
         $extratos = $extratos instanceof Collection
             ? $extratos
             : collect([$extratos]);
-
-        $extratoIds = $extratos->pluck('id');
-        $empresaId  = $extratos->first()->empresa_id;
+            
+        $empresaId  = $request->empresa_id ?? auth()->user()->empresa_id;
 
         // ==========================================================
         // BUSCA DE CONTAS RELACIONADAS
