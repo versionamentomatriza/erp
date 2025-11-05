@@ -19,6 +19,7 @@ use App\Services\ExtratoService;
 use App\Services\OfxService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class ExtratoController extends Controller
 {
@@ -232,9 +233,10 @@ class ExtratoController extends Controller
         $dre        = null;
 
         if ($inicio && $fim) {
-            $inicio = now()->startOfMonth()->toDateString();
-            $fim    = now()->endOfMonth()->toDateString();
-            $dre    = ExtratoService::gerarDRE($empresa, $inicio, $fim);
+            $inicioCarbon = Carbon::createFromFormat('Y-m', $inicio)->startOfMonth();
+            $fimCarbon    = Carbon::createFromFormat('Y-m', $fim)->endOfMonth();
+
+            $dre = ExtratoService::gerarDRE($empresa, $inicioCarbon->toDateString(), $fimCarbon->toDateString());
         }
 
         return view('extrato.dre', compact('empresa', 'dre'));

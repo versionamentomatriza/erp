@@ -14,7 +14,9 @@ class ExtratoService
 {
     public static function gerarDRE($empresa, $inicio, $fim)
     {
-        $extratos = Extrato::where('empresa_id', $empresa->id)
+        $empresaId = $empresa->id;
+
+        $extratos = Extrato::where('empresa_id', $empresaId)
             ->whereDate('inicio', '>=', $inicio)
             ->whereDate('fim', '<=', $fim)
             ->get();
@@ -23,8 +25,6 @@ class ExtratoService
         $extratos = $extratos instanceof Collection
             ? $extratos
             : collect([$extratos]);
-            
-        $empresaId  = $request->empresa_id ?? auth()->user()->empresa_id;
 
         // ==========================================================
         // BUSCA DE CONTAS RELACIONADAS
