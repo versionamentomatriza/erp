@@ -146,15 +146,15 @@
 
                         <div class="col-md-3">
                             {!! Form::select(
-    'natureza_operacao',
-    'Natureza de Operação',
+    'natureza_operacao',                    // name
+    'Natureza de Operação',                 // label
     ($naturezasOperacao && $naturezasOperacao->count() > 0)
-    ? ['' => 'Selecione'] + $naturezasOperacao->pluck('descricao', 'descricao')->toArray()
-    : ['' => '']
-)
-    ->attrs(['class' => 'form-select'])
-    ->value($item?->natureza_operacao ?? '')
-    !!}
+        ? ['' => 'Selecione'] + $naturezasOperacao->pluck('descricao', 'descricao')->toArray()
+        : [],                               // options
+    $item?->natureza_operacao ?? '',        // selected
+    ['class' => 'form-select']              // attributes
+) !!}
+
                         </div>
 
                         <div class="col-md-2">
@@ -223,7 +223,7 @@
                         </div>
                         <div class="col-md-3">
                             {!!Form::text('regime_tributacao', 'Regime de tributação')->attrs(['class' => ''])
-    ->value(isset($item) && isset($item->servico->regime_tributacao) ? $item->servico->regime_tributacao : '') 
+    ->value(isset($item) && isset($item->regime_tributacao) ? $item->regime_tributacao : '') 
                             !!}
                         </div>
                         <div class="col-md-2">
@@ -252,7 +252,7 @@
 
                         <div class="col-md-2">
                             {!!Form::select('estado_local_prestacao_servico', 'UF do local de prestação', \App\Models\Cidade::estados())->attrs(['class' => 'form-select'])
-    ->value(isset($item) && isset($item->servico->estado_local_prestacao_servico) ? $item->servico->estado_local_prestacao_servico : '')
+    ->value(isset($item) && isset($item->servico->estado_local_prestacao_servico) ? $item->servico->estado_local_prestacao_servico : 'SC')
                             !!}
                         </div>
 

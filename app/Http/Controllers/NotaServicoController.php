@@ -100,7 +100,10 @@ public function create(Request $request)
 
     public function edit($id){
         $item = NotaServico::findOrFail($id);
-        return view('nota_servico.edit', compact('item'));
+        $naturezasOperacao  = NaturezaOperacao::where('empresa_id', '=', auth()->user()->empresa->empresa->id)->get();
+        $os = null;
+        
+        return view('nota_servico.edit', compact('item', 'naturezasOperacao' , 'os'));
     }
 
     public function store(Request $request){

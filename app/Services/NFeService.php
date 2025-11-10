@@ -194,6 +194,7 @@ class NFeService{
 		$somaICMS = 0;
 		$somaFrete = 0;
 		$somaDesconto = 0;
+		$somaAcrecimo = 0;
 		$somaIpi = 0;
 		$totalItens = sizeof($item->itens);
 		$VBC = 0;
@@ -305,6 +306,11 @@ class NFeService{
 				}
 
 			}
+			
+
+			if (!isset($stdProd->vOutro)) {
+				$stdProd->vOutro = $this->format($item->acrescimo / $totalItens);
+			}	
 
 			$prod = $nfe->tagprod($stdProd); // fim tag de produtos
 
@@ -631,7 +637,7 @@ class NFeService{
 		$stdICMSTot->vIPI = $this->format($stdIPI->vIPI);
 		$stdICMSTot->vPIS = 0.00;
 		$stdICMSTot->vCOFINS = 0.00;
-		$stdICMSTot->vOutro = 0.00;
+		$stdICMSTot->vOutro = $this->format($item->acrescimo);
 		$stdICMSTot->vNF = $this->format($item->total + $somaVICMSST + $stdIPI->vIPI);
 		$stdICMSTot->vTotTrib = 0.00;
 		$ICMSTot = $nfe->tagICMSTot($stdICMSTot);
