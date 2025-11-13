@@ -7,11 +7,119 @@ use Illuminate\Http\Request;
 use CloudDfe\SdkPHP\Nfse;
 use App\Models\Empresa;
 use App\Models\NotaServico;
-
-
+use App\Models\Plano;
+use MercadoPago\Plan;
 
 class NotaServicoController extends Controller
 {
+    public function emitirNotaVindi(Request $request)
+    {
+        return response()->json('ok', 200);
+        try {
+            $nfse = new Nfse([
+                "token" => config('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbXAiOjEwMjk3LCJ1c3IiOjMzMSwidHAiOjIsImlhdCI6MTc0MDYwMjI1OX0.ynAN6Bgn1OHbLCvYHs7zTHHkUgBfinKeheDTtvXqrOs'),
+                "ambiente" => 1, // IMPORTANTE: 1 - Produção / 2 - Homologação
+                'options' => [
+                    'debug' => false,
+                    'timeout' => 60,
+                    'port' => 443,
+                    'http_version' => CURL_HTTP_VERSION_NONE
+                ]
+            ]);
+
+            $emitente  = Empresa::find(14);
+            $empresa   = Empresa::find($request->empresa_id);
+            $plano     = Plano::find($request->plano_id);
+            $doc       = preg_replace('/[^0-9]/', '', $empresa->cpf_cnpj);
+            $numero    = $emitente->numero_ultima_nfse + 1;
+
+            $payload = [
+                "modelo" => "municipal",
+                "numero" => $numero,
+                "serie" => $emitente->numero_serie_nfse,
+                "tipo" => "1",
+                "status" => "1",
+                "data_emissao" => date("Y-m-d\TH:i:sP"),
+                "data_competencia" => date("Y-m-d\TH:i:sP"),
+                "tomador" => [
+                    "cnpj" => strlen($doc) == 14 ? $doc : null,
+                    "cpf" => strlen($doc) == 11 ? $doc : null,
+                    "im" => $empresa->inscricao_municipal,
+                    "razao_social" => $empresa->nome,
+                    "endereco" => [
+                        "logradouro" => $empresa->rua,
+                        "numero" => $empresa->numero,
+                        "complemento" => $empresa->complemento,
+                        "bairro" => $empresa->bairro,
+                        "codigo_municipio" => $empresa->cidade->codigo,
+                        "uf" => $empresa->cidade->uf,
+                        "cep" => $empresa->cep
+                    ]
+                ],
+                "servico" => [
+                    "codigo_municipio" => $emitente->cidade->codigo,
+                    "itens" => [
+                        [
+                            "codigo"                      => "107",
+                            "codigo_tributacao_municipio" => "1.07",
+                            "discriminacao"               => "Plano empresarial",
+                            "valor_servicos"              => $plano->valor,
+                            "valor_aliquota"              => "2.00"
+                        ]
+                    ]
+                ]
+            ];
+
+            // Envia a NFSe para a API
+            $resp = $nfse->cria($payload);
+
+            if ($resp->sucesso) {
+                // Ao entrar nesse bloco significa que a NFSe foi para o provedor e aguarda processamento.
+                // Salva a chave no banco de dados para receber depois o resultado se a nota foi autorizada ou rejeitada
+                // OBS: A chave é o identificador para consultas futuras da NFSe
+                $chave = $resp->chave;
+                sleep(15); // Aguarda 15 segundos para consultar a NFse, pois o processamento pode levar alguns segundos
+                $payload = ["chave" => $chave];
+                $resp = $nfse->consulta($payload);
+
+                if ($resp->codigo != 5023) {
+                    if ($resp->sucesso) {
+                        // Mandar email para o cliente com a NFSe
+                        if (!empty($resp->pdf)) {
+                            $pdf = base64_decode($resp->pdf);
+                            $numeroNfse = $resp->numero ?? $numero; // fallback se a API não retornar o número
+                            $pdfPath = storage_path("app/nfse/{$numeroNfse}.pdf");
+                            file_put_contents($pdfPath, $pdf);
+                        }
+
+                        // --- Monta os dados pro e-mail ---
+                        $dadosEmail = [
+                            'number'    => $numeroNfse,
+                            'name'      => $empresa->nome,
+                            'link'      => $resp->link_nfse ?? null, // algumas prefeituras retornam esse link
+                        ];
+
+                        // --- Envia o e-mail pro cliente ---
+                        if (!empty($empresa->email)) {
+                            //mandar email
+                        }
+                        return response()->json($resp, 200);
+                    } else return response()->json($resp, 400);
+                } else return response()->json($resp, 400);
+            } else if (in_array($resp->codigo, [5001, 5002])) {
+                // Aqui o retorno indica que houve um erro na validação dos dados enviados
+                // O código 5001 indica que falto campos obrigatórios ou opcionais obrigatórios referente ao emitente.
+                // O código 5002 indica que houve um erro na validação dos dados como CNPJ, CPF, Inscrição Estadual, etc.
+                return response()->json($resp, 400);
+            } else {
+                // Aqui é retornado qualquer erro que não seja relacionado a validação dos dados como não foi informado certificado digital, entre outros.
+                return response()->json($resp, 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function transmitir(Request $request){
         $item = NotaServico::findOrFail($request->id);
         $empresa = $item->empresa;

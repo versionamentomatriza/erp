@@ -206,6 +206,7 @@ Route::group(['prefix' => 'produtos'], function () {
 });
 
 Route::group(['prefix' => 'nfse'], function () {
+    Route::post('/emitir_nota_vindi', 'NotaServicoController@emitirNotaVindi');
     Route::post('/transmitir', 'NotaServicoController@transmitir');
     Route::post('/consultar', 'NotaServicoController@consultar');
     Route::post('/cancelar', 'NotaServicoController@cancelar');
