@@ -14,7 +14,6 @@ class NotaServicoController extends Controller
 {
     public function emitirNotaVindi(Request $request)
     {
-        return response()->json('ok', 200);
         try {
             $nfse = new Nfse([
                 "token" => config('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbXAiOjEwMjk3LCJ1c3IiOjMzMSwidHAiOjIsImlhdCI6MTc0MDYwMjI1OX0.ynAN6Bgn1OHbLCvYHs7zTHHkUgBfinKeheDTtvXqrOs'),
