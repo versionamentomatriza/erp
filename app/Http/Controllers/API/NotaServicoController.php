@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Mail\EmailVindiNFSe;
 use Illuminate\Http\Request;
 use CloudDfe\SdkPHP\Nfse;
 use App\Models\Empresa;
 use App\Models\NotaServico;
 use App\Models\Plano;
+use Illuminate\Support\Facades\Mail;
 use MercadoPago\Plan;
 
 class NotaServicoController extends Controller
@@ -16,7 +18,7 @@ class NotaServicoController extends Controller
     {
         try {
             $nfse = new Nfse([
-                "token" => config('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbXAiOjEwMjk3LCJ1c3IiOjMzMSwidHAiOjIsImlhdCI6MTc0MDYwMjI1OX0.ynAN6Bgn1OHbLCvYHs7zTHHkUgBfinKeheDTtvXqrOs'),
+                "token" => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbXAiOjEwMjk3LCJ1c3IiOjMzMSwidHAiOjIsImlhdCI6MTc0MDYwMjI1OX0.ynAN6Bgn1OHbLCvYHs7zTHHkUgBfinKeheDTtvXqrOs',
                 "ambiente" => 1, // IMPORTANTE: 1 - Produção / 2 - Homologação
                 'options' => [
                     'debug' => false,
@@ -31,6 +33,7 @@ class NotaServicoController extends Controller
             $plano     = Plano::find($request->plano_id);
             $doc       = preg_replace('/[^0-9]/', '', $empresa->cpf_cnpj);
             $numero    = $emitente->numero_ultima_nfse + 1;
+
 
             $payload = [
                 "modelo" => "municipal",
@@ -52,7 +55,7 @@ class NotaServicoController extends Controller
                         "bairro" => $empresa->bairro,
                         "codigo_municipio" => $empresa->cidade->codigo,
                         "uf" => $empresa->cidade->uf,
-                        "cep" => $empresa->cep
+                        "cep" => preg_replace('/\D/', '', $empresa->cep)
                     ]
                 ],
                 "servico" => [
@@ -63,7 +66,9 @@ class NotaServicoController extends Controller
                             "codigo_tributacao_municipio" => "1.07",
                             "discriminacao"               => "Plano empresarial",
                             "valor_servicos"              => $plano->valor,
-                            "valor_aliquota"              => "2.00"
+                            "valor_base_calculo"          => $plano->valor,
+                            "valor_aliquota"              => "2.00",
+                            "regime_tributacao"           => 0
                         ]
                     ]
                 ]
@@ -73,6 +78,8 @@ class NotaServicoController extends Controller
             $resp = $nfse->cria($payload);
 
             if ($resp->sucesso) {
+                $emitente->numero_ultima_nfse = $numero;
+                $emitente->save();
                 // Ao entrar nesse bloco significa que a NFSe foi para o provedor e aguarda processamento.
                 // Salva a chave no banco de dados para receber depois o resultado se a nota foi autorizada ou rejeitada
                 // OBS: A chave é o identificador para consultas futuras da NFSe
@@ -83,25 +90,33 @@ class NotaServicoController extends Controller
 
                 if ($resp->codigo != 5023) {
                     if ($resp->sucesso) {
-                        // Mandar email para o cliente com a NFSe
                         if (!empty($resp->pdf)) {
+
+                            // Cria diretório se não existir
+                            $dir = storage_path('app/nfse');
+                            if (!is_dir($dir)) {
+                                mkdir($dir, 0775, true);
+                            }
+
+                            // Salva o PDF
                             $pdf = base64_decode($resp->pdf);
-                            $numeroNfse = $resp->numero ?? $numero; // fallback se a API não retornar o número
-                            $pdfPath = storage_path("app/nfse/{$numeroNfse}.pdf");
+                            $numeroNfse = $resp->numero ?? $numero;
+                            $pdfPath = "{$dir}/{$numeroNfse}.pdf";
                             file_put_contents($pdfPath, $pdf);
                         }
 
-                        // --- Monta os dados pro e-mail ---
+                        // Dados do email
                         $dadosEmail = [
-                            'number'    => $numeroNfse,
-                            'name'      => $empresa->nome,
-                            'link'      => $resp->link_nfse ?? null, // algumas prefeituras retornam esse link
+                            'number' => $numeroNfse,
+                            'name'   => $empresa->nome,
+                            'link'   => $resp->link_nfse ?? null,
                         ];
 
-                        // --- Envia o e-mail pro cliente ---
+                        // Envia
                         if (!empty($empresa->email)) {
-                            //mandar email
+                            Mail::to($empresa->email)->send(new EmailVindiNFSe($dadosEmail));
                         }
+
                         return response()->json($resp, 200);
                     } else return response()->json($resp, 400);
                 } else return response()->json($resp, 400);

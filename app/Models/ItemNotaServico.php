@@ -10,7 +10,7 @@ class ItemNotaServico extends Model
     use HasFactory;
 
     protected $fillable = [
-        'nota_servico_id', 'discriminacao', 'valor_servico', 'servico_id', 'codigo_cnae', 'codigo_tributacao_municipio', 
+        'nota_servico_id', 'discriminacao', 'valor_servico', 'servico_id', 'codigo_cnae', 'codigo_tributacao_municipio', 'regime_tributacao',
         'exigibilidade_iss', 'iss_retido', 'data_competencia', 'estado_local_prestacao_servico', 
         'cidade_local_prestacao_servico', 'valor_deducoes', 'desconto_incondicional', 'desconto_condicional',
         'outras_retencoes', 'aliquota_iss', 'aliquota_pis', 'aliquota_cofins', 'aliquota_inss', 
