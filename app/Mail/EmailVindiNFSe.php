@@ -22,7 +22,7 @@ class EmailVindiNFSe extends Mailable
     {
         $number = $this->data['number'];
 
-        $path = storage_path("app/nfse/{$number}.pdf");
+        $path = public_path("nfse_temp/{$number}.pdf");
 
         return $this->subject('Sua NFS-e está disponível!')
             ->view('emails.nfse')
