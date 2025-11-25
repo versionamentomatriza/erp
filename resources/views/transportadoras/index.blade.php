@@ -67,7 +67,7 @@
                                     @endcan
                                     <td>{{ $item->razao_social }}</td>
                                     <td>{{ $item->cpf_cnpj }}</td>
-                                    <td>{{ $item->cidade->info }}</td>
+                                    <td>{{ $item->cidade->info ?? '' }}</td>
                                     <td>
                                         <form action="{{ route('transportadoras.destroy', $item->id) }}" method="post" id="form-{{$item->id}}">
                                             @method('delete')
