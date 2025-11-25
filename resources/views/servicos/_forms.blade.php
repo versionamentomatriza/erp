@@ -51,6 +51,11 @@
         {!!Form::tel('codigo_tributacao_municipio', 'Código do tributação municipal')->attrs(['class' => ''])
         !!}
     </div>
+	
+	 <div class="col-md-3">
+        {!!Form::tel('regime_tributacao', 'Regime de Tributação')->attrs(['class' => ''])
+        !!}
+    </div>
 
     <div class="col-md-2">
         {!!Form::select('status', 'Ativo', ['1' => 'Sim', '0' => 'Não'])

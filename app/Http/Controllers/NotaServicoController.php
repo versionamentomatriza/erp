@@ -72,11 +72,13 @@ public function create(Request $request)
     $total = null;
     $servicoPadrao = null;
     $cliente = null;
-    $naturezasOperacao = null;
     $item = null;
 
+    // Carrega SEMPRE, independente de OS
+    $naturezasOperacao = NaturezaOperacao::where('empresa_id', auth()->user()->empresa->empresa->id)->get();
 
     if ($request->has('os_id')) {
+
         $os = OrdemServico::with('cliente', 'servicos')->find($request->os_id);
 
         if ($os) {
@@ -86,15 +88,20 @@ public function create(Request $request)
             $cliente            = $os->cliente;
             $nota               = $os->notaServico;
             $item               = $nota->servico ?? $cliente;
+
+            // Carrega naturezas do mesmo jeito (empresa da OS)
             $naturezasOperacao  = NaturezaOperacao::where('empresa_id', '=', $os->empresa_id)->get();
 
-            // Aqui entra o aviso
             session()->flash("flash_success", "Dados da Ordem de Serviço #{$os->codigo_sequencial} importados com sucesso!");
         }
     }
 
-    return view('nota_servico.create', compact('os', 'descricaoServico', 'total', 'servicoPadrao', 'item', 'naturezasOperacao'));
+    return view('nota_servico.create', compact(
+        'os', 'descricaoServico', 'total', 'servicoPadrao',
+        'item', 'naturezasOperacao'
+    ));
 }
+
 
 
 
@@ -150,6 +157,7 @@ public function create(Request $request)
                     'codigo_cnae' => $request->codigo_cnae ?? '',
                     'codigo_servico' => $request->codigo_servico ?? '',
                     'codigo_tributacao_municipio' => $request->codigo_tributacao_municipio ?? '',
+					'regime_tributacao' => $request->regime_tributacao ?? '',
                     'exigibilidade_iss' => $request->exigibilidade_iss,
                     'iss_retido' => $request->iss_retido,
                     'data_competencia' => $request->data_competencia ?? null,
@@ -253,6 +261,7 @@ public function update(Request $request, $id){
                 'codigo_cnae' => $request->codigo_cnae ?? '',
                 'codigo_servico' => $request->codigo_servico ?? '',
                 'codigo_tributacao_municipio' => $request->codigo_tributacao_municipio ?? '',
+				'regime_tributacao' => $request->regime_tributacao ?? '',
                 'exigibilidade_iss' => $request->exigibilidade_iss,
                 'iss_retido' => $request->iss_retido,
                 'data_competencia' => $request->data_competencia ?? null,

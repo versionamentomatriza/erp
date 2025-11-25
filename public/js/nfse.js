@@ -41,6 +41,7 @@ function getClient(cliente) {
         $('#inp-bairro').val(res.bairro)
         $('#inp-complemento').val(res.complemento)
         findCidade(res.cidade_id)
+		
     })
     .fail((err) => {
         console.error(err)
@@ -53,6 +54,14 @@ function findCidade(codigo){
     .done((res) => {
         var newOption = new Option(res.info, res.id, false, false);
         $('#inp-cidade_id').append(newOption).trigger('change');
+		
+        let estadoMatch = res.info.match(/\((.*?)\)/);
+        let estado = estadoMatch ? estadoMatch[1] : '';
+
+        let cidade = res.info.replace(/\(.*?\)/, '').trim();
+
+        $('#inp-estado_local_prestacao_servico').val(estado);
+        $('#inp-cidade_local_prestacao_servico').val(cidade);
     })
     .fail((err) => {
         console.log(err)
@@ -82,6 +91,7 @@ function getSerico(servico_id) {
         $('#inp-aliquota_inss').val(res.aliquota_inss)
         $('#inp-aliquota_iss').val(res.aliquota_iss)
         $('#inp-codigo_tributacao_municipio').val(res.codigo_tributacao_municipio)
+		$('#inp-regime_tributacao').val(res.regime_tributacao)
 
     })
     .fail((err) => {
