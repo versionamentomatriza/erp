@@ -8,12 +8,46 @@ use Illuminate\Support\Facades\Auth;
 
 function __convert_value_bd($valor)
 {
-	if (strlen($valor) >= 8) {
-		$valor = str_replace(".", "", $valor);
-	}
-	$valor = str_replace(",", ".", $valor);
+    // null ou vazio → 0
+    if ($valor === null || $valor === '') {
+        return 0.0;
+    }
 
-	return $valor;
+    // só aceita escalar
+    if (!is_scalar($valor)) {
+        throw new InvalidArgumentException("Valor numérico inválido.");
+    }
+
+    $valor = trim((string) $valor);
+
+    if ($valor === '') {
+        return 0.0;
+    }
+
+    // Formatos possíveis (aceitam qualquer quantidade de dígitos decimais)
+    $br_format = '/^\d{1,3}(\.\d{3})*(,\d+)?$/'; // 1.234,56789
+    $br_simple = '/^\d+(,\d+)?$/';              // 123,456
+    $us_simple = '/^\d+(\.\d+)?$/';             // 123.4567
+
+    if (
+        !preg_match($br_format, $valor) &&
+        !preg_match($br_simple, $valor) &&
+        !preg_match($us_simple, $valor)
+    ) {
+        throw new InvalidArgumentException("Formato inválido para valor monetário: '{$valor}'");
+    }
+
+    // Formato BR → normaliza para ponto
+    if (strpos($valor, ',') !== false) {
+        $valor = str_replace('.', '', $valor); // remove milhares
+        $valor = str_replace(',', '.', $valor); // vírgula > ponto
+    }
+
+    // Converte
+    $float = (float) $valor;
+
+    // Arredonda para 2 casas
+    return round($float, 2);
 }
 
 function __validaObjetoEmpresa($objeto)

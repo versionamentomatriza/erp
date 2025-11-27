@@ -541,6 +541,7 @@ class NFeService{
 			$stdIPI->vUnid = null;
 
 			$IPI = $nfe->tagIPI($stdIPI);
+			$somaIpi = $somaIpi + $stdIPI->vIPI;
 
 			if(strlen($i->produto->codigo_anp) > 2){
 				$stdComb = new \stdClass();
@@ -628,11 +629,11 @@ class NFeService{
 		$stdICMSTot->vSeg = 0.00;
 		$stdICMSTot->vDesc = $this->format($item->desconto);
 		$stdICMSTot->vII = 0.00;
-		$stdICMSTot->vIPI = $this->format($stdIPI->vIPI);
+		$stdICMSTot->vIPI = $this->format($somaIpi);
 		$stdICMSTot->vPIS = 0.00;
 		$stdICMSTot->vCOFINS = 0.00;
 		$stdICMSTot->vOutro = 0.00;
-		$stdICMSTot->vNF = $this->format($item->total + $somaVICMSST + $stdIPI->vIPI);
+		$stdICMSTot->vNF = $this->format($item->total + $somaVICMSST + $somaIpi);
 		$stdICMSTot->vTotTrib = 0.00;
 		$ICMSTot = $nfe->tagICMSTot($stdICMSTot);
 
