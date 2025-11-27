@@ -85,8 +85,20 @@
     </div>
 
     {{-- Descrição --}}
-    <div class="col-md-3">
+    <div class="col-md-12">
         {!! Form::text('descricao', 'Descrição')->required() !!}
+    </div>
+
+    <div class="col-md-12">
+        {!! Form::select(
+    'categoria_conta_id',
+    'Categoria da Receita',
+    \App\Models\CategoriaConta::where('tipo', 'receita')
+        ->orderBy('nome')
+        ->pluck('nome', 'id')
+        ->toArray(),
+    isset($item) ? $item->categoria_conta_id : null
+)->attrs(['class' => 'form-select'])->required() !!}
     </div>
 
     {{-- Valor Integral --}}
@@ -104,6 +116,13 @@
     ->required() !!}
     </div>
 
+    {{-- Data Compétencia --}}
+    <div class="col-md-2">
+        {!! Form::date('data_competencia', 'Data de Competência')
+    ->attrs(['id' => 'inp-data_competencia'])
+    ->required() !!}
+    </div>
+
     {{-- Status --}}
     <div class="col-md-2">
         {!! Form::select('status', 'Conta Recebida', ['0' => 'Não', '1' => 'Sim'])
@@ -112,16 +131,18 @@
     </div>
 
     {{-- Valor Recebido (escondido inicialmente) --}}
-    <div class="col-md-2 d-none" id="group-valor-recebido">
+    <div class="col-md-2">
         {!! Form::text('valor_recebido', 'Valor Recebido')
     ->attrs(['class' => 'form-control moeda', 'id' => 'inp-valor_recebido'])
+    ->disabled()
     ->value(isset($item) ? __moeda($item->valor_recebido ?? '') : '') !!}
     </div>
 
     {{-- Data Recebimento (escondido inicialmente) --}}
-    <div class="col-md-2 d-none" id="group-data-recebimento">
+    <div class="col-md-2">
         {!! Form::date('data_recebimento', 'Data Recebimento')
     ->attrs(['id' => 'inp-data_recebimento'])
+    ->disabled()
     ->value(isset($item) ? $item->data_recebimento : '') !!}
     </div>
 
@@ -132,16 +153,30 @@
     ->required() !!}
     </div>
 
-    {{-- Observação --}}
-    <div class="col-md-3">
-        {!! Form::text('observacao', 'Observação') !!}
+    {{-- Parcelas --}}
+    <div class="col-md-2">
+        {!! Form::select('parcelas', 'Parcelas', ['1' => 'À vista', '2' => '2x', '3' => '3x', '4' => '4x', '5' => '5x', '6' => '6x', '7' => '7x', '8' => '8x', '9' => '9x', '10' => '10x', '11' => '11x', '12' => '12x', '13' => '13x', '14' => '14x', '15' => '15x', '16' => '16x', '17' => '17x', '18' => '18x', '19' => '19x', '20' => '20x', '21' => '21x', '22' => '22x', '23' => '23x', '24' => '24x'])
+    ->attrs(['class' => 'form-select', 'id' => 'inp-parcelas'])
+    ->required() !!}
+    </div>
+
+    {{-- Valor Parcela --}}
+    <div class="col-md-2">
+        {!! Form::text('valor_parcelas', 'Valor das Parcelas')
+    ->attrs(['class' => 'form-control moeda', 'id' => 'inp-valor_parcelas'])
+    ->disabled() !!}
     </div>
 
     {{-- Centro de Custo --}}
-    <div class="col-md-4">
+    <div class="col-md-5">
         {!! Form::select('centro_custo_id', 'Centro de Custo', ['' => 'Selecione'] + $centrosCusto->pluck('descricao', 'id')->all())
     ->attrs(['class' => 'form-select'])
     ->value(isset($item) ? $item->centro_custo_id : '') !!}
+    </div>
+
+    {{-- Observação --}}
+    <div class="col-12">
+        {!! Form::text('observacao', 'Observação') !!}
     </div>
 
     {{-- Upload de Arquivo --}}
@@ -163,7 +198,8 @@
     @if(!isset($item))
         <div class="col-12">
             <p class="text-danger small mt-4">
-                * Campo abaixo deve ser preenchido se houver recorrência para este registro
+                * Campo abaixo deve ser preenchido se o recebimento for recorrente (ex: mensalidades, assinaturas, aluguel,
+                serviços contínuos).
             </p>
         </div>
 
@@ -192,42 +228,55 @@
         document.addEventListener("DOMContentLoaded", function () {
             const status = document.getElementById("inp-status");
             const valorIntegral = document.getElementById("inp-valor_integral");
-            const valorRecebidoGroup = document.getElementById("group-valor-recebido");
             const valorRecebido = document.getElementById("inp-valor_recebido");
-            const dataRecebimentoGroup = document.getElementById("group-data-recebimento");
             const dataRecebimento = document.getElementById("inp-data_recebimento");
+            const parcelas = document.getElementById("inp-parcelas");
+            const valorParcelas = document.getElementById("inp-valor_parcelas");
 
+            // --- Controle de recebimento ---
             function toggleCamposRecebimento() {
                 if (status.value === "1") {
-                    valorRecebidoGroup.classList.remove("d-none");
-                    dataRecebimentoGroup.classList.remove("d-none");
+                    valorRecebido.removeAttribute("disabled");
+                    dataRecebimento.removeAttribute("disabled");
 
-                    // Preenche valor recebido se estiver vazio
-                    if (!valorRecebido.value) {
-                        valorRecebido.value = valorIntegral.value;
-                    }
-
-                    // Preenche data de recebimento se estiver vazia
-                    if (!dataRecebimento.value) {
-                        const hoje = new Date().toISOString().split("T")[0];
-                        dataRecebimento.value = hoje;
-                    }
+                    if (!valorRecebido.value) valorRecebido.value = valorIntegral.value;
+                    if (!dataRecebimento.value)
+                        dataRecebimento.value = new Date().toISOString().split("T")[0];
                 } else {
-                    valorRecebidoGroup.classList.add("d-none");
+                    valorRecebido.setAttribute("disabled", true);
+                    dataRecebimento.setAttribute("disabled", true);
                     valorRecebido.value = "";
-
-                    dataRecebimentoGroup.classList.add("d-none");
                     dataRecebimento.value = "";
                 }
             }
 
-            // Ao mudar o select
             status.addEventListener("change", toggleCamposRecebimento);
-
-            // Na carga inicial (se editar registro já recebido)
             toggleCamposRecebimento();
 
-            // Recorrência
+            // --- Controle de parcelas ---
+            function toggleValorParcelas() {
+                const qtd = parseInt(parcelas.value);
+                const total = parseFloat(valorIntegral.value.replace(/\./g, '').replace(',', '.')) || 0;
+
+                if (qtd > 1) {
+                    valorParcelas.removeAttribute("disabled");
+
+                    if (total > 0) {
+                        const valorParcela = (total / qtd).toFixed(2);
+                        valorParcelas.value = valorParcela.replace('.', ',');
+                    }
+                } else {
+                    valorParcelas.setAttribute("disabled", true);
+                    valorParcelas.value = "";
+                }
+            }
+
+            // Agora o listener está no campo correto 👇
+            parcelas.addEventListener("change", toggleValorParcelas);
+            valorIntegral.addEventListener("blur", toggleValorParcelas);
+            toggleValorParcelas();
+
+            // --- Recorrência ---
             $('#inp-recorrencia').on('blur', function () {
                 let data = $(this).val();
                 if (data.length === 5) {
@@ -235,9 +284,7 @@
                     let valor = $('#inp-valor_integral').val();
                     if (valor && vencimento) {
                         $.get(path_url + 'api/conta-receber/recorrencia', { data, vencimento, valor })
-                            .done((html) => {
-                                $('.tbl-recorrencia').html(html).removeClass('d-none');
-                            })
+                            .done((html) => $('.tbl-recorrencia').html(html).removeClass('d-none'))
                             .fail((err) => console.log(err));
                     } else {
                         swal("Algo saiu errado", "Informe o valor e vencimento da conta base!", "warning");

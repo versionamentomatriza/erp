@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
+use App\Http\Controllers\ExtratoController;
 use App\Http\Controllers\OrdemServicoController;
 use App\Http\Controllers\UsuarioController;
 
@@ -110,6 +111,22 @@ Route::middleware(['authh', 'validaEmpresa'])->group(function () {
         Route::get('/gerenciar-planos', 'GerenciarPlanoController@index')->name('gerenciar.planos.index');
         Route::get('/ticket-super', 'TicketSuperController@index')->name('ticket-super.index');
     });
+
+    Route::get('/conciliacao', [ExtratoController::class, 'conciliar'])->name('extrato.conciliar');
+    Route::post('/conciliacao', [ExtratoController::class, 'conciliar'])->name('extrato.conciliar.post');
+    Route::post('/conciliacao/vincular', [ExtratoController::class, 'vincular'])->name('extrato.vincular');
+    Route::post('/conciliacao/desvincular', [ExtratoController::class, 'desvincular'])->name('extrato.desvincular');
+    Route::get('/movimentacao_bancaria', [ExtratoController::class, 'movimentacao_bancaria'])->name('extrato.movimentacao_bancaria');
+    Route::post('/conciliacao/criar_conta', [ExtratoController::class, 'criar_conta'])->name('extrato.criar_conta');
+    Route::get('/conciliacao/finalizar', [ExtratoController::class, 'finalizar'])->name('extrato.finalizar');
+    Route::post('/conciliacao/excedente', [ExtratoController::class, 'excedente'])->name('extrato.excedente');
+    Route::post('/conciliacao/excluir_conta', [ExtratoController::class, 'excluir_conta'])->name('extrato.excluir_conta');
+    Route::get('/conciliacao/ignorar_transacao', [ExtratoController::class, 'ignorar_transacao'])->name('extrato.ignorar_transacao');
+    Route::post('/conciliacao/transferir_conta', [ExtratoController::class, 'transferir_conta'])->name('extrato.transferir_conta');
+    Route::post('/conciliacao/transferir_transacao', [ExtratoController::class, 'transferir_transacao'])->name('extrato.transferir_transacao');
+    Route::get('/conciliacao/desfazer_transferencia_transacao', [ExtratoController::class, 'desfazer_transferencia_transacao'])->name('extrato.desfazer_transferencia_transacao');
+    Route::get('/dre', [ExtratoController::class, 'dre'])->name('extrato.dre');
+    Route::post('/dre', [ExtratoController::class, 'dre'])->name('extrato.dre.post');
 
     Route::get('/empresaPorCnpj/{cnpj}', [EmpresaController::class, 'findByCnpj']);
         Route::get('/confirm-email/{token}', [\App\Http\Controllers\EmailConfirmationController::class, 'confirm'])
@@ -315,6 +332,7 @@ Route::middleware(['authh', 'validaEmpresa'])->group(function () {
     Route::get('nuvem-shop-produtos-galery-delete', 'NuvemShopProdutoController@galeryDelete')->name('nuvem-shop-produtos.galery-delete');
     Route::post('nuvem-shop-produtos-galery-store', 'NuvemShopProdutoController@galeryStore')->name('nuvem-shop-produtos-galery-store');
 
+    Route::resource('contas-financeiras', 'ContaFinanceiraController');
     Route::resource('contas-empresa', 'ContaEmpresaController');
     Route::resource('contas-boleto', 'ContaBoletoController');
     Route::resource('remessa-boleto', 'RemessaBoletoController');
