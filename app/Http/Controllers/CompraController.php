@@ -582,6 +582,7 @@ public function edit($id, Request $request)
                                 'valor_integral' => __convert_value_bd($request->valor_fatura[$i]),
                                 'tipo_pagamento' => $tipoPagamento[$i],
                                 'data_vencimento' => $request->data_vencimento[$i],
+                                'data_competencia' => $request->data_vencimento[$i],
                                 'local_id' => $caixa->local_id,
                             ]);
                         }

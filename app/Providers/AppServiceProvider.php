@@ -44,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
         ini_set('post_max_size', '64M');  // tamanho máximo POST
         ini_set('upload_max_filesize', '64M'); // tamanho máximo de upload
 
+        require_once app_path('Helpers/ExtratoHelper.php');
+
         // Macro para adicionar dias úteis considerando feriados
         Carbon::macro('addDiasUteisComFeriados', function (int $dias): Carbon {
             $carbon = $this->copy();
